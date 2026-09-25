@@ -620,13 +620,69 @@ async fn call(url: &str, payload: Value, timeout_ms: i64) -> Option<Value> {
     }
 }
 
-/// [`cf::ChallengeSolver`] backed by [`fetch_async`].
+/// Form POST from the host's browser session (FlareSolverr `request.post`), for logins behind
+/// Cloudflare where a plain client gets 403. Returns the page after redirects and the
+/// browser's cookie jar (it includes the cookies the login just set).
+pub async fn post_form_async(url: &str, form: &str) -> Option<cf::BrowserPost> {
+    let v = view()?;
+    let host = host_of(url)?;
+    let session = session_for_host(&v, &host);
+    let _gate = session.gate.lock().await;
+
+    if !session.alive() && !create_session(&v, &session).await {
+        return None;
+    }
+    let payload = json!({
+        "cmd": "request.post",
+        "session": session.name,
+        "url": url,
+        "postData": form,
+        "maxTimeout": v.max_timeout_ms,
+    });
+    let root = call(&v.url, payload, v.max_timeout_ms as i64 + 30_000).await;
+    touch_session(&v, &session);
+    let Some(root) = root else {
+        session.set_alive(false);
+        return None;
+    };
+    if !val_str(root.get("status")).map(|s| s.eq_ignore_ascii_case("ok")).unwrap_or(false) {
+        let message = val_str(root.get("message")).unwrap_or_default();
+        log::error(cat::HOST, format!("{host}: FlareSolverr POST отказал: {message}"));
+        if is_session_broken_message(&message) {
+            session.set_alive(false);
+        }
+        return None;
+    }
+
+    let solution = root.get("solution").filter(|s| s.is_object())?;
+    let status = val_i32(solution.get("status")).unwrap_or(0).clamp(0, u16::MAX as i32) as u16;
+    let body = val_str(solution.get("response")).unwrap_or_default();
+    let cookies = solution
+        .get("cookies")
+        .and_then(|j| j.as_array())
+        .map(|jar| {
+            jar.iter()
+                .filter_map(|c| {
+                    let name = val_str(c.get("name")).filter(|n| !n.trim().is_empty())?;
+                    Some((name, val_str(c.get("value")).unwrap_or_default()))
+                })
+                .collect()
+        })
+        .unwrap_or_default();
+    Some(cf::BrowserPost { status, body, cookies })
+}
+
+/// [`cf::ChallengeSolver`] backed by [`fetch_async`] and [`post_form_async`].
 pub struct FlareSolverrSolver;
 
 #[async_trait::async_trait]
 impl cf::ChallengeSolver for FlareSolverrSolver {
     async fn fetch(&self, url: &str, cookie: Option<&str>, referer: Option<&str>, headers: &[(String, String)]) -> Option<String> {
         fetch_async(url, cookie, referer, headers).await
+    }
+
+    async fn post_form(&self, url: &str, form: &str) -> Option<cf::BrowserPost> {
+        post_form_async(url, form).await
     }
 }
 

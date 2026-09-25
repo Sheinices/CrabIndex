@@ -41,6 +41,9 @@ static TASK_PARSE: Lazy<Mutex<NestedTaskMap>> =
 static COOKIE: Mutex<Option<String>> = parking_lot::const_mutex(None);
 static LAST_LOGIN_ERROR: Mutex<Option<String>> = parking_lot::const_mutex(None);
 static LOGIN_SEMAPHORE: Lazy<Semaphore> = Lazy::new(|| Semaphore::new(1));
+/// Failed login: next attempt not before [`LOGIN_RETRY_AFTER`] (every page would retry otherwise).
+static LAST_LOGIN_FAIL: Mutex<Option<Instant>> = parking_lot::const_mutex(None);
+const LOGIN_RETRY_AFTER: Duration = Duration::from_secs(5 * 60);
 static CONSECUTIVE_STALES: AtomicI32 = AtomicI32::new(0);
 
 static PARSE_LOCK: ParseLock = ParseLock::new();
@@ -163,6 +166,41 @@ async fn take_login() -> bool {
         return false;
     }
 
+    if let Some(at) = *LAST_LOGIN_FAIL.lock() {
+        if at.elapsed() < LOGIN_RETRY_AFTER {
+            return false;
+        }
+    }
+
+    let form = [("username", c.Kinozal.login_u()), ("password", c.Kinozal.login_p()), ("returnto", "")];
+    let login_url = format!("{host}/takelogin.php");
+    // Behind Cloudflare the plain POST gets 403: skip it once the host is known to be guarded.
+    let blocked = net::cf::is_guarded(&tracker_host())
+        || match take_login_direct(&host, &login_url, &form).await {
+            Some(true) => return true,
+            Some(false) => true,
+            None => false,
+        };
+    if blocked {
+        if let Some(cookie) = take_login_browser(&login_url, &form).await {
+            return login_ok(cookie, "TakeLogin OK (browser)");
+        }
+    }
+    *LAST_LOGIN_FAIL.lock() = Some(Instant::now());
+    false
+}
+
+fn login_ok(cookie: String, msg: &str) -> bool {
+    *COOKIE.lock() = Some(cookie);
+    *LAST_LOGIN_FAIL.lock() = None;
+    set_login_error(None);
+    parser_log::write(TRACKER_NAME, msg);
+    true
+}
+
+/// Plain POST to `takelogin.php`. `Some(true)` = logged in, `Some(false)` = Cloudflare-like
+/// block (403/503/network error, worth retrying in the browser), `None` = rejected by the site.
+async fn take_login_direct(host: &str, login_url: &str, form: &[(&str, &str); 3]) -> Option<bool> {
     let client = match reqwest::Client::builder()
         .danger_accept_invalid_certs(true)
         .redirect(reqwest::redirect::Policy::none())
@@ -173,20 +211,19 @@ async fn take_login() -> bool {
         Err(e) => {
             set_login_error(Some(e.to_string()));
             parser_log::write(TRACKER_NAME, format!("TakeLogin error: {e}"));
-            return false;
+            return Some(false);
         }
     };
-    let form = [("username", c.Kinozal.login_u()), ("password", c.Kinozal.login_p()), ("returnto", "")];
     let resp = client
-        .post(format!("{host}/takelogin.php"))
+        .post(login_url)
         .header("user-agent", net::http::USER_AGENT)
         .header("cache-control", "no-cache")
         .header("dnt", "1")
-        .header("origin", host.as_str())
+        .header("origin", host)
         .header("pragma", "no-cache")
         .header("referer", format!("{host}/"))
         .header("upgrade-insecure-requests", "1")
-        .form(&form)
+        .form(form)
         .send()
         .await;
     match resp {
@@ -194,21 +231,53 @@ async fn take_login() -> bool {
             let lines: Vec<String> =
                 resp.headers().get_all("set-cookie").iter().filter_map(|v| v.to_str().ok().map(|s| s.to_string())).collect();
             if let Some(cookie) = cookie_from_set_cookies(&lines) {
-                *COOKIE.lock() = Some(cookie);
-                set_login_error(None);
-                parser_log::write(TRACKER_NAME, "TakeLogin OK");
-                return true;
+                return Some(login_ok(cookie, "TakeLogin OK"));
             }
-            let e = format!("no uid/pass cookies in response, status={}", resp.status().as_u16());
+            let status = resp.status().as_u16();
+            let e = format!("no uid/pass cookies in response, status={status}");
             parser_log::write(TRACKER_NAME, format!("TakeLogin failed: {e}"));
             set_login_error(Some(e));
+            if status == 403 || status == 503 {
+                Some(false)
+            } else {
+                None
+            }
         }
         Err(e) => {
             set_login_error(Some(e.to_string()));
             parser_log::write(TRACKER_NAME, format!("TakeLogin error: {e}"));
+            Some(false)
         }
     }
-    false
+}
+
+/// Login form submitted from the FlareSolverr session of the host (passes Cloudflare);
+/// `uid` / `pass` come from the browser's cookie jar.
+async fn take_login_browser(login_url: &str, form: &[(&str, &str); 3]) -> Option<String> {
+    let body = url::form_urlencoded::Serializer::new(String::new()).extend_pairs(form.iter()).finish();
+    let Some(r) = net::cf::post_form(login_url, &body).await else {
+        let e = "browser login failed (FlareSolverr disabled or unavailable)".to_string();
+        parser_log::write(TRACKER_NAME, format!("TakeLogin failed: {e}"));
+        set_login_error(Some(e));
+        return None;
+    };
+    let lines: Vec<String> = r.cookies.iter().map(|(k, v)| format!("{k}={v}")).collect();
+    let cookie = cookie_from_set_cookies(&lines);
+    if cookie.is_none() {
+        let hint = if parser::is_logged_in(&r.body) {
+            "logged-in page without uid/pass"
+        } else if r.body.contains("Не найдено имя пользователя") {
+            "unknown username (login.u must be the kinozal nickname, not e-mail)"
+        } else if r.body.contains("Неверный пароль") {
+            "wrong password"
+        } else {
+            "wrong login/password?"
+        };
+        let e = format!("browser login: no uid/pass cookies, status={}, {hint}", r.status);
+        parser_log::write(TRACKER_NAME, format!("TakeLogin failed: {e}"));
+        set_login_error(Some(e));
+    }
+    cookie
 }
 
 async fn ensure_logged_in() -> bool {

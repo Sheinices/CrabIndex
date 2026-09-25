@@ -14,10 +14,24 @@ use std::sync::Arc;
 use crate::conf;
 use crate::log::{self, cat};
 
+/// Result of a form POST made inside the browser: page after redirects and the
+/// browser's cookies for the host (login flows read `uid` / `pass` / session cookies).
+#[derive(Clone, Debug, Default)]
+pub struct BrowserPost {
+    pub status: u16,
+    pub body: String,
+    pub cookies: Vec<(String, String)>,
+}
+
 #[async_trait]
 pub trait ChallengeSolver: Send + Sync {
     /// Fetch a page through the browser / cffetch fast path. `None` when it failed.
     async fn fetch(&self, url: &str, cookie: Option<&str>, referer: Option<&str>, headers: &[(String, String)]) -> Option<String>;
+
+    /// POST an `application/x-www-form-urlencoded` body from the host's browser session.
+    async fn post_form(&self, _url: &str, _form: &str) -> Option<BrowserPost> {
+        None
+    }
 }
 
 static SOLVER: OnceCell<Arc<dyn ChallengeSolver>> = OnceCell::new();
@@ -134,4 +148,14 @@ pub async fn fetch(url: &str, cookie: Option<&str>, referer: Option<&str>, heade
     }
     let s = SOLVER.get()?.clone();
     s.fetch(url, cookie, referer, headers).await.filter(|b| !b.trim().is_empty())
+}
+
+/// Form POST via the registered solver (browser), for logins behind Cloudflare.
+/// `None` when disabled / not registered / the browser failed.
+pub async fn post_form(url: &str, form: &str) -> Option<BrowserPost> {
+    if !solver_enabled() {
+        return None;
+    }
+    let s = SOLVER.get()?.clone();
+    s.post_form(url, form).await
 }
