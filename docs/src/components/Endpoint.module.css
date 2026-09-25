@@ -1,0 +1,40 @@
+.endpoint {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  padding: 0.6rem 0.8rem;
+  margin: 0.5rem 0 1rem;
+  border-radius: 10px;
+  border: 1px solid var(--ifm-color-emphasis-300);
+  background: var(--ifm-background-surface-color);
+}
+
+.method {
+  font-weight: 700;
+  font-size: 0.75rem;
+  padding: 0.15rem 0.5rem;
+  border-radius: 6px;
+  color: #fff;
+  background: #2e8555;
+}
+
+.method[data-method='POST'] {
+  background: #1f6feb;
+}
+
+.method[data-method='ANY'] {
+  background: #8250df;
+}
+
+.path {
+  background: transparent;
+  border: none;
+  padding: 0;
+  font-size: 0.95rem;
+}
+
+.desc {
+  color: var(--ifm-color-emphasis-700);
+  font-size: 0.9rem;
+}

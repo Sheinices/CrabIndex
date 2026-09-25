@@ -1,0 +1,42 @@
+{
+  "version.label": {
+    "message": "Next",
+    "description": "The label for version current"
+  },
+  "sidebar.guide.category.Начало работы": {
+    "message": "Начало работы",
+    "description": "The label for category 'Начало работы' in sidebar 'guide'"
+  },
+  "sidebar.guide.category.Концепции": {
+    "message": "Концепции",
+    "description": "The label for category 'Концепции' in sidebar 'guide'"
+  },
+  "sidebar.guide.category.Конфигурация": {
+    "message": "Конфигурация",
+    "description": "The label for category 'Конфигурация' in sidebar 'guide'"
+  },
+  "sidebar.guide.category.Развёртывание": {
+    "message": "Развёртывание",
+    "description": "The label for category 'Развёртывание' in sidebar 'guide'"
+  },
+  "sidebar.guide.category.Эксплуатация": {
+    "message": "Эксплуатация",
+    "description": "The label for category 'Эксплуатация' in sidebar 'guide'"
+  },
+  "sidebar.guide.category.Разработка": {
+    "message": "Разработка",
+    "description": "The label for category 'Разработка' in sidebar 'guide'"
+  },
+  "sidebar.trackers.category.Все трекеры": {
+    "message": "Все трекеры",
+    "description": "The label for category 'Все трекеры' in sidebar 'trackers'"
+  },
+  "sidebar.api.category.Поиск": {
+    "message": "Поиск",
+    "description": "The label for category 'Поиск' in sidebar 'api'"
+  },
+  "sidebar.api.category.Управление": {
+    "message": "Управление",
+    "description": "The label for category 'Управление' in sidebar 'api'"
+  }
+}

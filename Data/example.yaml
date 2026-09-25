@@ -1,0 +1,419 @@
+---
+# Full example config (example.yaml). Copy to init.yaml or init.conf to use.
+# Config priority: init.yaml > init.conf. If both exist, init.yaml is used.
+
+listenip: any
+listenport: 9117
+apikey: "" # Ключ авторизации API (пусто - без проверки)
+devkey: "" # Пароль админ-панели и ключ для /dev/, /cron/, /jsondb из интернета (пусто, сгенерируется при первом запуске)
+
+# Админ-панель: вход по адресу http://<сервер>:9117{path}?{token}, затем пароль devkey.
+# Пустые token/devkey генерируются при первом запуске и записываются в этот файл
+# (адрес и devkey выводятся в лог; повторно: `crabindex admin`). Путь при генерации
+# можно задать переменной окружения CRABINDEX_ADMIN_PATH.
+admin:
+  enable: true
+  path: /admin # один сегмент [a-z0-9_-], 2-32 символа, не /api, /cron, /stats и т.п.
+  token: "" # [A-Za-z0-9]{18}, генерируется автоматически
+  sessionHours: 12 # время жизни сессии после входа
+
+# WAF: фильтр запросов до роутинга (реальный IP клиента; X-Forwarded-For доверяется только от loopback-прокси).
+# Порядок: loopback (и LAN при whitelistLan) → whitelist → blacklist/бан (403) → User-Agent (403 + бан)
+# → trapPaths (404 + бан) → rateLimit (429 + Retry-After + бан).
+# Списки blacklist/whitelist и баны хранятся не здесь, а в Data/waf.json (управляются из админ-панели).
+waf:
+  enable: true
+  logRequests: true # журнал запросов и статистика в памяти (сбрасываются при перезапуске)
+  historySize: 5000 # сколько последних запросов держать в памяти (0-100000)
+  rateLimit:
+    enable: true
+    perMinute: 300 # запросов с одного IP за скользящую минуту
+    banMinutes: 15 # автоматический бан при превышении
+  trapPaths: # приманки для сканеров (префикс, без учёта регистра): обращение банит IP на trapBanMinutes
+    - /.env
+    - /wp-admin
+    - /wp-login.php
+    - /.git/
+    - /phpmyadmin
+  trapBanMinutes: 1440
+  blockUserAgents: [] # regex без учёта регистра, например ["sqlmap", "nikto", "masscan"]
+  whitelistLan: true # LAN/loopback никогда не ограничиваются и не банятся
+
+# Cloudflare bypass via FlareSolverr (required for Rutracker when no Worker alias).
+# Host-run / host-network FS: 127.0.0.1. CrabIndex on compose bridge + FS host network:
+# http://host.docker.internal:8191/v1 (extra_hosts host.docker.internal:host-gateway).
+# crawlUrl: second FlareSolverr (PORT=8193) for ParseAll/UpdateTasks. Empty = same as url.
+# Bridge-only FS (no WARP): http://flaresolverr:8191/v1
+# VPS/datacenter: set PROXY_URL on the FlareSolverr container (not in this block).
+flaresolverr:
+  enable: true
+  url: http://127.0.0.1:8191/v1
+  crawlUrl: http://127.0.0.1:8193/v1
+  maxTimeoutMs: 300000
+  sessionIdleMinutes: 120
+  browserTimeoutRetries: 1
+  recycleAfterTimeouts: 3
+  guardedHours: 6
+  recheckMinutes: 30
+
+# Fast path after FlareSolverr solve: ghcr.io/jacred-fdb/cffetch (host network).
+# Compose CrabIndex on bridge: http://host.docker.internal:8192/fetch
+# Same WARP SOCKS as FlareSolverr PROXY_URL. Master 2026-09-10: ~0.18s vs ~0.5-1.2s goto.
+cffetch:
+  enable: true
+  url: http://127.0.0.1:8192/fetch
+  impersonate: chrome136
+  timeoutSeconds: 25
+  maxConcurrent: 4
+  clearanceMinutes: 60
+  proxy: socks5://127.0.0.1:20001
+
+mergeduplicates: true
+mergenumduplicates: true # Объединять дубликаты по номеру (серии и т.п.)
+openstats: true
+opensync: true
+web: true # Раздавать статику (веб-интерфейс)
+logFdb: true
+logFdbRetentionDays: 7
+logFdbMaxSizeMb: 0
+logFdbMaxFiles: 0
+logParsers: true
+syncapi: https://sync.crab.rip
+synctrackers:
+  - anibelka
+  - anidub
+  - anifilm
+  - aniliberty
+  - animelayer
+  - anistar
+  - baibako
+  - bitru
+  - kinozal
+  - knaben
+  - korsars
+  - leproduction
+  - lostfilm
+  - mazepa
+  - megapeer
+  - nnmclub
+  - rudub
+  - rutor
+  - rutracker
+  - selezen
+  - subsplease
+  - toloka
+  - torrentby
+  - ultradox
+  - viruseproject
+# Retired trackers - do not add to synctrackers; keep in disable_trackers
+disable_trackers: []
+syncsport: true
+syncspidr: true
+maxreadfile: 250
+fdbPathLevels: 2 # Уровни вложенности каталогов fdb
+tracks: false # Включить сбор метаданных треков (tsuri)
+trackslog: true # Логи модуля tracks (Data/log/tracks.log)
+trackscategory: crabindex # Категория для торрентов из crabindex (рекомендуется задавать уникально для каждого инстанса)
+tracksdelay: 20000 # Задержка между запросами к tsuri, мс
+tracksatempt: 20 # Количество неудачных попыток извлечь дорожки, после этого торрент исключается из tracks
+tracksconcurrency: 2 # Глобальный лимит параллельных анализов к tsuri
+tracksffptimeout: 60 # Таймаут HTTP /ffp при sid > 0, сек
+tracksffptimeoutnosid: 30 # Таймаут HTTP /ffp при sid == 0, сек
+tracksreadtimeout: 30 # Ожидание file_stats от TorrServer, сек
+trackspeerwaittimeout: 30 # Проверка сидов/bytes_read перед /ffp, сек
+tracksffpretry: 2 # Доп. file id для /ffp за одну попытку
+tracksminbufferkb: 512 # Мин. буфер перед /ffp, KB
+tracksorphansweepmin: 15 # Интервал rem сирот в trackscategory, мин
+tracksmod: 0 # Режим треков: 0 - все, 1 - только за текущие сутки
+tracksinterval:
+  task1: 60 # Интервал запуска задачи tracks за последние сутки, мин
+  task0: 180 # Интервал запуска всех остальных задач, мин
+tsuri:
+  - http://127.0.0.1:8090
+timeStatsUpdate: 15
+timeSync: 120
+timeSyncSpidr: 360
+saveCheckpointEveryNBatches: 5
+evercache:
+  enable: false
+  validHour: 1
+  maxOpenWriteTask: 200
+  dropCacheTake: 200
+
+# Combined search (Prisma/Lampa Jackett JSON, Torznab XML - shared pipeline)
+search:
+  mergeV1: auto # false | auto (v1 fuzzy только fuzzy mode) | true
+  maxV1Pairs: 4 # Лимит v1-пар при mergeV1=auto в fuzzy mode
+  v1Sort: sid # sid (seeders), pir, size; также IMDB/KP exact v1
+  stripTrailingYear: true # Fuzzy: доп. запрос без года в конце
+  stripSeasonEpisode: true # Fuzzy: доп. запрос без S01/S01E01 (AIOStreams)
+  skipSeasonEpisodeFilter: false # true - не фильтровать season/ep (AIOStreams фильтрует сам)
+  skipCatFilter: true # Не фильтровать cat/Category[] на сервере (Prisma/Lampa фильтрует сама)
+
+# Alloha TV API v2 - resolve KP/IMDB/TMDB (tt… / kp… / tmdb… / themoviedb.org URL) to titles for FileDB search
+alloha:
+  enable: true
+  baseUrl: https://apbugall.org
+  token: "04941a9a3ca3ac16e2b4327347bbc1" # Bearer; redact in /settings
+  timeoutSeconds: 10
+  cacheHours: 24
+  filterByYear: true # when client year absent, keep FileDB hits with relased ±1 of Alloha year
+
+# Torznab XML (Sonarr/Radarr/Prowlarr). Не влияет на Prisma/Lampa Jackett JSON.
+torznab:
+  enable: true # false → 404 на /torznab/api и Prowlarr meta
+  enrichTitles: true # Озвучки в Torznab XML <title>
+
+# Console logging (journalctl). File logs: Data/log/* - logFdb, logParsers, trackslog (on by default).
+logging:
+  tracksConsoleDetail: false
+  cronSkipFastMs: 100
+  categories:
+    parsers: None # parser detail → Data/log/{tracker}.log only
+
+# Tracker settings (optional; defaults are used if omitted)
+Rutor:
+  host: http://rutor.info
+  alias: "" # e.g. http://rutor....onion
+  useproxy: false
+  reqMinute: 8
+  parseDelay: 7000
+  log: true
+
+Megapeer:
+  host: http://megapeer.vip
+  alias: ""
+  useproxy: false
+  reqMinute: 5
+  parseDelay: 12000
+  log: true
+
+TorrentBy:
+  host: https://torrent.by
+  alias: "" # e.g. https://torrentby.workers.dev
+  useproxy: false
+  reqMinute: 8
+  parseDelay: 7000
+  log: true
+
+Kinozal:
+  host: https://kinozal.guru
+  useproxy: false
+  reqMinute: 8
+  parseDelay: 7000
+  log: true
+  # Static session cookie (optional). If set, login.u/p are not required.
+  # cookie: "uid=12345678; pass=XXXXXXXX;"
+  login:
+    u: ""
+    p: ""
+
+NNMClub:
+  host: https://nnmclub.to
+  alias: "" # e.g. http://nnmclub....onion
+  useproxy: false
+  reqMinute: 8
+  parseDelay: 7000
+  log: true
+
+# BitRu official API.
+# cron parse (newest page): /cron/bitru/parse
+# cron backfill (older archive, persisted cursor): /cron/bitru/backfill?pages=20 (max 50)
+# Live after_date = older-than (official BitRu docs invert the label).
+Bitru:
+  host: https://bitru.org
+  alias: ""
+  useproxy: false
+  log: true
+
+Toloka:
+  host: https://toloka.to
+  useproxy: false
+  reqMinute: 8
+  parseDelay: 7000
+  log: true
+  login:
+    u: ""
+    p: ""
+
+Mazepa:
+  host: https://mazepa.to
+  useproxy: false
+  reqMinute: 8
+  parseDelay: 7000
+  log: true
+  login:
+    u: ""
+    p: ""
+
+Rutracker:
+  host: https://rutracker.org
+  alias: "" # optional Worker/onion when flaresolverr.enable=false; FDB urls stay on host
+  useproxy: false
+  reqMinute: 30
+  parseDelay: 2000
+  topicFetchAttempts: 5
+  log: true
+
+Selezen:
+  host: https://open.selezen.org
+  cookie: null
+  useproxy: false
+  reqMinute: 8
+  parseDelay: 7000
+  log: true
+  login:
+    u: ""
+    p: ""
+
+Animelayer:
+  host: https://animelayer.ru
+  useproxy: false
+  reqMinute: 8
+  parseDelay: 7000
+  log: true
+  cookie: "" # Статический cookie (если указан, используется вместо логина)
+  login: # Альтернатива cookie: логин и пароль (предпочтительно)
+    u: ""
+    p: ""
+
+Anidub:
+  host: https://tr.anidub.com
+  useproxy: false
+  reqMinute: 8
+  parseDelay: 7000
+  log: true
+
+Anistar:
+  host: https://anistar.org
+  alias: https://v30.astar.bz
+  useproxy: false
+  reqMinute: 8
+  parseDelay: 7000
+  log: true
+  # alias = live mirror for fetch; host = canonical FDB urls. Cookie optional on v30.
+  cookie: ""
+
+# Anonymous only - do not set cookie/login (passkeys must not enter magnets).
+Anibelka:
+  host: https://anibelka.com
+  useproxy: false
+  reqMinute: 8
+  parseDelay: 7000
+  log: true
+
+Aniliberty:
+  host: https://aniliberty.top
+  useproxy: false
+  reqMinute: 8
+  parseDelay: 7000
+  log: true
+
+Anifilm:
+  host: https://anifilm.pro
+  useproxy: false
+  reqMinute: 8
+  parseDelay: 7000
+  log: true
+  # Static session cookie (optional). If set, login.u/p are not required.
+  cookie: "" # пример: "XSRF-TOKEN=example_xsrf; anifilm_session=example_session"
+  login:
+    u: ""
+    p: ""
+Leproduction:
+  host: https://www.le-production.online
+  useproxy: false
+  reqMinute: 8
+  parseDelay: 7000
+  log: true
+
+Viruseproject:
+  host: https://viruseproject.tv
+  useproxy: false
+  reqMinute: 8
+  parseDelay: 7000
+  log: true
+
+# Referer must look like google/yandex search (own origin → 503).
+Ultradox:
+  host: https://ultradox.vip
+  useproxy: false
+  reqMinute: 8
+  parseDelay: 7000
+  log: true
+
+Korsars:
+  host: https://korsars.pro
+  alias: "" # optional mirror; FDB urls stay on host, requests use rqHost
+  useproxy: false
+  reqMinute: 8
+  parseDelay: 7000
+  log: true
+  # Static bb_data cookie (optional). If set, login.u/p are not required.
+  cookie: "" # пример: "bb_data=1-exampleUserId-exampleHash-exampleIp-exampleUaHash"
+  login:
+    u: ""
+    p: ""
+Knaben:
+  host: https://api.knaben.org
+  useproxy: false
+  reqMinute: 120
+  log: true
+
+Baibako:
+  host: http://baibako.tv
+  useproxy: false
+  reqMinute: 8
+  parseDelay: 7000
+  log: true
+  cookie: "" # пример: "PHPSESSID=your_session_id; uid=your_user_id; pass=your_pass_hash"
+  login:
+    u: ""
+    p: ""
+
+# RuDub (ex-BaibaKoTV). Host mirrors rotate (rN.rudub.world). Parses HD 1080 / HD 2160 only.
+Rudub:
+  host: https://r4.rudub.world
+  alias: ""
+  useproxy: false
+  reqMinute: 8
+  parseDelay: 7000
+  log: true
+  cookie: "" # пример: "PHPSESSID=your_session_id; uid=your_user_id; pass=your_pass_hash"
+  login:
+    u: ""
+    p: ""
+# SubsPlease - public anime API; 1080p magnets only (batches via ParseShows).
+SubsPlease:
+  host: https://subsplease.org
+  useproxy: false
+  reqMinute: 30
+  parseDelay: 1000
+  log: true
+
+Lostfilm:
+  host: https://www.lostfilm.tv
+  cookie: "" # пример: "lf_loyal_person=0; lf_session=test_session_value; lf_udv=test_udv_value; PHPSESSID=test_phpsessid_value"
+  useproxy: false
+  reqMinute: 8
+  parseDelay: 7000
+  log: true
+
+proxy:
+  pattern: ""
+  useAuth: false
+  BypassOnLocal: false
+  username: ""
+  password: ""
+  list:
+    - ip:port
+    - socks5://ip:port
+
+globalproxy:
+  - pattern: "\\.onion"
+    useAuth: false
+    BypassOnLocal: false
+    username: ""
+    password: ""
+    list:
+      - socks5://127.0.0.1:9050

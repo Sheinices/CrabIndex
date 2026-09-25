@@ -1,0 +1,493 @@
+{
+ "listenip": "any",
+ "listenport": 9117,
+ "apikey": null,
+ "devkey": "devkey",
+ "mergeduplicates": true,
+ "mergenumduplicates": true,
+ "openstats": true,
+ "opensync": true,
+ "tracks": false,
+ "web": true,
+ "tracksmod": 0,
+ "tracksdelay": 20000,
+ "trackslog": true,
+ "tracksatempt": 20,
+ "tracksconcurrency": 2,
+ "tracksffptimeout": 60,
+ "tracksffptimeoutnosid": 30,
+ "tracksreadtimeout": 30,
+ "trackspeerwaittimeout": 30,
+ "tracksffpretry": 2,
+ "tracksminbufferkb": 512,
+ "tracksorphansweepmin": 15,
+ "trackscategory": "crabindex",
+ "tracksinterval": {
+  "task0": 180,
+  "task1": 60
+ },
+ "tsuri": [
+  "http://127.0.0.1:8090"
+ ],
+ "logFdb": false,
+ "logFdbRetentionDays": 7,
+ "logFdbMaxSizeMb": 0,
+ "logFdbMaxFiles": 0,
+ "logParsers": true,
+ "syncapi": null,
+ "synctrackers": null,
+ "disable_trackers": [],
+ "syncsport": true,
+ "syncspidr": true,
+ "maxreadfile": 200,
+ "evercache": {
+  "enable": true,
+  "validHour": 1,
+  "maxOpenWriteTask": 2000,
+  "dropCacheTake": 200
+ },
+ "fdbPathLevels": 2,
+ "timeStatsUpdate": 90,
+ "timeSync": 60,
+ "timeSyncSpidr": 60,
+ "saveCheckpointEveryNBatches": 5,
+ "Rutor": {
+  "host": "http://rutor.info",
+  "alias": null,
+  "cookie": null,
+  "log": true,
+  "useproxy": false,
+  "reqMinute": 8,
+  "topicFetchAttempts": 5,
+  "login": {
+   "u": null,
+   "p": null
+  },
+  "parseDelay": 7000
+ },
+ "Megapeer": {
+  "host": "http://megapeer.vip",
+  "alias": null,
+  "cookie": null,
+  "log": true,
+  "useproxy": false,
+  "reqMinute": 5,
+  "topicFetchAttempts": 5,
+  "login": {
+   "u": null,
+   "p": null
+  },
+  "parseDelay": 12000
+ },
+ "TorrentBy": {
+  "host": "https://torrent.by",
+  "alias": null,
+  "cookie": null,
+  "log": true,
+  "useproxy": false,
+  "reqMinute": 8,
+  "topicFetchAttempts": 5,
+  "login": {
+   "u": null,
+   "p": null
+  },
+  "parseDelay": 7000
+ },
+ "Kinozal": {
+  "host": "https://kinozal.guru",
+  "alias": null,
+  "cookie": null,
+  "log": true,
+  "useproxy": false,
+  "reqMinute": 8,
+  "topicFetchAttempts": 5,
+  "login": {
+   "u": null,
+   "p": null
+  },
+  "parseDelay": 7000
+ },
+ "NNMClub": {
+  "host": "https://nnmclub.to",
+  "alias": null,
+  "cookie": null,
+  "log": true,
+  "useproxy": false,
+  "reqMinute": 8,
+  "topicFetchAttempts": 5,
+  "login": {
+   "u": null,
+   "p": null
+  },
+  "parseDelay": 7000
+ },
+ "Bitru": {
+  "host": "https://bitru.org",
+  "alias": null,
+  "cookie": null,
+  "log": true,
+  "useproxy": false,
+  "reqMinute": 8,
+  "topicFetchAttempts": 5,
+  "login": {
+   "u": null,
+   "p": null
+  },
+  "parseDelay": 7000
+ },
+ "Toloka": {
+  "host": "https://toloka.to",
+  "alias": null,
+  "cookie": null,
+  "log": true,
+  "useproxy": false,
+  "reqMinute": 8,
+  "topicFetchAttempts": 5,
+  "login": {
+   "u": null,
+   "p": null
+  },
+  "parseDelay": 7000
+ },
+ "Mazepa": {
+  "host": "https://mazepa.to",
+  "alias": null,
+  "cookie": null,
+  "log": true,
+  "useproxy": false,
+  "reqMinute": 8,
+  "topicFetchAttempts": 5,
+  "login": {
+   "u": null,
+   "p": null
+  },
+  "parseDelay": 7000
+ },
+ "Rutracker": {
+  "host": "https://rutracker.org",
+  "alias": null,
+  "cookie": null,
+  "log": true,
+  "useproxy": false,
+  "reqMinute": 8,
+  "topicFetchAttempts": 5,
+  "login": {
+   "u": null,
+   "p": null
+  },
+  "parseDelay": 7000
+ },
+ "Selezen": {
+  "host": "https://use.selezen.club",
+  "alias": null,
+  "cookie": null,
+  "log": true,
+  "useproxy": false,
+  "reqMinute": 8,
+  "topicFetchAttempts": 5,
+  "login": {
+   "u": null,
+   "p": null
+  },
+  "parseDelay": 7000
+ },
+ "Lostfilm": {
+  "host": "https://www.lostfilm.tv",
+  "alias": null,
+  "cookie": null,
+  "log": true,
+  "useproxy": false,
+  "reqMinute": 8,
+  "topicFetchAttempts": 5,
+  "login": {
+   "u": null,
+   "p": null
+  },
+  "parseDelay": 7000
+ },
+ "Animelayer": {
+  "host": "https://animelayer.ru",
+  "alias": null,
+  "cookie": null,
+  "log": true,
+  "useproxy": false,
+  "reqMinute": 8,
+  "topicFetchAttempts": 5,
+  "login": {
+   "u": null,
+   "p": null
+  },
+  "parseDelay": 7000
+ },
+ "Anidub": {
+  "host": "https://tr.anidub.com",
+  "alias": null,
+  "cookie": null,
+  "log": true,
+  "useproxy": false,
+  "reqMinute": 8,
+  "topicFetchAttempts": 5,
+  "login": {
+   "u": null,
+   "p": null
+  },
+  "parseDelay": 7000
+ },
+ "Anistar": {
+  "host": "https://anistar.org",
+  "alias": null,
+  "cookie": null,
+  "log": true,
+  "useproxy": false,
+  "reqMinute": 8,
+  "topicFetchAttempts": 5,
+  "login": {
+   "u": null,
+   "p": null
+  },
+  "parseDelay": 7000
+ },
+ "Anibelka": {
+  "host": "https://anibelka.com",
+  "alias": null,
+  "cookie": null,
+  "log": true,
+  "useproxy": false,
+  "reqMinute": 8,
+  "topicFetchAttempts": 5,
+  "login": {
+   "u": null,
+   "p": null
+  },
+  "parseDelay": 7000
+ },
+ "Aniliberty": {
+  "host": "https://aniliberty.top",
+  "alias": null,
+  "cookie": null,
+  "log": true,
+  "useproxy": false,
+  "reqMinute": 8,
+  "topicFetchAttempts": 5,
+  "login": {
+   "u": null,
+   "p": null
+  },
+  "parseDelay": 7000
+ },
+ "Anifilm": {
+  "host": "https://anifilm.pro",
+  "alias": null,
+  "cookie": null,
+  "log": true,
+  "useproxy": false,
+  "reqMinute": 8,
+  "topicFetchAttempts": 5,
+  "login": {
+   "u": null,
+   "p": null
+  },
+  "parseDelay": 7000
+ },
+ "Leproduction": {
+  "host": "https://www.le-production.online",
+  "alias": null,
+  "cookie": null,
+  "log": true,
+  "useproxy": false,
+  "reqMinute": 8,
+  "topicFetchAttempts": 5,
+  "login": {
+   "u": null,
+   "p": null
+  },
+  "parseDelay": 7000
+ },
+ "Viruseproject": {
+  "host": "https://viruseproject.tv",
+  "alias": null,
+  "cookie": null,
+  "log": true,
+  "useproxy": false,
+  "reqMinute": 8,
+  "topicFetchAttempts": 5,
+  "login": {
+   "u": null,
+   "p": null
+  },
+  "parseDelay": 7000
+ },
+ "Korsars": {
+  "host": "https://korsars.pro",
+  "alias": null,
+  "cookie": null,
+  "log": true,
+  "useproxy": false,
+  "reqMinute": 8,
+  "topicFetchAttempts": 5,
+  "login": {
+   "u": null,
+   "p": null
+  },
+  "parseDelay": 7000
+ },
+ "Ultradox": {
+  "host": "https://ultradox.vip",
+  "alias": null,
+  "cookie": null,
+  "log": true,
+  "useproxy": false,
+  "reqMinute": 8,
+  "topicFetchAttempts": 5,
+  "login": {
+   "u": null,
+   "p": null
+  },
+  "parseDelay": 7000
+ },
+ "Knaben": {
+  "host": "https://api.knaben.org",
+  "alias": null,
+  "cookie": null,
+  "log": true,
+  "useproxy": false,
+  "reqMinute": 8,
+  "topicFetchAttempts": 5,
+  "login": {
+   "u": null,
+   "p": null
+  },
+  "parseDelay": 7000
+ },
+ "Baibako": {
+  "host": "http://baibako.tv",
+  "alias": null,
+  "cookie": null,
+  "log": true,
+  "useproxy": false,
+  "reqMinute": 8,
+  "topicFetchAttempts": 5,
+  "login": {
+   "u": null,
+   "p": null
+  },
+  "parseDelay": 7000
+ },
+ "Rudub": {
+  "host": "https://r4.rudub.world",
+  "alias": null,
+  "cookie": null,
+  "log": true,
+  "useproxy": false,
+  "reqMinute": 8,
+  "topicFetchAttempts": 5,
+  "login": {
+   "u": null,
+   "p": null
+  },
+  "parseDelay": 7000
+ },
+ "SubsPlease": {
+  "host": "https://subsplease.org",
+  "alias": null,
+  "cookie": null,
+  "log": true,
+  "useproxy": false,
+  "reqMinute": 8,
+  "topicFetchAttempts": 5,
+  "login": {
+   "u": null,
+   "p": null
+  },
+  "parseDelay": 7000
+ },
+ "flaresolverr": {
+  "enable": false,
+  "url": "http://127.0.0.1:8191/v1",
+  "crawlUrl": "",
+  "maxTimeoutMs": 300000,
+  "sessionIdleMinutes": 120,
+  "browserTimeoutRetries": 1,
+  "recycleAfterTimeouts": 3,
+  "guardedHours": 6,
+  "recheckMinutes": 30
+ },
+ "cffetch": {
+  "enable": false,
+  "url": "http://127.0.0.1:8192/fetch",
+  "impersonate": "chrome136",
+  "timeoutSeconds": 25,
+  "maxConcurrent": 4,
+  "clearanceMinutes": 60,
+  "proxy": ""
+ },
+ "proxy": {
+  "pattern": null,
+  "useAuth": false,
+  "BypassOnLocal": false,
+  "username": null,
+  "password": null,
+  "list": null
+ },
+ "search": {
+  "mergeV1": "auto",
+  "maxV1Pairs": 4,
+  "v1Sort": "sid",
+  "stripTrailingYear": true,
+  "stripSeasonEpisode": true,
+  "skipSeasonEpisodeFilter": false,
+  "skipCatFilter": true
+ },
+ "alloha": {
+  "enable": true,
+  "baseUrl": "https://apbugall.org",
+  "token": "sample-alloha-token",
+  "timeoutSeconds": 8,
+  "cacheHours": 24,
+  "filterByYear": true
+ },
+ "torznab": {
+  "enable": true,
+  "enrichTitles": true
+ },
+ "logging": {
+  "defaultLevel": "Information",
+  "consoleTimestamp": false,
+  "categories": {
+   "parsers": "None"
+  },
+  "tracksConsoleDetail": false,
+  "cronSkipFastMs": 100
+ },
+ "globalproxy": null,
+ "admin": {
+  "enable": true,
+  "path": "/admin",
+  "token": "Z0mt0N7r2hoUM2TuOk",
+  "sessionHours": 12
+ },
+ "waf": {
+  "enable": true,
+  "logRequests": true,
+  "historySize": 5000,
+  "rateLimit": {
+   "enable": true,
+   "perMinute": 300,
+   "banMinutes": 15
+  },
+  "trapPaths": [
+   "/.env",
+   "/wp-admin",
+   "/wp-login.php",
+   "/.git/",
+   "/phpmyadmin"
+  ],
+  "trapBanMinutes": 1440,
+  "blockUserAgents": [
+   "sqlmap",
+   "nikto",
+   "masscan"
+  ],
+  "whitelistLan": true
+ }
+}

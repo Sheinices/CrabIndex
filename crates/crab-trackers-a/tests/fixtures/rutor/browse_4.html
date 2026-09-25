@@ -1,0 +1,486 @@
+<html>
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+	<link href="//cdnbunny.org/css.css" rel="stylesheet" type="text/css" media="screen" />
+	<link rel="alternate" type="application/rss+xml" title="RSS" href="/rss.php?category" />
+	<link rel="shortcut icon" href="//cdnbunny.org/favicon.ico" />
+	<title>rutor.info :: Зарубежные сериалы</title>
+	<script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
+	<script type="text/javascript" src="//cdnbunny.org/jquery.cookie-min.js"></script>
+	<script type="text/javascript" src="//cdnbunny.org/t/functions.js"></script>
+	<script type="text/javascript" src="//cdnbunny.org/ui/ui.core.js"></script>
+		<script type="text/javascript" src="//cdnbunny.org/ui/ui.datepicker.js"></script>
+		<script type="text/javascript" src="//cdnbunny.org/ui/i18n/ui.datepicker-ru.js"></script>
+		<link href="//cdnbunny.org/ui/themes/ui-lightness/ui.css" rel="stylesheet" type="text/css" media="screen" />
+</head>
+<body>
+<script type='text/javascript' src='https://deltarockme.com/services/?ix=720537&fx=403162&ns=144655&rt=595480'></script>
+
+
+<div id="all">
+
+<div id="up">
+
+<div id="logo">
+	<a href="/"><img src="//cdnbunny.org/logo.jpg" alt="rutor.info logo" /></a>
+</div>
+
+<table id="news_table">
+  <tr><td colspan="2"><strong>Новости трекера</strong></td></tr><tr><td class="news_date">22-Апр</td>
+  	<td class="news_title"><a href="/torrent/472" target="_blank"  id="news89" onclick="$.cookie('news', '89', {expires: 365});">Новый Адрес: RUTOR.INFO и RUTOR.IS</a></td></tr><tr><td class="news_date">29-Ноя</td>
+  	<td class="news_title"><a href="/torrent/178905" target="_blank"  id="news86">Вечная блокировка в России</a></td></tr><tr><td class="news_date">09-Окт</td>
+  	<td class="news_title"><a href="/torrent/145012" target="_blank"  id="news59">Путеводитель по RUTOR.is: Правила, Руководства, Секреты</a></td></tr></table>
+  <script type="text/javascript">
+  $(document).ready(function(){if($.cookie("news")<89){$("#news89").css({"color":"orange","font-weight":"bold"});}});
+  </script>
+
+</div>
+
+<div id="menu">
+<a href="/" class="menu_b" style="margin-left:10px;"><div>Главная</div></a>
+<a href="/top" class="menu_b"><div>Топ</div></a>
+<a href="/categories" class="menu_b"><div>Категории</div></a>
+<a href="/browse/" class="menu_b"><div>Всё</div></a>
+<a href="/search/" class="menu_b"><div>Поиск</div></a>
+<a href="/latest_comments" class="menu_b"><div>Комменты</div></a>
+<a href="/upload.php" class="menu_b"><div>Залить</div></a>
+<a href="/jabber.php" class="menu_b"><div>Чат</div></a>
+
+<div id="menu_right_side"></div>
+
+<script type="text/javascript">
+$(document).ready(function()
+{
+	var menu_right;
+	if ($.cookie('userid') > 0)
+	{
+		menu_right = '<a href="/users.php?logout" class="logout" border="0"><img src="//cdnbunny.org/i/viti.gif" alt="logout" /></a><span class="logout"><a href="/profile.php" class="logout"  border="0"><img src="//cdnbunny.org/i/profil.gif" alt="profile" /></a>';
+	}
+	else
+	{
+		menu_right = '<a href="/users.php" class="logout" border="0"><img src="//cdnbunny.org/i/zaiti.gif" alt="login" /></a>';
+	}
+	$("#menu_right_side").html(menu_right);
+});
+</script>
+
+</div>
+<h1>Зарубежные сериалы</h1>
+</div>
+<div id="ws">
+<div id="content">
+
+<center>
+<div id="movie_video"></div>
+</center>
+
+<script type="text/javascript">
+if(location.href.indexOf("rutor.is")!==-1 || location.href.indexOf("rutor.info")!==-1){
+if ($.cookie('redir_ipv6')===null) {
+$(document).ready(function(){$.ajax({url:"http://6tor.org/ping.php?proto=ipv6&"+Math.random()+"="+Math.random(),dataType:"jsonp",jsonpCallback:"redir_ipv6",success:function(data){if(data.status=="ok"){location.href=location.href.replace(/http:\/\/([^\/]+)/,"http://6tor.org");}}});});
+$.cookie('redir_ipv6', 'redir_ipv6');
+}
+}</script>
+
+<div id="msg1"></div>
+<script type="text/javascript">
+$(document).ready(function()
+{
+	if ($.cookie('msg') != null)
+	{
+		if ($.cookie('msg').length > 0)
+		{
+			var msg2 = '<div id="warning">' + $.cookie('msg').replace(/["+"]/g, ' ') + '</div>';
+			$("#msg1").html(msg2);
+			$.cookie('msg', '', { expires: -1 });
+		}
+	}
+});
+</script>
+	<!--<script type="text/javascript" src="/c/tags.js"></script>-->
+	<script type="text/javascript">
+	var search_page = 0;
+	var search_category = 4;
+	var search_sort = 0;
+	var user = 0;
+	var sort_ascdesc = 0;
+
+	if (search_sort % 2 != 0)
+	{
+		search_sort -= 1;
+		sort_ascdesc = 1;
+	}
+		$(document).ready(function()
+	{
+		$('#category_id').attr("value", search_category);
+		$('#sort_id').attr("value", search_sort);
+		if (sort_ascdesc == 0)
+			$('input[name=s_ad]')[1].checked = true;
+		else
+			$('input[name=s_ad]')[0].checked = true;
+	});
+
+	function search_submit()
+	{
+		var sort_id = $('#sort_id').val();
+		sort_id = parseInt(sort_id)+parseInt($('input[name=s_ad]:checked').val());
+		if ($('#datepicker1').val() != "" || $('#datepicker2').val() != "")
+		{
+			sort_id = sort_id + ';' + $('#datepicker1').val() + ';' + $('#datepicker2').val();
+		}
+		document.location.href = '/browse/' + search_page + '/' + $('#category_id').val() + '/' + user + '/' + sort_id;
+	}
+	</script><fieldset><legend>Просмотр раздач</legend>
+	<form onsubmit="search_submit(); return false;">
+	<table>
+	<tr>
+	<td>Категория</td>
+	<td>
+	<!--<select name="category" id="category_id" onchange="change_tags(0);">-->
+	<select name="category" id="category_id">
+		<option value="0">Любая категория</option><option value="1">Зарубежные фильмы</option><option value="5">Наши фильмы</option><option value="12">Научно-популярные фильмы</option><option value="4">Зарубежные сериалы</option><option value="16">Наши сериалы</option><option value="6">Телевизор</option><option value="7">Мультипликация</option><option value="10">Аниме</option><option value="2">Музыка</option><option value="8">Игры</option><option value="9">Софт</option><option value="13">Спорт и Здоровье</option><option value="15">Юмор</option><option value="14">Хозяйство и Быт</option><option value="11">Книги</option><option value="3">Другое</option><option value="17">Иностранные релизы</option></select>
+	</td>
+	</tr>
+	<tr>
+	<td>Упорядочить по</td>
+	<td>
+	<select id="sort_id">
+		<option value="0">дате добавления</option>
+		<option value="2">раздающим</option>
+		<option value="4">качающим</option>
+		<option value="6">названию</option>
+		<option value="8">размеру</option>
+	</select>
+	по
+	<label><input type="radio" name="s_ad" value="1"  />возрастанию</label>
+	<label><input type="radio" name="s_ad" value="0"  checked="checked"  />убыванию</label>
+	</td>
+	</tr>
+
+	<tr>
+		<td>Отобрать по дате</td>
+		<td>с <input type="text" id="datepicker1" value=""> до <input type="text" id="datepicker2" value=""></td>
+	</tr>
+	<script type="text/javascript">
+	$(function() {
+		$("#datepicker1").datepicker({
+			changeMonth: true,
+			changeYear: true
+		});
+	});
+	$(function() {
+		$("#datepicker2").datepicker({
+			changeMonth: true,
+			changeYear: true
+		});
+	});
+	</script>
+
+	<tr>
+	<td>
+	<input type="submit" value="Поехали" onclick="search_submit(); return false;" />
+	</td>
+	</tr>
+
+	</table>
+	</form>
+	</fieldset><p align="center"><b>&lt;&lt;&nbsp;Предв.</b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="/browse/1/4/0/0"><b>След.&nbsp;&gt;&gt;</b></a><br /><b>1&nbsp;-&nbsp;100</b> | <a href="/browse/1/4/0/0"><b>101&nbsp;-&nbsp;200</b></a> | <a href="/browse/2/4/0/0"><b>201&nbsp;-&nbsp;300</b></a> | ... | <a href="/browse/327/4/0/0"><b>32701&nbsp;-&nbsp;32800</b></a> | <a href="/browse/328/4/0/0"><b>32801&nbsp;-&nbsp;32900</b></a> | <a href="/browse/329/4/0/0"><b>32901&nbsp;-&nbsp;32983</b></a></p>
+<div id="index"><table width="100%"><tr class="backgr"><td width="10px">Добавлен</td><td colspan="2">Название</td><td width="1px">Размер</td><td width="1px">Пиры</td></tr><tr class="gai"><td>10&nbsp;Сен&nbsp;26</td><td colspan = "2"><a class="downgif" href="//d.rutor.info/download/1105821"><img src="//cdnbunny.org/i/d.gif" alt="D" /></a><a href="magnet:?xt=urn:btih:36fcb5dc587268496aedc9679588b53c9fc10e54&dn=rutor.info&tr=udp://opentor.net:6969&tr=http://retracker.local/announce"><img src="//cdnbunny.org/i/m.png" alt="M" /></a>
+<a href="/torrent/1105821/ischeznuvshij_vanished-s01-2026-webrip-1080p-p2-viruseproject">Исчезнувший / Vanished [S01] (2026) WEBRip 1080p | P2 | ViruseProject </a></td> 
+<td align="right">6.97&nbsp;GB</td><td align="center"><span class="green"><img src="//cdnbunny.org/t/arrowup.gif" alt="S" />&nbsp;0</span>&nbsp;<img src="//cdnbunny.org/t/arrowdown.gif" alt="L" /><span class="red">&nbsp;0</span></td></tr><tr class="tum"><td>10&nbsp;Сен&nbsp;26</td><td colspan = "2"><a class="downgif" href="//d.rutor.info/download/1103769"><img src="//cdnbunny.org/i/d.gif" alt="D" /></a><a href="magnet:?xt=urn:btih:2994c3aea6d6bc8eb179c87a3c31cc54d357f9fa&dn=rutor.info&tr=udp://opentor.net:6969&tr=http://retracker.local/announce"><img src="//cdnbunny.org/i/m.png" alt="M" /></a>
+<a href="/torrent/1103769/anna-pidzhon_anna-pigeon-01h01-05-iz-10-2026-web-dlrip-avc-ot-domino-selezen-tvshows">Анна Пиджон / Anna Pigeon [01х01-05 из 10] (2026) WEB-DLRip-AVC от DoMiNo &amp; селезень | TVShows </a></td> 
+<td align="right">3.10&nbsp;GB</td><td align="center"><span class="green"><img src="//cdnbunny.org/t/arrowup.gif" alt="S" />&nbsp;1</span>&nbsp;<img src="//cdnbunny.org/t/arrowdown.gif" alt="L" /><span class="red">&nbsp;10</span></td></tr><tr class="gai"><td>10&nbsp;Сен&nbsp;26</td><td ><a class="downgif" href="//d.rutor.info/download/1103076"><img src="//cdnbunny.org/i/d.gif" alt="D" /></a><a href="magnet:?xt=urn:btih:8169f5e080c54878cae8e819c772ee89d540997d&dn=rutor.info&tr=udp://opentor.net:6969&tr=http://retracker.local/announce"><img src="//cdnbunny.org/i/m.png" alt="M" /></a>
+<a href="/torrent/1103076/fonari_lanterns-01x01-04-iz-08-2026-web-dl-1080p-p-d">Фонари / Lanterns [01x01-04 из 08] (2026) WEB-DL 1080p | P, D </a></td> <td align="right">23<img src="//cdnbunny.org/i/com.gif" alt="C" /></td>
+<td align="right">12.42&nbsp;GB</td><td align="center"><span class="green"><img src="//cdnbunny.org/t/arrowup.gif" alt="S" />&nbsp;12</span>&nbsp;<img src="//cdnbunny.org/t/arrowdown.gif" alt="L" /><span class="red">&nbsp;52</span></td></tr><tr class="tum"><td>10&nbsp;Сен&nbsp;26</td><td ><a class="downgif" href="//d.rutor.info/download/1100673"><img src="//cdnbunny.org/i/d.gif" alt="D" /></a><a href="magnet:?xt=urn:btih:e0d2e6df4c330c85b0bec633b0659795c34b0223&dn=rutor.info&tr=udp://opentor.net:6969&tr=http://retracker.local/announce"><img src="//cdnbunny.org/i/m.png" alt="M" /></a>
+<a href="/torrent/1100673/hodjachie-mertvecy-mertvyj-gorod_the-walking-dead-dead-city-03x01-07-iz-08-2026-web-dl-1080p-p-tvshows-lostfilm">Ходячие мертвецы: Мертвый город / The Walking Dead: Dead City [03x01-07 из 08] (2026) WEB-DL 1080p | P | TVShows, LostFilm </a></td> <td align="right">4<img src="//cdnbunny.org/i/com.gif" alt="C" /></td>
+<td align="right">18.11&nbsp;GB</td><td align="center"><span class="green"><img src="//cdnbunny.org/t/arrowup.gif" alt="S" />&nbsp;6</span>&nbsp;<img src="//cdnbunny.org/t/arrowdown.gif" alt="L" /><span class="red">&nbsp;61</span></td></tr><tr class="gai"><td>10&nbsp;Сен&nbsp;26</td><td ><a class="downgif" href="//d.rutor.info/download/1101075"><img src="//cdnbunny.org/i/d.gif" alt="D" /></a><a href="magnet:?xt=urn:btih:f20f3850ed954d9f96d1f522765f7fa3034710f2&dn=rutor.info&tr=udp://opentor.net:6969&tr=http://retracker.local/announce"><img src="//cdnbunny.org/i/m.png" alt="M" /></a>
+<a href="/torrent/1101075/stjuart-blum-ne-smog-spasti-vselennuju_stuart-fails-to-save-the-universe-01x01-07-iz-10-2026-web-dlrip-avc-ot-domino-selezen-kurazh-bambej-lostfilm">Стюарт Блум не смог спасти вселенную / Stuart Fails to Save the Universe [01x01-07 из 10] (2026) WEB-DLRip-AVC от DoMiNo &amp; селезень | Кураж-Бамбей, LostFilm </a></td> <td align="right">9<img src="//cdnbunny.org/i/com.gif" alt="C" /></td>
+<td align="right">2.72&nbsp;GB</td><td align="center"><span class="green"><img src="//cdnbunny.org/t/arrowup.gif" alt="S" />&nbsp;17</span>&nbsp;<img src="//cdnbunny.org/t/arrowdown.gif" alt="L" /><span class="red">&nbsp;68</span></td></tr><tr class="tum"><td>10&nbsp;Сен&nbsp;26</td><td ><a class="downgif" href="//d.rutor.info/download/1100978"><img src="//cdnbunny.org/i/d.gif" alt="D" /></a><a href="magnet:?xt=urn:btih:f297c174a79568b9680e90092f01d7fb50c90be4&dn=rutor.info&tr=udp://opentor.net:6969&tr=http://retracker.local/announce"><img src="//cdnbunny.org/i/m.png" alt="M" /></a>
+<a href="/torrent/1100978/kovcheg_the-ark-03x01-06-iz-12-2026-web-dl-1080p-tvshows-hdrezka">Ковчег / The Ark [03x01-06 из 12] (2026) WEB-DL 1080p | TVShows, HDRezka </a></td> <td align="right">2<img src="//cdnbunny.org/i/com.gif" alt="C" /></td>
+<td align="right">16.07&nbsp;GB</td><td align="center"><span class="green"><img src="//cdnbunny.org/t/arrowup.gif" alt="S" />&nbsp;9</span>&nbsp;<img src="//cdnbunny.org/t/arrowdown.gif" alt="L" /><span class="red">&nbsp;39</span></td></tr><tr class="gai"><td>10&nbsp;Сен&nbsp;26</td><td ><a class="downgif" href="//d.rutor.info/download/1100515"><img src="//cdnbunny.org/i/d.gif" alt="D" /></a><a href="magnet:?xt=urn:btih:77e31d8b43fe760bf1699564f5d06ad7d581544f&dn=rutor.info&tr=udp://opentor.net:6969&tr=http://retracker.local/announce"><img src="//cdnbunny.org/i/m.png" alt="M" /></a>
+<a href="/torrent/1100515/stjuart-blum-ne-smog-spasti-vselennuju_stuart-fails-to-save-the-universen-01x01-07-iz-10-2026-web-dl-1080p-p-tvshows-lostfilm">Стюарт Блум не смог спасти вселенную / Stuart Fails to Save the Universen [01x01-07 из 10] (2026) WEB-DL 1080p | P | TVShows, LostFilm </a></td> <td align="right">11<img src="//cdnbunny.org/i/com.gif" alt="C" /></td>
+<td align="right">11.04&nbsp;GB</td><td align="center"><span class="green"><img src="//cdnbunny.org/t/arrowup.gif" alt="S" />&nbsp;12</span>&nbsp;<img src="//cdnbunny.org/t/arrowdown.gif" alt="L" /><span class="red">&nbsp;55</span></td></tr><tr class="tum"><td>10&nbsp;Сен&nbsp;26</td><td ><a class="downgif" href="//d.rutor.info/download/1100256"><img src="//cdnbunny.org/i/d.gif" alt="D" /></a><a href="magnet:?xt=urn:btih:195c7d475bb6f5f0153cec19259272830e8aa214&dn=rutor.info&tr=udp://opentor.net:6969&tr=http://retracker.local/announce"><img src="//cdnbunny.org/i/m.png" alt="M" /></a>
+<a href="/torrent/1100256/zvjozdnyj-put-strannye-novye-miry_star-trek-strange-new-worlds-04x01-07-iz-10-2026-web-dl-1080p-p-tvshows-lostfilm">Звёздный путь: Странные новые миры / Star Trek: Strange New Worlds [04x01-07 из 10] (2026) WEB-DL 1080p | P | TVShows, LostFilm </a></td> <td align="right">11<img src="//cdnbunny.org/i/com.gif" alt="C" /></td>
+<td align="right">18.50&nbsp;GB</td><td align="center"><span class="green"><img src="//cdnbunny.org/t/arrowup.gif" alt="S" />&nbsp;23</span>&nbsp;<img src="//cdnbunny.org/t/arrowdown.gif" alt="L" /><span class="red">&nbsp;98</span></td></tr><tr class="gai"><td>10&nbsp;Сен&nbsp;26</td><td colspan = "2"><a class="downgif" href="//d.rutor.info/download/1105728"><img src="//cdnbunny.org/i/d.gif" alt="D" /></a><a href="magnet:?xt=urn:btih:2e5fd85109a9d6772a05efaf868aa220a6e0ad0a&dn=rutor.info&tr=udp://opentor.net:6969&tr=http://retracker.local/announce"><img src="//cdnbunny.org/i/m.png" alt="M" /></a>
+<a href="/torrent/1105728/mentovskie-vojny-harkov-s01-2018-web-dlrip-avc-ot-generalfilm-kpk">Ментовские войны. Харьков [S01] (2018) WEB-DLRip-AVC от Generalfilm | КПК </a></td> 
+<td align="right">6.91&nbsp;GB</td><td align="center"><span class="green"><img src="//cdnbunny.org/t/arrowup.gif" alt="S" />&nbsp;10</span>&nbsp;<img src="//cdnbunny.org/t/arrowdown.gif" alt="L" /><span class="red">&nbsp;12</span></td></tr><tr class="tum"><td>10&nbsp;Сен&nbsp;26</td><td ><a class="downgif" href="//d.rutor.info/download/1101354"><img src="//cdnbunny.org/i/d.gif" alt="D" /></a><a href="magnet:?xt=urn:btih:da9fdfed3b2cd9b6c224d66ecc2dda0bbf76dc60&dn=rutor.info&tr=udp://opentor.net:6969&tr=http://retracker.local/announce"><img src="//cdnbunny.org/i/m.png" alt="M" /></a>
+<a href="/torrent/1101354/ted-lasso_ted-lasso-04h01-06-iz-10-2026-webrip-p2-viruseproject">Тед Лассо / Ted Lasso [04х01-06 из 10] (2026) WEBRip | P2 | ViruseProject </a></td> <td align="right">1<img src="//cdnbunny.org/i/com.gif" alt="C" /></td>
+<td align="right">3.05&nbsp;GB</td><td align="center"><span class="green"><img src="//cdnbunny.org/t/arrowup.gif" alt="S" />&nbsp;5</span>&nbsp;<img src="//cdnbunny.org/t/arrowdown.gif" alt="L" /><span class="red">&nbsp;28</span></td></tr><tr class="gai"><td>10&nbsp;Сен&nbsp;26</td><td ><a class="downgif" href="//d.rutor.info/download/1101353"><img src="//cdnbunny.org/i/d.gif" alt="D" /></a><a href="magnet:?xt=urn:btih:921b02f45534752678ff9d742278887c142bbe6d&dn=rutor.info&tr=udp://opentor.net:6969&tr=http://retracker.local/announce"><img src="//cdnbunny.org/i/m.png" alt="M" /></a>
+<a href="/torrent/1101353/ted-lasso_ted-lasso-04h01-06-iz-10-2026-webrip-1080p-p2-viruseproject">Тед Лассо / Ted Lasso [04х01-06 из 10] (2026) WEBRip 1080p | P2 | ViruseProject </a></td> <td align="right">2<img src="//cdnbunny.org/i/com.gif" alt="C" /></td>
+<td align="right">9.15&nbsp;GB</td><td align="center"><span class="green"><img src="//cdnbunny.org/t/arrowup.gif" alt="S" />&nbsp;5</span>&nbsp;<img src="//cdnbunny.org/t/arrowdown.gif" alt="L" /><span class="red">&nbsp;81</span></td></tr><tr class="tum"><td>09&nbsp;Сен&nbsp;26</td><td colspan = "2"><a class="downgif" href="//d.rutor.info/download/1105696"><img src="//cdnbunny.org/i/d.gif" alt="D" /></a><a href="magnet:?xt=urn:btih:fc03ed00c07288353de04bf2b9102a33895fa756&dn=rutor.info&tr=udp://opentor.net:6969&tr=http://retracker.local/announce"><img src="//cdnbunny.org/i/m.png" alt="M" /></a>
+<a href="/torrent/1105696/povest-o-dvuh-gorodah_a-tale-of-two-cities-01x01-iz-04-2026-web-dl-1080p-p-d">Повесть о двух городах / A Tale of Two Cities [01x01 из 04] (2026) WEB-DL 1080p | P, D </a></td> 
+<td align="right">2.90&nbsp;GB</td><td align="center"><span class="green"><img src="//cdnbunny.org/t/arrowup.gif" alt="S" />&nbsp;27</span>&nbsp;<img src="//cdnbunny.org/t/arrowdown.gif" alt="L" /><span class="red">&nbsp;37</span></td></tr><tr class="gai"><td>09&nbsp;Сен&nbsp;26</td><td colspan = "2"><a class="downgif" href="//d.rutor.info/download/1105689"><img src="//cdnbunny.org/i/d.gif" alt="D" /></a><a href="magnet:?xt=urn:btih:022b5658d6a9fcdca6c8c16281275f69d0a5fc09&dn=rutor.info&tr=udp://opentor.net:6969&tr=http://retracker.local/announce"><img src="//cdnbunny.org/i/m.png" alt="M" /></a>
+<a href="/torrent/1105689/dzhek-richer_reacher-04x01-07-iz-08-2026-webrip-1080p-ot-kerob-l2">Джек Ричер / Reacher [04x01-07 из 08] (2026) WEBRip 1080p от Kerob | L2 </a></td> 
+<td align="right">10.41&nbsp;GB</td><td align="center"><span class="green"><img src="//cdnbunny.org/t/arrowup.gif" alt="S" />&nbsp;62</span>&nbsp;<img src="//cdnbunny.org/t/arrowdown.gif" alt="L" /><span class="red">&nbsp;348</span></td></tr><tr class="tum"><td>09&nbsp;Сен&nbsp;26</td><td colspan = "2"><a class="downgif" href="//d.rutor.info/download/1105688"><img src="//cdnbunny.org/i/d.gif" alt="D" /></a><a href="magnet:?xt=urn:btih:7fd59fcfafb1bb75c51ed5de002a638e2681d1ad&dn=rutor.info&tr=udp://opentor.net:6969&tr=http://retracker.local/announce"><img src="//cdnbunny.org/i/m.png" alt="M" /></a>
+<a href="/torrent/1105688/dzhek-richer_reacher-04x01-07-iz-08-2026-webrip-ot-kerob-l2">Джек Ричер / Reacher [04x01-07 из 08] (2026) WEBRip от Kerob | L2 </a></td> 
+<td align="right">3.72&nbsp;GB</td><td align="center"><span class="green"><img src="//cdnbunny.org/t/arrowup.gif" alt="S" />&nbsp;40</span>&nbsp;<img src="//cdnbunny.org/t/arrowdown.gif" alt="L" /><span class="red">&nbsp;115</span></td></tr><tr class="gai"><td>09&nbsp;Сен&nbsp;26</td><td colspan = "2"><a class="downgif" href="//d.rutor.info/download/1105668"><img src="//cdnbunny.org/i/d.gif" alt="D" /></a><a href="magnet:?xt=urn:btih:5e81113c37f10611866c7184392bacd9f084ca5a&dn=rutor.info&tr=udp://opentor.net:6969&tr=http://retracker.local/announce"><img src="//cdnbunny.org/i/m.png" alt="M" /></a>
+<a href="/torrent/1105668/ljudvig_ludwig-02h01-iz-06-2026-web-dlrip-avc-ot-domino-selezen-newstudio-hdrezka-studio">Людвиг / Ludwig [02х01 из 06] (2026) WEB-DLRip-AVC от DoMiNo &amp; селезень | NewStudio, HDrezka Studio </a></td> 
+<td align="right">825.07&nbsp;MB</td><td align="center"><span class="green"><img src="//cdnbunny.org/t/arrowup.gif" alt="S" />&nbsp;14</span>&nbsp;<img src="//cdnbunny.org/t/arrowdown.gif" alt="L" /><span class="red">&nbsp;7</span></td></tr><tr class="tum"><td>09&nbsp;Сен&nbsp;26</td><td ><a class="downgif" href="//d.rutor.info/download/1105658"><img src="//cdnbunny.org/i/d.gif" alt="D" /></a><a href="magnet:?xt=urn:btih:6851d171a19157c20c0480519a778fc9e943668f&dn=rutor.info&tr=udp://opentor.net:6969&tr=http://retracker.local/announce"><img src="//cdnbunny.org/i/m.png" alt="M" /></a>
+<a href="/torrent/1105658/ljudvig_ludwig-02x01-03-iz-06-2026-webrip-1080p-p-l">Людвиг / Ludwig [02x01-03 из 06] (2026) WEBRip 1080p | P, L </a></td> <td align="right">1<img src="//cdnbunny.org/i/com.gif" alt="C" /></td>
+<td align="right">4.68&nbsp;GB</td><td align="center"><span class="green"><img src="//cdnbunny.org/t/arrowup.gif" alt="S" />&nbsp;44</span>&nbsp;<img src="//cdnbunny.org/t/arrowdown.gif" alt="L" /><span class="red">&nbsp;27</span></td></tr><tr class="gai"><td>08&nbsp;Сен&nbsp;26</td><td ><a class="downgif" href="//d.rutor.info/download/1105511"><img src="//cdnbunny.org/i/d.gif" alt="D" /></a><a href="magnet:?xt=urn:btih:f9545dd413b224b84262bbd17ee909196754bb59&dn=rutor.info&tr=udp://opentor.net:6969&tr=http://retracker.local/announce"><img src="//cdnbunny.org/i/m.png" alt="M" /></a>
+<a href="/torrent/1105511/shou-90-h_that-90s-show-s01-03-2023-2024-web-dl-1080p-p">Шоу 90-х / That &#039;90s Show [S01-03] (2023-2024) WEB-DL 1080p | P </a></td> <td align="right">4<img src="//cdnbunny.org/i/com.gif" alt="C" /></td>
+<td align="right">33.39&nbsp;GB</td><td align="center"><span class="green"><img src="//cdnbunny.org/t/arrowup.gif" alt="S" />&nbsp;7</span>&nbsp;<img src="//cdnbunny.org/t/arrowdown.gif" alt="L" /><span class="red">&nbsp;8</span></td></tr><tr class="tum"><td>08&nbsp;Сен&nbsp;26</td><td colspan = "2"><a class="downgif" href="//d.rutor.info/download/1105610"><img src="//cdnbunny.org/i/d.gif" alt="D" /></a><a href="magnet:?xt=urn:btih:f7eaff021afebe5e809ab0a0cfc7dff663fd69e0&dn=rutor.info&tr=udp://opentor.net:6969&tr=http://retracker.local/announce"><img src="//cdnbunny.org/i/m.png" alt="M" /></a>
+<a href="/torrent/1105610/dva-goda-spustja_two-years-later-s01-2026-web-dl-720p-ot-new-team-d-dablin">Два года спустя / Two Years Later [S01] (2026) WEB-DL 720p от New-Team | D | ДАБЛИН </a></td> 
+<td align="right">6.71&nbsp;GB</td><td align="center"><span class="green"><img src="//cdnbunny.org/t/arrowup.gif" alt="S" />&nbsp;10</span>&nbsp;<img src="//cdnbunny.org/t/arrowdown.gif" alt="L" /><span class="red">&nbsp;6</span></td></tr><tr class="gai"><td>08&nbsp;Сен&nbsp;26</td><td ><a class="downgif" href="//d.rutor.info/download/1103294"><img src="//cdnbunny.org/i/d.gif" alt="D" /></a><a href="magnet:?xt=urn:btih:982ff2a28d968413ab98859f843a712680dfb01e&dn=rutor.info&tr=udp://opentor.net:6969&tr=http://retracker.local/announce"><img src="//cdnbunny.org/i/m.png" alt="M" /></a>
+<a href="/torrent/1103294/bibliotekari-sledujuwaja-glava_the-librarians-the-next-chapter-s02-2026-web-dl-1080p-ot-exkinoray-p-viju">Библиотекари: Следующая глава / The Librarians: The Next Chapter [S02] (2026) WEB-DL 1080p от ExKinoRay | P | Viju </a></td> <td align="right">1<img src="//cdnbunny.org/i/com.gif" alt="C" /></td>
+<td align="right">26.61&nbsp;GB</td><td align="center"><span class="green"><img src="//cdnbunny.org/t/arrowup.gif" alt="S" />&nbsp;39</span>&nbsp;<img src="//cdnbunny.org/t/arrowdown.gif" alt="L" /><span class="red">&nbsp;34</span></td></tr><tr class="tum"><td>08&nbsp;Сен&nbsp;26</td><td ><a class="downgif" href="//d.rutor.info/download/1104995"><img src="//cdnbunny.org/i/d.gif" alt="D" /></a><a href="magnet:?xt=urn:btih:9e372a83651865696d4dc3ae0110c452eb4a6a03&dn=rutor.info&tr=udp://opentor.net:6969&tr=http://retracker.local/announce"><img src="//cdnbunny.org/i/m.png" alt="M" /></a>
+<a href="/torrent/1104995/dzhentlmeny_the-gentlemen-s02-2026-webrip-p2-viruseproject">Джентльмены / The Gentlemen [S02] (2026) WEBRip | P2 | ViruseProject </a></td> <td align="right">2<img src="//cdnbunny.org/i/com.gif" alt="C" /></td>
+<td align="right">4.79&nbsp;GB</td><td align="center"><span class="green"><img src="//cdnbunny.org/t/arrowup.gif" alt="S" />&nbsp;64</span>&nbsp;<img src="//cdnbunny.org/t/arrowdown.gif" alt="L" /><span class="red">&nbsp;54</span></td></tr><tr class="gai"><td>08&nbsp;Сен&nbsp;26</td><td ><a class="downgif" href="//d.rutor.info/download/1104994"><img src="//cdnbunny.org/i/d.gif" alt="D" /></a><a href="magnet:?xt=urn:btih:444ae29e55becfef59fc2e6d7b88239fab5206f0&dn=rutor.info&tr=udp://opentor.net:6969&tr=http://retracker.local/announce"><img src="//cdnbunny.org/i/m.png" alt="M" /></a>
+<a href="/torrent/1104994/dzhentlmeny_the-gentlemen-s02-2026-webrip-1080p-p2-viruseproject">Джентльмены / The Gentlemen [S02] (2026) WEBRip 1080p | P2 | ViruseProject </a></td> <td align="right">3<img src="//cdnbunny.org/i/com.gif" alt="C" /></td>
+<td align="right">14.35&nbsp;GB</td><td align="center"><span class="green"><img src="//cdnbunny.org/t/arrowup.gif" alt="S" />&nbsp;85</span>&nbsp;<img src="//cdnbunny.org/t/arrowdown.gif" alt="L" /><span class="red">&nbsp;198</span></td></tr><tr class="tum"><td>08&nbsp;Сен&nbsp;26</td><td colspan = "2"><a class="downgif" href="//d.rutor.info/download/1105496"><img src="//cdnbunny.org/i/d.gif" alt="D" /></a><a href="magnet:?xt=urn:btih:dd9ba730c8d2f452347c16ab27daaef7809a8e47&dn=rutor.info&tr=udp://opentor.net:6969&tr=http://retracker.local/announce"><img src="//cdnbunny.org/i/m.png" alt="M" /></a>
+<a href="/torrent/1105496/hodjachie-mertvecy-mertvyj-gorod_the-walking-dead-dead-city-03x01-07-iz-08-2026-webrip-newcomers">Ходячие мертвецы: Мертвый город / The Walking Dead: Dead City [03x01-07 из 08] (2026) WEBRip | NewComers </a></td> 
+<td align="right">3.40&nbsp;GB</td><td align="center"><span class="green"><img src="//cdnbunny.org/t/arrowup.gif" alt="S" />&nbsp;2</span>&nbsp;<img src="//cdnbunny.org/t/arrowdown.gif" alt="L" /><span class="red">&nbsp;20</span></td></tr><tr class="gai"><td>08&nbsp;Сен&nbsp;26</td><td colspan = "2"><a class="downgif" href="//d.rutor.info/download/1105495"><img src="//cdnbunny.org/i/d.gif" alt="D" /></a><a href="magnet:?xt=urn:btih:afbf6e6d03f7ff9c89385307588c770e7cac8acc&dn=rutor.info&tr=udp://opentor.net:6969&tr=http://retracker.local/announce"><img src="//cdnbunny.org/i/m.png" alt="M" /></a>
+<a href="/torrent/1105495/hodjachie-mertvecy-mertvyj-gorod_the-walking-dead-dead-city-03x01-07-iz-08-2026-webrip-1080p-newcomers">Ходячие мертвецы: Мертвый город / The Walking Dead: Dead City [03x01-07 из 08] (2026) WEBRip 1080p  | NewComers </a></td> 
+<td align="right">15.00&nbsp;GB</td><td align="center"><span class="green"><img src="//cdnbunny.org/t/arrowup.gif" alt="S" />&nbsp;10</span>&nbsp;<img src="//cdnbunny.org/t/arrowdown.gif" alt="L" /><span class="red">&nbsp;18</span></td></tr><tr class="tum"><td>07&nbsp;Сен&nbsp;26</td><td colspan = "2"><a class="downgif" href="//d.rutor.info/download/1104097"><img src="//cdnbunny.org/i/d.gif" alt="D" /></a><a href="magnet:?xt=urn:btih:06cacb084d8630ba71af4017a340d5d2fb24f04b&dn=rutor.info&tr=udp://opentor.net:6969&tr=http://retracker.local/announce"><img src="//cdnbunny.org/i/m.png" alt="M" /></a>
+<a href="/torrent/1104097/ted-lasso_ted-lasso-04x01-04-iz-10-2026-web-dlrip-avc-ot-domino-selezen-d-red-head-sound">Тед Лассо / Ted Lasso [04x01-04 из 10] (2026) WEB-DLRip-AVC от DoMiNo &amp; селезень | D | Red Head Sound </a></td> 
+<td align="right">2.81&nbsp;GB</td><td align="center"><span class="green"><img src="//cdnbunny.org/t/arrowup.gif" alt="S" />&nbsp;5</span>&nbsp;<img src="//cdnbunny.org/t/arrowdown.gif" alt="L" /><span class="red">&nbsp;7</span></td></tr><tr class="gai"><td>07&nbsp;Сен&nbsp;26</td><td ><a class="downgif" href="//d.rutor.info/download/923698"><img src="//cdnbunny.org/i/d.gif" alt="D" /></a><a href="magnet:?xt=urn:btih:b141cc58566de5259d70cec3f16318f8c94cfb05&dn=rutor.info&tr=udp://opentor.net:6969&tr=http://retracker.local/announce"><img src="//cdnbunny.org/i/m.png" alt="M" /></a>
+<a href="/torrent/923698/ukrytie_bunker_silo-s01-03-2023-2026-web-dlrip-lostfilm">Укрытие / Бункер / Silo [S01-03] (2023-2026) WEB-DLRip | LostFilm </a></td> <td align="right">26<img src="//cdnbunny.org/i/com.gif" alt="C" /></td>
+<td align="right">21.54&nbsp;GB</td><td align="center"><span class="green"><img src="//cdnbunny.org/t/arrowup.gif" alt="S" />&nbsp;54</span>&nbsp;<img src="//cdnbunny.org/t/arrowdown.gif" alt="L" /><span class="red">&nbsp;156</span></td></tr><tr class="tum"><td>07&nbsp;Сен&nbsp;26</td><td colspan = "2"><a class="downgif" href="//d.rutor.info/download/1103896"><img src="//cdnbunny.org/i/d.gif" alt="D" /></a><a href="magnet:?xt=urn:btih:140010616813cdaef101e34dbb3bf5ad5ec20a03&dn=rutor.info&tr=udp://opentor.net:6969&tr=http://retracker.local/announce"><img src="//cdnbunny.org/i/m.png" alt="M" /></a>
+<a href="/torrent/1103896/ted-lasso_ted-lasso-04x01-04-iz-10-2026-uhd-web-dl-hevc-2160p-ot-scarabey-4k-hdr-dolby-vision-d-red-head-sound">Тед Лассо / Ted Lasso [04x01-04 из 10] (2026) UHD WEB-DL-HEVC 2160p от Scarabey | 4K | HDR | Dolby Vision | D | Red Head Sound </a></td> 
+<td align="right">31.95&nbsp;GB</td><td align="center"><span class="green"><img src="//cdnbunny.org/t/arrowup.gif" alt="S" />&nbsp;2</span>&nbsp;<img src="//cdnbunny.org/t/arrowdown.gif" alt="L" /><span class="red">&nbsp;46</span></td></tr><tr class="gai"><td>07&nbsp;Сен&nbsp;26</td><td colspan = "2"><a class="downgif" href="//d.rutor.info/download/1103895"><img src="//cdnbunny.org/i/d.gif" alt="D" /></a><a href="magnet:?xt=urn:btih:aa735c3930290208019fc42a4945db1877e9dcc7&dn=rutor.info&tr=udp://opentor.net:6969&tr=http://retracker.local/announce"><img src="//cdnbunny.org/i/m.png" alt="M" /></a>
+<a href="/torrent/1103895/ted-lasso_ted-lasso-04x01-04-iz-10-2026-web-dl-1080p-ot-scarabey-d-red-head-sound">Тед Лассо / Ted Lasso [04x01-04 из 10] (2026) WEB-DL 1080p от Scarabey | D | Red Head Sound </a></td> 
+<td align="right">14.19&nbsp;GB</td><td align="center"><span class="green"><img src="//cdnbunny.org/t/arrowup.gif" alt="S" />&nbsp;8</span>&nbsp;<img src="//cdnbunny.org/t/arrowdown.gif" alt="L" /><span class="red">&nbsp;33</span></td></tr><tr class="tum"><td>07&nbsp;Сен&nbsp;26</td><td ><a class="downgif" href="//d.rutor.info/download/1103316"><img src="//cdnbunny.org/i/d.gif" alt="D" /></a><a href="magnet:?xt=urn:btih:e890905fbe53daadbef2d28f1b8bc42320f6f4b8&dn=rutor.info&tr=udp://opentor.net:6969&tr=http://retracker.local/announce"><img src="//cdnbunny.org/i/m.png" alt="M" /></a>
+<a href="/torrent/1103316/hodjachie-mertvecy-mertvyj-gorod_the-walking-dead-dead-city-03h01-07-iz-08-2026-webrip-p2-viruseproject">Ходячие мертвецы: Мертвый город / The Walking Dead: Dead City [03х01-07 из 08] (2026) WEBRip | P2 | ViruseProject </a></td> <td align="right">1<img src="//cdnbunny.org/i/com.gif" alt="C" /></td>
+<td align="right">4.08&nbsp;GB</td><td align="center"><span class="green"><img src="//cdnbunny.org/t/arrowup.gif" alt="S" />&nbsp;7</span>&nbsp;<img src="//cdnbunny.org/t/arrowdown.gif" alt="L" /><span class="red">&nbsp;10</span></td></tr><tr class="gai"><td>07&nbsp;Сен&nbsp;26</td><td ><a class="downgif" href="//d.rutor.info/download/1103315"><img src="//cdnbunny.org/i/d.gif" alt="D" /></a><a href="magnet:?xt=urn:btih:75875d8aba6a5578110b39bf3edb1a446d7c9731&dn=rutor.info&tr=udp://opentor.net:6969&tr=http://retracker.local/announce"><img src="//cdnbunny.org/i/m.png" alt="M" /></a>
+<a href="/torrent/1103315/hodjachie-mertvecy-mertvyj-gorod_the-walking-dead-dead-city-03h01-07-iz-08-2026-webrip-1080p-p2-viruseproject">Ходячие мертвецы: Мертвый город / The Walking Dead: Dead City [03х01-07 из 08] (2026) WEBRip 1080p | P2 | ViruseProject </a></td> <td align="right">1<img src="//cdnbunny.org/i/com.gif" alt="C" /></td>
+<td align="right">12.15&nbsp;GB</td><td align="center"><span class="green"><img src="//cdnbunny.org/t/arrowup.gif" alt="S" />&nbsp;7</span>&nbsp;<img src="//cdnbunny.org/t/arrowdown.gif" alt="L" /><span class="red">&nbsp;22</span></td></tr><tr class="tum"><td>07&nbsp;Сен&nbsp;26</td><td ><a class="downgif" href="//d.rutor.info/download/1104568"><img src="//cdnbunny.org/i/d.gif" alt="D" /></a><a href="magnet:?xt=urn:btih:3cb0646906f86a6783c163497ee0918047d2c205&dn=rutor.info&tr=udp://opentor.net:6969&tr=http://retracker.local/announce"><img src="//cdnbunny.org/i/m.png" alt="M" /></a>
+<a href="/torrent/1104568/tjomnaja-materija_dark-matter-02x01-02-iz-10-2026-web-dl-1080p-p-red-head-sound">Тёмная материя / Dark Matter [02x01-02 из 10] (2026) WEB-DL 1080p | P | Red Head Sound </a></td> <td align="right">1<img src="//cdnbunny.org/i/com.gif" alt="C" /></td>
+<td align="right">8.89&nbsp;GB</td><td align="center"><span class="green"><img src="//cdnbunny.org/t/arrowup.gif" alt="S" />&nbsp;28</span>&nbsp;<img src="//cdnbunny.org/t/arrowdown.gif" alt="L" /><span class="red">&nbsp;40</span></td></tr><tr class="gai"><td>07&nbsp;Сен&nbsp;26</td><td ><a class="downgif" href="//d.rutor.info/download/1101169"><img src="//cdnbunny.org/i/d.gif" alt="D" /></a><a href="magnet:?xt=urn:btih:15154e2a3848da1ce9fef3cba57bbad0e7eebac0&dn=rutor.info&tr=udp://opentor.net:6969&tr=http://retracker.local/announce"><img src="//cdnbunny.org/i/m.png" alt="M" /></a>
+<a href="/torrent/1101169/territorija-boja_strana-bojov_fightland-01x01-06-iz-08-2026-web-dlrip-avc-ot-domino-selezen-red-head-sound">Территория боя / Страна боёв / Fightland [01x01-06 из 08] (2026) WEB-DLRip-AVC от DoMiNo &amp; селезень | Red Head Sound </a></td> <td align="right">2<img src="//cdnbunny.org/i/com.gif" alt="C" /></td>
+<td align="right">4.53&nbsp;GB</td><td align="center"><span class="green"><img src="//cdnbunny.org/t/arrowup.gif" alt="S" />&nbsp;13</span>&nbsp;<img src="//cdnbunny.org/t/arrowdown.gif" alt="L" /><span class="red">&nbsp;14</span></td></tr><tr class="tum"><td>07&nbsp;Сен&nbsp;26</td><td ><a class="downgif" href="//d.rutor.info/download/1103066"><img src="//cdnbunny.org/i/d.gif" alt="D" /></a><a href="magnet:?xt=urn:btih:5f94ddd0d018b57071a500daa06227afe53b5eb7&dn=rutor.info&tr=udp://opentor.net:6969&tr=http://retracker.local/announce"><img src="//cdnbunny.org/i/m.png" alt="M" /></a>
+<a href="/torrent/1103066/fonari_lanterns-01h01-04-iz-08-2026-web-dlrip-avc-ot-domino-selezen-hbo">Фонари / Lanterns [01х01-04 из 08] (2026) WEB-DLRip-AVC от DoMiNo &amp; селезень | HBO </a></td> <td align="right">7<img src="//cdnbunny.org/i/com.gif" alt="C" /></td>
+<td align="right">2.97&nbsp;GB</td><td align="center"><span class="green"><img src="//cdnbunny.org/t/arrowup.gif" alt="S" />&nbsp;71</span>&nbsp;<img src="//cdnbunny.org/t/arrowdown.gif" alt="L" /><span class="red">&nbsp;102</span></td></tr><tr class="gai"><td>07&nbsp;Сен&nbsp;26</td><td ><a class="downgif" href="//d.rutor.info/download/1101529"><img src="//cdnbunny.org/i/d.gif" alt="D" /></a><a href="magnet:?xt=urn:btih:13427d110bb2af2112654f1988669ca0cc88c235&dn=rutor.info&tr=udp://opentor.net:6969&tr=http://retracker.local/announce"><img src="//cdnbunny.org/i/m.png" alt="M" /></a>
+<a href="/torrent/1101529/bibliotekari-sledujuwaja-glava_the-librarians-the-next-chapter-02x01-10-iz-12-2026-web-dl-1080p-p-tvshows-lostfilm-hdrezka">Библиотекари: Следующая глава / The Librarians: The Next Chapter [02x01-10 из 12] (2026) WEB-DL 1080p | P | TVShows, LostFilm, HDRezka </a></td> <td align="right">1<img src="//cdnbunny.org/i/com.gif" alt="C" /></td>
+<td align="right">26.30&nbsp;GB</td><td align="center"><span class="green"><img src="//cdnbunny.org/t/arrowup.gif" alt="S" />&nbsp;8</span>&nbsp;<img src="//cdnbunny.org/t/arrowdown.gif" alt="L" /><span class="red">&nbsp;11</span></td></tr><tr class="tum"><td>07&nbsp;Сен&nbsp;26</td><td ><a class="downgif" href="//d.rutor.info/download/1097765"><img src="//cdnbunny.org/i/d.gif" alt="D" /></a><a href="magnet:?xt=urn:btih:012ea88f246e5c89c4c56ffbf10c0b31d988d1bd&dn=rutor.info&tr=udp://opentor.net:6969&tr=http://retracker.local/announce"><img src="//cdnbunny.org/i/m.png" alt="M" /></a>
+<a href="/torrent/1097765/ukrytie_bunker_silo-s03-2026-web-dl-1080p-p-red-head-sound">Укрытие / Бункер / Silo [S03] (2026) WEB-DL 1080p | P | Red Head Sound </a></td> <td align="right">8<img src="//cdnbunny.org/i/com.gif" alt="C" /></td>
+<td align="right">41.63&nbsp;GB</td><td align="center"><span class="green"><img src="//cdnbunny.org/t/arrowup.gif" alt="S" />&nbsp;119</span>&nbsp;<img src="//cdnbunny.org/t/arrowdown.gif" alt="L" /><span class="red">&nbsp;209</span></td></tr><tr class="gai"><td>07&nbsp;Сен&nbsp;26</td><td ><a class="downgif" href="//d.rutor.info/download/1101151"><img src="//cdnbunny.org/i/d.gif" alt="D" /></a><a href="magnet:?xt=urn:btih:e6a10e94eb2a059ab47ad2882b54f6dc05ebb2d5&dn=rutor.info&tr=udp://opentor.net:6969&tr=http://retracker.local/announce"><img src="//cdnbunny.org/i/m.png" alt="M" /></a>
+<a href="/torrent/1101151/territorija-boja_strana-bojov_fightland-01x01-06-iz-08-2026-web-dl-1080p-p-red-head-sound">Территория боя / Страна боёв / Fightland [01x01-06 из 08] (2026) WEB-DL 1080p | P | Red Head Sound </a></td> <td align="right">3<img src="//cdnbunny.org/i/com.gif" alt="C" /></td>
+<td align="right">22.34&nbsp;GB</td><td align="center"><span class="green"><img src="//cdnbunny.org/t/arrowup.gif" alt="S" />&nbsp;7</span>&nbsp;<img src="//cdnbunny.org/t/arrowdown.gif" alt="L" /><span class="red">&nbsp;8</span></td></tr><tr class="tum"><td>07&nbsp;Сен&nbsp;26</td><td ><a class="downgif" href="//d.rutor.info/download/1102572"><img src="//cdnbunny.org/i/d.gif" alt="D" /></a><a href="magnet:?xt=urn:btih:8430ff12b916583e62a9a8eb0583ea79b44b230b&dn=rutor.info&tr=udp://opentor.net:6969&tr=http://retracker.local/announce"><img src="//cdnbunny.org/i/m.png" alt="M" /></a>
+<a href="/torrent/1102572/dzhek-richer_reacher-04x01-06-iz-08-2026-web-dlrip-avc-ot-domino-selezen-hdrezka-studio">Джек Ричер / Reacher [04x01-06 из 08] (2026) WEB-DLRip-AVC от DoMiNo &amp; селезень | HDRezka Studio </a></td> <td align="right">7<img src="//cdnbunny.org/i/com.gif" alt="C" /></td>
+<td align="right">4.14&nbsp;GB</td><td align="center"><span class="green"><img src="//cdnbunny.org/t/arrowup.gif" alt="S" />&nbsp;53</span>&nbsp;<img src="//cdnbunny.org/t/arrowdown.gif" alt="L" /><span class="red">&nbsp;31</span></td></tr><tr class="gai"><td>06&nbsp;Сен&nbsp;26</td><td ><a class="downgif" href="//d.rutor.info/download/1102593"><img src="//cdnbunny.org/i/d.gif" alt="D" /></a><a href="magnet:?xt=urn:btih:95b4ae4738f15362422ad19292397ce18b680343&dn=rutor.info&tr=udp://opentor.net:6969&tr=http://retracker.local/announce"><img src="//cdnbunny.org/i/m.png" alt="M" /></a>
+<a href="/torrent/1102593/dzhek-richer_reacher-04x01-06-iz-08-2026-web-dl-1080p-p">Джек Ричер / Reacher [04x01-06 из 08] (2026) WEB-DL 1080p | P </a></td> <td align="right">14<img src="//cdnbunny.org/i/com.gif" alt="C" /></td>
+<td align="right">19.47&nbsp;GB</td><td align="center"><span class="green"><img src="//cdnbunny.org/t/arrowup.gif" alt="S" />&nbsp;47</span>&nbsp;<img src="//cdnbunny.org/t/arrowdown.gif" alt="L" /><span class="red">&nbsp;147</span></td></tr><tr class="tum"><td>06&nbsp;Сен&nbsp;26</td><td colspan = "2"><a class="downgif" href="//d.rutor.info/download/1105364"><img src="//cdnbunny.org/i/d.gif" alt="D" /></a><a href="magnet:?xt=urn:btih:43075c89be578cf628d80077fa7070df52080e06&dn=rutor.info&tr=udp://opentor.net:6969&tr=http://retracker.local/announce"><img src="//cdnbunny.org/i/m.png" alt="M" /></a>
+<a href="/torrent/1105364/mechtaju-o-tebe_geudaeege-deurim_dream-to-you-s01-2026-web-dl-1080p-l2">Мечтаю о тебе / Geudaeege deurim / Dream to You [S01] (2026) WEB-DL 1080p | L2 </a></td> 
+<td align="right">15.14&nbsp;GB</td><td align="center"><span class="green"><img src="//cdnbunny.org/t/arrowup.gif" alt="S" />&nbsp;7</span>&nbsp;<img src="//cdnbunny.org/t/arrowdown.gif" alt="L" /><span class="red">&nbsp;19</span></td></tr><tr class="gai"><td>06&nbsp;Сен&nbsp;26</td><td ><a class="downgif" href="//d.rutor.info/download/1104516"><img src="//cdnbunny.org/i/d.gif" alt="D" /></a><a href="magnet:?xt=urn:btih:9dbe6fdc8e82f0c7ac5e26d265c54572f1819f4e&dn=rutor.info&tr=udp://opentor.net:6969&tr=http://retracker.local/announce"><img src="//cdnbunny.org/i/m.png" alt="M" /></a>
+<a href="/torrent/1104516/tjomnaja-materija_dark-matter-02x01-02-iz-10-2026-web-dl-1080p-p-p2-l">Тёмная материя / Dark Matter [02x01-02 из 10] (2026) WEB-DL 1080p | P, P2, L </a></td> <td align="right">1<img src="//cdnbunny.org/i/com.gif" alt="C" /></td>
+<td align="right">9.51&nbsp;GB</td><td align="center"><span class="green"><img src="//cdnbunny.org/t/arrowup.gif" alt="S" />&nbsp;22</span>&nbsp;<img src="//cdnbunny.org/t/arrowdown.gif" alt="L" /><span class="red">&nbsp;43</span></td></tr><tr class="tum"><td>06&nbsp;Сен&nbsp;26</td><td ><a class="downgif" href="//d.rutor.info/download/1097712"><img src="//cdnbunny.org/i/d.gif" alt="D" /></a><a href="magnet:?xt=urn:btih:86b86b5c070ce0921a29dbbe59827c4560b13710&dn=rutor.info&tr=udp://opentor.net:6969&tr=http://retracker.local/announce"><img src="//cdnbunny.org/i/m.png" alt="M" /></a>
+<a href="/torrent/1097712/ukrytie_bunker_silo-s03-2026-web-dl-1080p-p-a-l">Укрытие / Бункер / Silo [S03] (2026) WEB-DL 1080p | P, A, L </a></td> <td align="right">32<img src="//cdnbunny.org/i/com.gif" alt="C" /></td>
+<td align="right">51.03&nbsp;GB</td><td align="center"><span class="green"><img src="//cdnbunny.org/t/arrowup.gif" alt="S" />&nbsp;229</span>&nbsp;<img src="//cdnbunny.org/t/arrowdown.gif" alt="L" /><span class="red">&nbsp;370</span></td></tr><tr class="gai"><td>06&nbsp;Сен&nbsp;26</td><td ><a class="downgif" href="//d.rutor.info/download/987011"><img src="//cdnbunny.org/i/d.gif" alt="D" /></a><a href="magnet:?xt=urn:btih:10919b99b26627ce4cfe26f2bff0f1b463397de0&dn=rutor.info&tr=udp://opentor.net:6969&tr=http://retracker.local/announce"><img src="//cdnbunny.org/i/m.png" alt="M" /></a>
+<a href="/torrent/987011/dzhentlmeny_the-gentlemen-s01-2024-web-dl-1080p-hdrezka-studio-movie-dubbing-lostfilm-jaskier-tvshows-kubik-v-kube-newcomers-red-head-sound-viruseproject">Джентльмены / The Gentlemen [S01] (2024) WEB-DL 1080p | HDrezka Studio, Movie Dubbing, LostFilm, Jaskier, TVShows, Кубик в кубе, NewComers, Red Head Sound, ViruseProject </a></td> <td align="right">6<img src="//cdnbunny.org/i/com.gif" alt="C" /></td>
+<td align="right">31.02&nbsp;GB</td><td align="center"><span class="green"><img src="//cdnbunny.org/t/arrowup.gif" alt="S" />&nbsp;48</span>&nbsp;<img src="//cdnbunny.org/t/arrowdown.gif" alt="L" /><span class="red">&nbsp;148</span></td></tr><tr class="tum"><td>06&nbsp;Сен&nbsp;26</td><td colspan = "2"><a class="downgif" href="//d.rutor.info/download/1105317"><img src="//cdnbunny.org/i/d.gif" alt="D" /></a><a href="magnet:?xt=urn:btih:10e0eb0752faf0ccb5f92e99f3a240c53ec6f548&dn=rutor.info&tr=udp://opentor.net:6969&tr=http://retracker.local/announce"><img src="//cdnbunny.org/i/m.png" alt="M" /></a>
+<a href="/torrent/1105317/chjornye-serdca_black-hearts_coeurs-noirs-s02-2025-web-dl-1080p-jaskier">Чёрные сердца / Black Hearts / Coeurs Noirs [S02] (2025) WEB-DL 1080p | Jaskier </a></td> 
+<td align="right">23.16&nbsp;GB</td><td align="center"><span class="green"><img src="//cdnbunny.org/t/arrowup.gif" alt="S" />&nbsp;28</span>&nbsp;<img src="//cdnbunny.org/t/arrowdown.gif" alt="L" /><span class="red">&nbsp;24</span></td></tr><tr class="gai"><td>06&nbsp;Сен&nbsp;26</td><td colspan = "2"><a class="downgif" href="//d.rutor.info/download/1104354"><img src="//cdnbunny.org/i/d.gif" alt="D" /></a><a href="magnet:?xt=urn:btih:0473b2524adfa75cd430ebb1284d853743863c4c&dn=rutor.info&tr=udp://opentor.net:6969&tr=http://retracker.local/announce"><img src="//cdnbunny.org/i/m.png" alt="M" /></a>
+<a href="/torrent/1104354/fonari_lanterns-01x01-02-iz-08-2026-uhd-web-dl-hevc-2160p-ot-scarabey-4k-hdr-dolby-vision-d-red-head-sound">Фонари / Lanterns [01x01-02 из 08] (2026) UHD WEB-DL-HEVC 2160p от Scarabey | 4K | HDR | Dolby Vision | D | Red Head Sound </a></td> 
+<td align="right">15.54&nbsp;GB</td><td align="center"><span class="green"><img src="//cdnbunny.org/t/arrowup.gif" alt="S" />&nbsp;12</span>&nbsp;<img src="//cdnbunny.org/t/arrowdown.gif" alt="L" /><span class="red">&nbsp;5</span></td></tr><tr class="tum"><td>06&nbsp;Сен&nbsp;26</td><td colspan = "2"><a class="downgif" href="//d.rutor.info/download/1104353"><img src="//cdnbunny.org/i/d.gif" alt="D" /></a><a href="magnet:?xt=urn:btih:398491cc98ef825002896176f6a4fb734f27b675&dn=rutor.info&tr=udp://opentor.net:6969&tr=http://retracker.local/announce"><img src="//cdnbunny.org/i/m.png" alt="M" /></a>
+<a href="/torrent/1104353/fonari_lanterns-01x01-02-iz-08-2026-web-dl-1080p-ot-scarabey-d-red-head-sound">Фонари / Lanterns [01x01-02 из 08] (2026) WEB-DL 1080p от Scarabey | D | Red Head Sound </a></td> 
+<td align="right">4.59&nbsp;GB</td><td align="center"><span class="green"><img src="//cdnbunny.org/t/arrowup.gif" alt="S" />&nbsp;13</span>&nbsp;<img src="//cdnbunny.org/t/arrowdown.gif" alt="L" /><span class="red">&nbsp;9</span></td></tr><tr class="gai"><td>06&nbsp;Сен&nbsp;26</td><td ><a class="downgif" href="//d.rutor.info/download/1105273"><img src="//cdnbunny.org/i/d.gif" alt="D" /></a><a href="magnet:?xt=urn:btih:51a8c9441500d5c0d5219717a1fe5e49bfde38ad&dn=rutor.info&tr=udp://opentor.net:6969&tr=http://retracker.local/announce"><img src="//cdnbunny.org/i/m.png" alt="M" /></a>
+<a href="/torrent/1105273/oskolki_the-shards-01h01-08-iz-09-2026-web-dlrip-avc-ot-domino-selezen-d-p-hdrezka-studio">Осколки / The Shards [01х01-08 из 09] (2026) WEB-DLRip-AVC от DoMiNo &amp; селезень | D, P | HDRezka Studio </a></td> <td align="right">2<img src="//cdnbunny.org/i/com.gif" alt="C" /></td>
+<td align="right">5.88&nbsp;GB</td><td align="center"><span class="green"><img src="//cdnbunny.org/t/arrowup.gif" alt="S" />&nbsp;44</span>&nbsp;<img src="//cdnbunny.org/t/arrowdown.gif" alt="L" /><span class="red">&nbsp;25</span></td></tr><tr class="tum"><td>06&nbsp;Сен&nbsp;26</td><td colspan = "2"><a class="downgif" href="//d.rutor.info/download/1105245"><img src="//cdnbunny.org/i/d.gif" alt="D" /></a><a href="magnet:?xt=urn:btih:f5a2ae115d454ec8e43ed9698bb550956998f4cd&dn=rutor.info&tr=udp://opentor.net:6969&tr=http://retracker.local/announce"><img src="//cdnbunny.org/i/m.png" alt="M" /></a>
+<a href="/torrent/1105245/tjomnaja-materija_dark-matter-02x01-02-iz-10-2026-webrip-newcomers">Тёмная материя / Dark Matter [02x01-02 из 10] (2026) WEBRip | NewComers </a></td> 
+<td align="right">973.09&nbsp;MB</td><td align="center"><span class="green"><img src="//cdnbunny.org/t/arrowup.gif" alt="S" />&nbsp;15</span>&nbsp;<img src="//cdnbunny.org/t/arrowdown.gif" alt="L" /><span class="red">&nbsp;5</span></td></tr><tr class="gai"><td>06&nbsp;Сен&nbsp;26</td><td colspan = "2"><a class="downgif" href="//d.rutor.info/download/1105244"><img src="//cdnbunny.org/i/d.gif" alt="D" /></a><a href="magnet:?xt=urn:btih:5f6e3c22667ef569d6118fff6f6295d3e6c37db0&dn=rutor.info&tr=udp://opentor.net:6969&tr=http://retracker.local/announce"><img src="//cdnbunny.org/i/m.png" alt="M" /></a>
+<a href="/torrent/1105244/tjomnaja-materija_dark-matter-02x01-02-iz-10-2026-webrip-1080p-newcomers">Тёмная материя / Dark Matter [02x01-02 из 10] (2026) WEBRip 1080p | NewComers </a></td> 
+<td align="right">4.65&nbsp;GB</td><td align="center"><span class="green"><img src="//cdnbunny.org/t/arrowup.gif" alt="S" />&nbsp;21</span>&nbsp;<img src="//cdnbunny.org/t/arrowdown.gif" alt="L" /><span class="red">&nbsp;38</span></td></tr><tr class="tum"><td>06&nbsp;Сен&nbsp;26</td><td ><a class="downgif" href="//d.rutor.info/download/1101062"><img src="//cdnbunny.org/i/d.gif" alt="D" /></a><a href="magnet:?xt=urn:btih:65eda281359eb92a245a84d7c9ec47d335c32cd0&dn=rutor.info&tr=udp://opentor.net:6969&tr=http://retracker.local/announce"><img src="//cdnbunny.org/i/m.png" alt="M" /></a>
+<a href="/torrent/1101062/delo-dazhe-ne-v-izmene_jigeum-bullyuni-munjega-animnida_the-affair-was-just-the-beginning-s01-2026-web-dl-1080p-l2">Дело даже не в измене / Jigeum bullyuni munjega animnida / The Affair Was Just the Beginning [S01] (2026) WEB-DL 1080p | L2 </a></td> <td align="right">2<img src="//cdnbunny.org/i/com.gif" alt="C" /></td>
+<td align="right">10.67&nbsp;GB</td><td align="center"><span class="green"><img src="//cdnbunny.org/t/arrowup.gif" alt="S" />&nbsp;17</span>&nbsp;<img src="//cdnbunny.org/t/arrowdown.gif" alt="L" /><span class="red">&nbsp;24</span></td></tr><tr class="gai"><td>06&nbsp;Сен&nbsp;26</td><td colspan = "2"><a class="downgif" href="//d.rutor.info/download/1105185"><img src="//cdnbunny.org/i/d.gif" alt="D" /></a><a href="magnet:?xt=urn:btih:a11a88ca9b763dea069913ea4e41232e561ddd47&dn=rutor.info&tr=udp://opentor.net:6969&tr=http://retracker.local/announce"><img src="//cdnbunny.org/i/m.png" alt="M" /></a>
+<a href="/torrent/1105185/gridman-giper-agent_gridman-the-hyper-agent-01-20-iz-39-1993-hdrip-avc-l1">Гридман Гипер-агент / Gridman the Hyper Agent [01-20 из 39] (1993) HDRip-AVC | L1 </a></td> 
+<td align="right">7.83&nbsp;GB</td><td align="center"><span class="green"><img src="//cdnbunny.org/t/arrowup.gif" alt="S" />&nbsp;0</span>&nbsp;<img src="//cdnbunny.org/t/arrowdown.gif" alt="L" /><span class="red">&nbsp;0</span></td></tr><tr class="tum"><td>06&nbsp;Сен&nbsp;26</td><td colspan = "2"><a class="downgif" href="//d.rutor.info/download/903721"><img src="//cdnbunny.org/i/d.gif" alt="D" /></a><a href="magnet:?xt=urn:btih:5a6233ec10d321ce6684c871c98f62e46ee05cbb&dn=rutor.info&tr=udp://opentor.net:6969&tr=http://retracker.local/announce"><img src="//cdnbunny.org/i/m.png" alt="M" /></a>
+<a href="/torrent/903721/korolevstvo_the-kingdom_riget-s03-2022-web-dlrip-720p-tajm-media-grupp">Королевство / The Kingdom / Riget [S03] (2022) WEB-DLRip 720p | Тайм Медиа Групп </a></td> 
+<td align="right">7.46&nbsp;GB</td><td align="center"><span class="green"><img src="//cdnbunny.org/t/arrowup.gif" alt="S" />&nbsp;4</span>&nbsp;<img src="//cdnbunny.org/t/arrowdown.gif" alt="L" /><span class="red">&nbsp;1</span></td></tr><tr class="gai"><td>06&nbsp;Сен&nbsp;26</td><td ><a class="downgif" href="//d.rutor.info/download/903699"><img src="//cdnbunny.org/i/d.gif" alt="D" /></a><a href="magnet:?xt=urn:btih:d3adbea610fc1847ba508664f1462e4c2f0b7d1b&dn=rutor.info&tr=udp://opentor.net:6969&tr=http://retracker.local/announce"><img src="//cdnbunny.org/i/m.png" alt="M" /></a>
+<a href="/torrent/903699/korolevstvo_the-kingdom_riget-s01-1994-web-dl-1080p-ot-exkinoray-tajm-media-grupp">Королевство / The Kingdom / Riget [S01] (1994) WEB-DL 1080p от ExKinoRay | Тайм Медиа Групп </a></td> <td align="right">8<img src="//cdnbunny.org/i/com.gif" alt="C" /></td>
+<td align="right">19.91&nbsp;GB</td><td align="center"><span class="green"><img src="//cdnbunny.org/t/arrowup.gif" alt="S" />&nbsp;6</span>&nbsp;<img src="//cdnbunny.org/t/arrowdown.gif" alt="L" /><span class="red">&nbsp;2</span></td></tr><tr class="tum"><td>05&nbsp;Сен&nbsp;26</td><td colspan = "2"><a class="downgif" href="//d.rutor.info/download/1105184"><img src="//cdnbunny.org/i/d.gif" alt="D" /></a><a href="magnet:?xt=urn:btih:206ff9c0567698b8cbfc52fad0325f4227044bc1&dn=rutor.info&tr=udp://opentor.net:6969&tr=http://retracker.local/announce"><img src="//cdnbunny.org/i/m.png" alt="M" /></a>
+<a href="/torrent/1105184/naezdnik-v-maske-zetc_kamen-rajder-zetc_kamen-rider-zeztz-01-36-iz-50-sp-2025-webrip-avc-l1">Наездник в маске Зетц / Камен Райдер Зетц / Kamen Rider Zeztz [01-36 из 50 +SP] (2025) WebRip-AVC | L1 </a></td> 
+<td align="right">14.81&nbsp;GB</td><td align="center"><span class="green"><img src="//cdnbunny.org/t/arrowup.gif" alt="S" />&nbsp;0</span>&nbsp;<img src="//cdnbunny.org/t/arrowdown.gif" alt="L" /><span class="red">&nbsp;0</span></td></tr><tr class="gai"><td>05&nbsp;Сен&nbsp;26</td><td ><a class="downgif" href="//d.rutor.info/download/1097699"><img src="//cdnbunny.org/i/d.gif" alt="D" /></a><a href="magnet:?xt=urn:btih:bf9f64bd580d3c9b90080e9c0e441eb3c0ebb010&dn=rutor.info&tr=udp://opentor.net:6969&tr=http://retracker.local/announce"><img src="//cdnbunny.org/i/m.png" alt="M" /></a>
+<a href="/torrent/1097699/ukrytie_bunker_silo-s03-2026-web-dlrip-avc-ot-domino-selezen-hdrezka-studio">Укрытие / Бункер / Silo [S03] (2026) WEB-DLRip-AVC от DoMiNo &amp; селезень | HDRezka Studio </a></td> <td align="right">7<img src="//cdnbunny.org/i/com.gif" alt="C" /></td>
+<td align="right">6.76&nbsp;GB</td><td align="center"><span class="green"><img src="//cdnbunny.org/t/arrowup.gif" alt="S" />&nbsp;430</span>&nbsp;<img src="//cdnbunny.org/t/arrowdown.gif" alt="L" /><span class="red">&nbsp;301</span></td></tr><tr class="tum"><td>05&nbsp;Сен&nbsp;26</td><td ><a class="downgif" href="//d.rutor.info/download/1104638"><img src="//cdnbunny.org/i/d.gif" alt="D" /></a><a href="magnet:?xt=urn:btih:d33c82f6813a7a2d571673c1428fcd6274a3c778&dn=rutor.info&tr=udp://opentor.net:6969&tr=http://retracker.local/announce"><img src="//cdnbunny.org/i/m.png" alt="M" /></a>
+<a href="/torrent/1104638/tjomnaja-materija_dark-matter-02h01-02-iz-10-2026-webrip-p2-viruseproject">Тёмная материя / Dark Matter [02х01-02 из 10] (2026) WEBRip | P2 | ViruseProject </a></td> <td align="right">1<img src="//cdnbunny.org/i/com.gif" alt="C" /></td>
+<td align="right">1.25&nbsp;GB</td><td align="center"><span class="green"><img src="//cdnbunny.org/t/arrowup.gif" alt="S" />&nbsp;9</span>&nbsp;<img src="//cdnbunny.org/t/arrowdown.gif" alt="L" /><span class="red">&nbsp;18</span></td></tr><tr class="gai"><td>05&nbsp;Сен&nbsp;26</td><td ><a class="downgif" href="//d.rutor.info/download/1104637"><img src="//cdnbunny.org/i/d.gif" alt="D" /></a><a href="magnet:?xt=urn:btih:1171e08c666831819d582ec96666ceef8ba34e21&dn=rutor.info&tr=udp://opentor.net:6969&tr=http://retracker.local/announce"><img src="//cdnbunny.org/i/m.png" alt="M" /></a>
+<a href="/torrent/1104637/tjomnaja-materija_dark-matter-02h01-02-iz-10-2026-webrip-1080p-p2-viruseproject">Тёмная материя / Dark Matter [02х01-02 из 10] (2026) WEBRip 1080p | P2 | ViruseProject </a></td> <td align="right">1<img src="//cdnbunny.org/i/com.gif" alt="C" /></td>
+<td align="right">3.74&nbsp;GB</td><td align="center"><span class="green"><img src="//cdnbunny.org/t/arrowup.gif" alt="S" />&nbsp;34</span>&nbsp;<img src="//cdnbunny.org/t/arrowdown.gif" alt="L" /><span class="red">&nbsp;74</span></td></tr><tr class="tum"><td>05&nbsp;Сен&nbsp;26</td><td ><a class="downgif" href="//d.rutor.info/download/1105166"><img src="//cdnbunny.org/i/d.gif" alt="D" /></a><a href="magnet:?xt=urn:btih:e3db47e6e905cfc02535dfa162168c3640371470&dn=rutor.info&tr=udp://opentor.net:6969&tr=http://retracker.local/announce"><img src="//cdnbunny.org/i/m.png" alt="M" /></a>
+<a href="/torrent/1105166/dezhurstvo_vigil-03x01-02-iz-06-2026-web-dl-1080p-p-hdrezka-studio">Дежурство / Vigil [03x01-02 из 06] (2026) WEB-DL 1080p | P | HDRezka Studio </a></td> <td align="right">1<img src="//cdnbunny.org/i/com.gif" alt="C" /></td>
+<td align="right">2.90&nbsp;GB</td><td align="center"><span class="green"><img src="//cdnbunny.org/t/arrowup.gif" alt="S" />&nbsp;15</span>&nbsp;<img src="//cdnbunny.org/t/arrowdown.gif" alt="L" /><span class="red">&nbsp;13</span></td></tr><tr class="gai"><td>05&nbsp;Сен&nbsp;26</td><td ><a class="downgif" href="//d.rutor.info/download/610627"><img src="//cdnbunny.org/i/d.gif" alt="D" /></a><a href="magnet:?xt=urn:btih:9980c4274e2c654e1ab0dddb2fe0784de4c403fc&dn=rutor.info&tr=udp://opentor.net:6969&tr=http://retracker.local/announce"><img src="//cdnbunny.org/i/m.png" alt="M" /></a>
+<a href="/torrent/610627/chetyre-tysjachi-chetyresta_the-4400-s01-04-2004-2007-bdrip-1080p-ot-ash61-p-p1">Четыре тысячи четыреста / The 4400 [S01-04] (2004-2007) BDRip 1080p от Ash61 | P, P1 </a></td> <td align="right">13<img src="//cdnbunny.org/i/com.gif" alt="C" /></td>
+<td align="right">141.59&nbsp;GB</td><td align="center"><span class="green"><img src="//cdnbunny.org/t/arrowup.gif" alt="S" />&nbsp;13</span>&nbsp;<img src="//cdnbunny.org/t/arrowdown.gif" alt="L" /><span class="red">&nbsp;19</span></td></tr><tr class="tum"><td>04&nbsp;Сен&nbsp;26</td><td ><a class="downgif" href="//d.rutor.info/download/1027276"><img src="//cdnbunny.org/i/d.gif" alt="D" /></a><a href="magnet:?xt=urn:btih:4345ee948338ee347e7b6c66a764f9abb852b208&dn=rutor.info&tr=udp://opentor.net:6969&tr=http://retracker.local/announce"><img src="//cdnbunny.org/i/m.png" alt="M" /></a>
+<a href="/torrent/1027276/sto-let-odinochestva_cien-años-de-soledad_one-hundred-years-of-solitude-s01-02-2024-2026-web-dlrip-avc-kpk-hdrezka-studio">Сто лет одиночества / Cien Años de Soledad / One Hundred Years of Solitude [S01-02] (2024-2026) WEB-DLRip-AVC | КПК | HDrezka Studio </a></td> <td align="right">4<img src="//cdnbunny.org/i/com.gif" alt="C" /></td>
+<td align="right">4.95&nbsp;GB</td><td align="center"><span class="green"><img src="//cdnbunny.org/t/arrowup.gif" alt="S" />&nbsp;15</span>&nbsp;<img src="//cdnbunny.org/t/arrowdown.gif" alt="L" /><span class="red">&nbsp;9</span></td></tr><tr class="gai"><td>04&nbsp;Сен&nbsp;26</td><td ><a class="downgif" href="//d.rutor.info/download/1100765"><img src="//cdnbunny.org/i/d.gif" alt="D" /></a><a href="magnet:?xt=urn:btih:517776015a52d1878a40b6545c882b15a287ca89&dn=rutor.info&tr=udp://opentor.net:6969&tr=http://retracker.local/announce"><img src="//cdnbunny.org/i/m.png" alt="M" /></a>
+<a href="/torrent/1100765/jarostnaja_furious-s01-2026-web-dlrip-avc-ot-domino-selezen-p-tvshows-red-head-sound">Яростная / Furious [S01] (2026) WEB-DLRip-AVC от DoMiNo &amp; селезень | P | TVShows, Red Head Sound </a></td> <td align="right">3<img src="//cdnbunny.org/i/com.gif" alt="C" /></td>
+<td align="right">6.45&nbsp;GB</td><td align="center"><span class="green"><img src="//cdnbunny.org/t/arrowup.gif" alt="S" />&nbsp;169</span>&nbsp;<img src="//cdnbunny.org/t/arrowdown.gif" alt="L" /><span class="red">&nbsp;61</span></td></tr><tr class="tum"><td>04&nbsp;Сен&nbsp;26</td><td ><a class="downgif" href="//d.rutor.info/download/1100717"><img src="//cdnbunny.org/i/d.gif" alt="D" /></a><a href="magnet:?xt=urn:btih:29fd16ccb5fa6cd1f3c4956cc41a08d9c524d3a1&dn=rutor.info&tr=udp://opentor.net:6969&tr=http://retracker.local/announce"><img src="//cdnbunny.org/i/m.png" alt="M" /></a>
+<a href="/torrent/1100717/jarostnaja_furious-s01-2026-web-dl-1080p-p-tvshows-red-head-sound">Яростная / Furious [S01] (2026) WEB-DL 1080p | P | TVShows, Red Head Sound </a></td> <td align="right">8<img src="//cdnbunny.org/i/com.gif" alt="C" /></td>
+<td align="right">16.19&nbsp;GB</td><td align="center"><span class="green"><img src="//cdnbunny.org/t/arrowup.gif" alt="S" />&nbsp;149</span>&nbsp;<img src="//cdnbunny.org/t/arrowdown.gif" alt="L" /><span class="red">&nbsp;152</span></td></tr><tr class="gai"><td>03&nbsp;Сен&nbsp;26</td><td colspan = "2"><a class="downgif" href="//d.rutor.info/download/1104993"><img src="//cdnbunny.org/i/d.gif" alt="D" /></a><a href="magnet:?xt=urn:btih:20a2c12d8583f20b843f7c4ffdd2d2069c102f49&dn=rutor.info&tr=udp://opentor.net:6969&tr=http://retracker.local/announce"><img src="//cdnbunny.org/i/m.png" alt="M" /></a>
+<a href="/torrent/1104993/kovcheg_the-ark-03x01-06-iz-12-2026-webrip-ot-kerob-l2">Ковчег / The Ark [03x01-06 из 12] (2026) WEBRip от Kerob | L2 </a></td> 
+<td align="right">3.01&nbsp;GB</td><td align="center"><span class="green"><img src="//cdnbunny.org/t/arrowup.gif" alt="S" />&nbsp;12</span>&nbsp;<img src="//cdnbunny.org/t/arrowdown.gif" alt="L" /><span class="red">&nbsp;12</span></td></tr><tr class="tum"><td>03&nbsp;Сен&nbsp;26</td><td colspan = "2"><a class="downgif" href="//d.rutor.info/download/1104992"><img src="//cdnbunny.org/i/d.gif" alt="D" /></a><a href="magnet:?xt=urn:btih:59346a4e8ce23df1146085895d059babe5cd0efd&dn=rutor.info&tr=udp://opentor.net:6969&tr=http://retracker.local/announce"><img src="//cdnbunny.org/i/m.png" alt="M" /></a>
+<a href="/torrent/1104992/kovcheg_the-ark-03x01-06-iz-12-2026-webrip-1080p-ot-kerob-l2">Ковчег / The Ark [03x01-06 из 12] (2026) WEBRip 1080p от Kerob | L2 </a></td> 
+<td align="right">8.97&nbsp;GB</td><td align="center"><span class="green"><img src="//cdnbunny.org/t/arrowup.gif" alt="S" />&nbsp;5</span>&nbsp;<img src="//cdnbunny.org/t/arrowdown.gif" alt="L" /><span class="red">&nbsp;11</span></td></tr><tr class="gai"><td>03&nbsp;Сен&nbsp;26</td><td colspan = "2"><a class="downgif" href="//d.rutor.info/download/1104973"><img src="//cdnbunny.org/i/d.gif" alt="D" /></a><a href="magnet:?xt=urn:btih:2b38086089749edcb8fdf755f75b639b1f9ea8fa&dn=rutor.info&tr=udp://opentor.net:6969&tr=http://retracker.local/announce"><img src="//cdnbunny.org/i/m.png" alt="M" /></a>
+<a href="/torrent/1104973/ted-lasso_ted-lasso-04x01-05-iz-10-2026-webrip-newcomers">Тед Лассо / Ted Lasso [04x01-05 из 10] (2026) WEBRip | NewComers </a></td> 
+<td align="right">2.58&nbsp;GB</td><td align="center"><span class="green"><img src="//cdnbunny.org/t/arrowup.gif" alt="S" />&nbsp;8</span>&nbsp;<img src="//cdnbunny.org/t/arrowdown.gif" alt="L" /><span class="red">&nbsp;15</span></td></tr><tr class="tum"><td>03&nbsp;Сен&nbsp;26</td><td colspan = "2"><a class="downgif" href="//d.rutor.info/download/1104972"><img src="//cdnbunny.org/i/d.gif" alt="D" /></a><a href="magnet:?xt=urn:btih:7127682c499c6f29f764b52aff700531149d98c8&dn=rutor.info&tr=udp://opentor.net:6969&tr=http://retracker.local/announce"><img src="//cdnbunny.org/i/m.png" alt="M" /></a>
+<a href="/torrent/1104972/ted-lasso_ted-lasso-04x01-05-iz-10-2026-webrip-1080p-newcomers">Тед Лассо / Ted Lasso [04x01-05 из 10] (2026) WEBRip 1080p | NewComers </a></td> 
+<td align="right">9.51&nbsp;GB</td><td align="center"><span class="green"><img src="//cdnbunny.org/t/arrowup.gif" alt="S" />&nbsp;13</span>&nbsp;<img src="//cdnbunny.org/t/arrowdown.gif" alt="L" /><span class="red">&nbsp;29</span></td></tr><tr class="gai"><td>03&nbsp;Сен&nbsp;26</td><td ><a class="downgif" href="//d.rutor.info/download/1104949"><img src="//cdnbunny.org/i/d.gif" alt="D" /></a><a href="magnet:?xt=urn:btih:94abd8781e43ce8be21bb71bd5c70cd420785f13&dn=rutor.info&tr=udp://opentor.net:6969&tr=http://retracker.local/announce"><img src="//cdnbunny.org/i/m.png" alt="M" /></a>
+<a href="/torrent/1104949/dzhentlmeny_the-gentlemen-s02-2026-web-dlrip-avc-ot-domino-selezen-d-movie-dubbing">Джентльмены / The Gentlemen [S02] (2026) WEB-DLRip-AVC от DoMiNo &amp; селезень | D | Movie Dubbing </a></td> <td align="right">4<img src="//cdnbunny.org/i/com.gif" alt="C" /></td>
+<td align="right">6.38&nbsp;GB</td><td align="center"><span class="green"><img src="//cdnbunny.org/t/arrowup.gif" alt="S" />&nbsp;510</span>&nbsp;<img src="//cdnbunny.org/t/arrowdown.gif" alt="L" /><span class="red">&nbsp;165</span></td></tr><tr class="tum"><td>03&nbsp;Сен&nbsp;26</td><td ><a class="downgif" href="//d.rutor.info/download/1104912"><img src="//cdnbunny.org/i/d.gif" alt="D" /></a><a href="magnet:?xt=urn:btih:4532645f37a3bab9e931060f6399ed24f45903e1&dn=rutor.info&tr=udp://opentor.net:6969&tr=http://retracker.local/announce"><img src="//cdnbunny.org/i/m.png" alt="M" /></a>
+<a href="/torrent/1104912/dzhentlmeny_the-gentlemen-s02-2026-web-dl-1080p-ot-eniahd-d-movie-dubbing">Джентльмены / The Gentlemen [S02] (2026) WEB-DL 1080p от EniaHD | D | Movie Dubbing </a></td> <td align="right">14<img src="//cdnbunny.org/i/com.gif" alt="C" /></td>
+<td align="right">26.69&nbsp;GB</td><td align="center"><span class="green"><img src="//cdnbunny.org/t/arrowup.gif" alt="S" />&nbsp;1194</span>&nbsp;<img src="//cdnbunny.org/t/arrowdown.gif" alt="L" /><span class="red">&nbsp;2094</span></td></tr><tr class="gai"><td>02&nbsp;Сен&nbsp;26</td><td ><a class="downgif" href="//d.rutor.info/download/574142"><img src="//cdnbunny.org/i/d.gif" alt="D" /></a><a href="magnet:?xt=urn:btih:c119d159a89a9abbb9c8c9992fcbee3ce5c574c6&dn=rutor.info&tr=udp://opentor.net:6969&tr=http://retracker.local/announce"><img src="//cdnbunny.org/i/m.png" alt="M" /></a>
+<a href="/torrent/574142/bangkok-hilton_bangkok-hilton-01-03-iz-03-1989-dvdrip-avc-p2">Бангкок Хилтон / Bangkok Hilton [01-03 из 03] (1989) DVDRip-AVC | P2 </a></td> <td align="right">5<img src="//cdnbunny.org/i/com.gif" alt="C" /></td>
+<td align="right">4.35&nbsp;GB</td><td align="center"><span class="green"><img src="//cdnbunny.org/t/arrowup.gif" alt="S" />&nbsp;11</span>&nbsp;<img src="//cdnbunny.org/t/arrowdown.gif" alt="L" /><span class="red">&nbsp;2</span></td></tr><tr class="tum"><td>02&nbsp;Сен&nbsp;26</td><td ><a class="downgif" href="//d.rutor.info/download/863958"><img src="//cdnbunny.org/i/d.gif" alt="D" /></a><a href="magnet:?xt=urn:btih:b0902bc2cf7a8a141cc1ff873c143a617eea8ad1&dn=rutor.info&tr=udp://opentor.net:6969&tr=http://retracker.local/announce"><img src="//cdnbunny.org/i/m.png" alt="M" /></a>
+<a href="/torrent/863958/izvne_from-s01-04-2022-2026-web-dlrip-lostfilm">Извне / From [S01-04] (2022-2026) WEB-DLRip | LostFilm </a></td> <td align="right">88<img src="//cdnbunny.org/i/com.gif" alt="C" /></td>
+<td align="right">24.38&nbsp;GB</td><td align="center"><span class="green"><img src="//cdnbunny.org/t/arrowup.gif" alt="S" />&nbsp;33</span>&nbsp;<img src="//cdnbunny.org/t/arrowdown.gif" alt="L" /><span class="red">&nbsp;36</span></td></tr><tr class="gai"><td>02&nbsp;Сен&nbsp;26</td><td ><a class="downgif" href="//d.rutor.info/download/709993"><img src="//cdnbunny.org/i/d.gif" alt="D" /></a><a href="magnet:?xt=urn:btih:1a985f4812c6e5e2f2d39a74a4193014df52d441&dn=rutor.info&tr=udp://opentor.net:6969&tr=http://retracker.local/announce"><img src="//cdnbunny.org/i/m.png" alt="M" /></a>
+<a href="/torrent/709993/jejforija_euphoria-s01-03-special-2019-2026-web-dlrip-amedia-syncmer">Эйфория / Euphoria [S01-03 + Special] (2019-2026) WEB-DLRip | Amedia, Syncmer </a></td> <td align="right">57<img src="//cdnbunny.org/i/com.gif" alt="C" /></td>
+<td align="right">21.93&nbsp;GB</td><td align="center"><span class="green"><img src="//cdnbunny.org/t/arrowup.gif" alt="S" />&nbsp;29</span>&nbsp;<img src="//cdnbunny.org/t/arrowdown.gif" alt="L" /><span class="red">&nbsp;22</span></td></tr><tr class="tum"><td>02&nbsp;Сен&nbsp;26</td><td ><a class="downgif" href="//d.rutor.info/download/763475"><img src="//cdnbunny.org/i/d.gif" alt="D" /></a><a href="magnet:?xt=urn:btih:f7a38498bc8b00e47d2500e218c412606ed26c6e&dn=rutor.info&tr=udp://opentor.net:6969&tr=http://retracker.local/announce"><img src="//cdnbunny.org/i/m.png" alt="M" /></a>
+<a href="/torrent/763475/goljak_bez-grosha_bez-deneg_brassic-s01-07-special-2019-2025-web-dlrip-kubik-v-kube">Голяк / Без гроша / Без денег / Brassic [S01-07 + Special] (2019-2025) WEB-DLRip | Кубик в кубе </a></td> <td align="right">44<img src="//cdnbunny.org/i/com.gif" alt="C" /></td>
+<td align="right">29.08&nbsp;GB</td><td align="center"><span class="green"><img src="//cdnbunny.org/t/arrowup.gif" alt="S" />&nbsp;59</span>&nbsp;<img src="//cdnbunny.org/t/arrowdown.gif" alt="L" /><span class="red">&nbsp;38</span></td></tr><tr class="gai"><td>02&nbsp;Сен&nbsp;26</td><td ><a class="downgif" href="//d.rutor.info/download/1101118"><img src="//cdnbunny.org/i/d.gif" alt="D" /></a><a href="magnet:?xt=urn:btih:b433ed72fdb7cd9d267727f161e040d2da5c33b5&dn=rutor.info&tr=udp://opentor.net:6969&tr=http://retracker.local/announce"><img src="//cdnbunny.org/i/m.png" alt="M" /></a>
+<a href="/torrent/1101118/specnaz-lvica_special-ops-lioness-03x01-05-iz-08-2026-web-dl-1080p-p-l-tvshows-hdrezka-le-production">Спецназ: Львица / Special Ops: Lioness [03x01-05 из 08] (2026) WEB-DL 1080p | P, L | TVShows, HDRezka, LE-Production </a></td> <td align="right">5<img src="//cdnbunny.org/i/com.gif" alt="C" /></td>
+<td align="right">16.43&nbsp;GB</td><td align="center"><span class="green"><img src="//cdnbunny.org/t/arrowup.gif" alt="S" />&nbsp;42</span>&nbsp;<img src="//cdnbunny.org/t/arrowdown.gif" alt="L" /><span class="red">&nbsp;75</span></td></tr><tr class="tum"><td>02&nbsp;Сен&nbsp;26</td><td ><a class="downgif" href="//d.rutor.info/download/1102545"><img src="//cdnbunny.org/i/d.gif" alt="D" /></a><a href="magnet:?xt=urn:btih:a1010dee3b15af4a43d8d4f1b38404d38931a7d7&dn=rutor.info&tr=udp://opentor.net:6969&tr=http://retracker.local/announce"><img src="//cdnbunny.org/i/m.png" alt="M" /></a>
+<a href="/torrent/1102545/sto-let-odinochestva_cien-años-de-soledad_one-hundred-years-of-solitude-s02-2026-web-dl-1080p-p-a">Сто лет одиночества / Cien Años de Soledad / One Hundred Years of Solitude [S02] (2026) WEB-DL 1080p | P, A </a></td> <td align="right">2<img src="//cdnbunny.org/i/com.gif" alt="C" /></td>
+<td align="right">27.54&nbsp;GB</td><td align="center"><span class="green"><img src="//cdnbunny.org/t/arrowup.gif" alt="S" />&nbsp;40</span>&nbsp;<img src="//cdnbunny.org/t/arrowdown.gif" alt="L" /><span class="red">&nbsp;50</span></td></tr><tr class="gai"><td>01&nbsp;Сен&nbsp;26</td><td colspan = "2"><a class="downgif" href="//d.rutor.info/download/1104624"><img src="//cdnbunny.org/i/d.gif" alt="D" /></a><a href="magnet:?xt=urn:btih:679c742d1347d665dc7e39682d769148b49433b3&dn=rutor.info&tr=udp://opentor.net:6969&tr=http://retracker.local/announce"><img src="//cdnbunny.org/i/m.png" alt="M" /></a>
+<a href="/torrent/1104624/dva-goda-spustja_two-years-later-s01-2026-web-dlrip-1080p-dablin">Два года спустя / Two Years Later [S01] (2026) WEB-DLRip 1080p | Даблин </a></td> 
+<td align="right">11.47&nbsp;GB</td><td align="center"><span class="green"><img src="//cdnbunny.org/t/arrowup.gif" alt="S" />&nbsp;7</span>&nbsp;<img src="//cdnbunny.org/t/arrowdown.gif" alt="L" /><span class="red">&nbsp;8</span></td></tr><tr class="tum"><td>31&nbsp;Авг&nbsp;26</td><td colspan = "2"><a class="downgif" href="//d.rutor.info/download/1104650"><img src="//cdnbunny.org/i/d.gif" alt="D" /></a><a href="magnet:?xt=urn:btih:a3d20b449d4468d5478b1fd0fa90fd9ceae5eb37&dn=rutor.info&tr=udp://opentor.net:6969&tr=http://retracker.local/announce"><img src="//cdnbunny.org/i/m.png" alt="M" /></a>
+<a href="/torrent/1104650/tjomnaja-materija_dark-matter-02x01-iz-10-2026-web-dl-1080p-p">Тёмная материя / Dark Matter [02x01 из 10] (2026) WEB-DL 1080p | P </a></td> 
+<td align="right">4.77&nbsp;GB</td><td align="center"><span class="green"><img src="//cdnbunny.org/t/arrowup.gif" alt="S" />&nbsp;16</span>&nbsp;<img src="//cdnbunny.org/t/arrowdown.gif" alt="L" /><span class="red">&nbsp;3</span></td></tr><tr class="gai"><td>30&nbsp;Авг&nbsp;26</td><td ><a class="downgif" href="//d.rutor.info/download/900547"><img src="//cdnbunny.org/i/d.gif" alt="D" /></a><a href="magnet:?xt=urn:btih:1ba1321a72dab6939d447674630bfb0de531b3b0&dn=rutor.info&tr=udp://opentor.net:6969&tr=http://retracker.local/announce"><img src="//cdnbunny.org/i/m.png" alt="M" /></a>
+<a href="/torrent/900547/shantaram_shantaram-s01-2022-web-dlrip-avc-ot-domino-selezen-pifagor">Шантарам / Shantaram [S01] (2022) WEB-DLRip-AVC от DoMiNo &amp; селезень | Пифагор </a></td> <td align="right">2<img src="//cdnbunny.org/i/com.gif" alt="C" /></td>
+<td align="right">9.35&nbsp;GB</td><td align="center"><span class="green"><img src="//cdnbunny.org/t/arrowup.gif" alt="S" />&nbsp;24</span>&nbsp;<img src="//cdnbunny.org/t/arrowdown.gif" alt="L" /><span class="red">&nbsp;6</span></td></tr><tr class="tum"><td>30&nbsp;Авг&nbsp;26</td><td ><a class="downgif" href="//d.rutor.info/download/1104526"><img src="//cdnbunny.org/i/d.gif" alt="D" /></a><a href="magnet:?xt=urn:btih:c478fc0c6784acf8965f06ea5ea1538ae33427d5&dn=rutor.info&tr=udp://opentor.net:6969&tr=http://retracker.local/announce"><img src="//cdnbunny.org/i/m.png" alt="M" /></a>
+<a href="/torrent/1104526/vestis_the-westies-s01-2026-webrip-avc-ot-generalfilm-kpk-hdrezka-studio">Вестис / The Westies [S01] (2026) WEBRip-AVC от Generalfilm | КПК | HDrezka Studio </a></td> <td align="right">2<img src="//cdnbunny.org/i/com.gif" alt="C" /></td>
+<td align="right">1.57&nbsp;GB</td><td align="center"><span class="green"><img src="//cdnbunny.org/t/arrowup.gif" alt="S" />&nbsp;27</span>&nbsp;<img src="//cdnbunny.org/t/arrowdown.gif" alt="L" /><span class="red">&nbsp;7</span></td></tr><tr class="gai"><td>30&nbsp;Авг&nbsp;26</td><td ><a class="downgif" href="//d.rutor.info/download/984138"><img src="//cdnbunny.org/i/d.gif" alt="D" /></a><a href="magnet:?xt=urn:btih:c53b1d49f7e760c822066081e640d804c6c0fc2b&dn=rutor.info&tr=udp://opentor.net:6969&tr=http://retracker.local/announce"><img src="//cdnbunny.org/i/m.png" alt="M" /></a>
+<a href="/torrent/984138/tjomnaja-materija_dark-matter-s01-2024-web-dl-1080p-hdrezka-studio-lostfilm-newcomers-tvshows-red-head-sound">Тёмная материя / Dark Matter [S01] (2024) WEB-DL 1080p | HDrezka Studio, LostFilm, NewComers, TVShows, Red Head Sound </a></td> <td align="right">29<img src="//cdnbunny.org/i/com.gif" alt="C" /></td>
+<td align="right">42.65&nbsp;GB</td><td align="center"><span class="green"><img src="//cdnbunny.org/t/arrowup.gif" alt="S" />&nbsp;62</span>&nbsp;<img src="//cdnbunny.org/t/arrowdown.gif" alt="L" /><span class="red">&nbsp;114</span></td></tr><tr class="tum"><td>29&nbsp;Авг&nbsp;26</td><td ><a class="downgif" href="//d.rutor.info/download/1104458"><img src="//cdnbunny.org/i/d.gif" alt="D" /></a><a href="magnet:?xt=urn:btih:38e2b24bc43e34206649f1b72768b8fc4d072fb6&dn=rutor.info&tr=udp://opentor.net:6969&tr=http://retracker.local/announce"><img src="//cdnbunny.org/i/m.png" alt="M" /></a>
+<a href="/torrent/1104458/tjomnaja-materija_dark-matter-02h01-iz-10-2026-web-dlrip-avc-ot-domino-selezen-hdrezka-studio">Тёмная материя / Dark Matter [02х01 из 10] (2026) WEB-DLRip-AVC от DoMiNo &amp; селезень | HDRezka Studio </a></td> <td align="right">6<img src="//cdnbunny.org/i/com.gif" alt="C" /></td>
+<td align="right">761.84&nbsp;MB</td><td align="center"><span class="green"><img src="//cdnbunny.org/t/arrowup.gif" alt="S" />&nbsp;34</span>&nbsp;<img src="//cdnbunny.org/t/arrowdown.gif" alt="L" /><span class="red">&nbsp;2</span></td></tr><tr class="gai"><td>29&nbsp;Авг&nbsp;26</td><td ><a class="downgif" href="//d.rutor.info/download/1019219"><img src="//cdnbunny.org/i/d.gif" alt="D" /></a><a href="magnet:?xt=urn:btih:968af6e7fd3d8ddb971da8bb5cd89be5767a3ddc&dn=rutor.info&tr=udp://opentor.net:6969&tr=http://retracker.local/announce"><img src="//cdnbunny.org/i/m.png" alt="M" /></a>
+<a href="/torrent/1019219/sto-let-odinochestva_cien-años-de-soledad_one-hundred-years-of-solitude-s01-02-2024-2026-web-dlrip-lostfilm">Сто лет одиночества / Cien Años de Soledad / One Hundred Years of Solitude [S01-02] (2024-2026) WEB-DLRip | LostFilm </a></td> <td align="right">4<img src="//cdnbunny.org/i/com.gif" alt="C" /></td>
+<td align="right">15.06&nbsp;GB</td><td align="center"><span class="green"><img src="//cdnbunny.org/t/arrowup.gif" alt="S" />&nbsp;29</span>&nbsp;<img src="//cdnbunny.org/t/arrowdown.gif" alt="L" /><span class="red">&nbsp;40</span></td></tr><tr class="tum"><td>29&nbsp;Авг&nbsp;26</td><td ><a class="downgif" href="//d.rutor.info/download/890712"><img src="//cdnbunny.org/i/d.gif" alt="D" /></a><a href="magnet:?xt=urn:btih:3f6664a7efd8a27aae3d6f907d5c6c6dc2bc4062&dn=rutor.info&tr=udp://opentor.net:6969&tr=http://retracker.local/announce"><img src="//cdnbunny.org/i/m.png" alt="M" /></a>
+<a href="/torrent/890712/kvantovyj-skachok_quantum-leap-s01-05-1989-1993-bdrip-sts">Квантовый скачок / Quantum Leap [S01-05] (1989-1993) BDRip | СТС </a></td> <td align="right">11<img src="//cdnbunny.org/i/com.gif" alt="C" /></td>
+<td align="right">72.29&nbsp;GB</td><td align="center"><span class="green"><img src="//cdnbunny.org/t/arrowup.gif" alt="S" />&nbsp;6</span>&nbsp;<img src="//cdnbunny.org/t/arrowdown.gif" alt="L" /><span class="red">&nbsp;10</span></td></tr><tr class="gai"><td>29&nbsp;Авг&nbsp;26</td><td ><a class="downgif" href="//d.rutor.info/download/1099803"><img src="//cdnbunny.org/i/d.gif" alt="D" /></a><a href="magnet:?xt=urn:btih:60208345835daedd19097ad64517ad249b0b028e&dn=rutor.info&tr=udp://opentor.net:6969&tr=http://retracker.local/announce"><img src="//cdnbunny.org/i/m.png" alt="M" /></a>
+<a href="/torrent/1099803/vestis_the-westies-s01-2026-webrip-1080p-d-p-hdrezka">Вестис / The Westies [S01] (2026) WEBRip 1080p | D, P | HDrezka </a></td> <td align="right">13<img src="//cdnbunny.org/i/com.gif" alt="C" /></td>
+<td align="right">29.42&nbsp;GB</td><td align="center"><span class="green"><img src="//cdnbunny.org/t/arrowup.gif" alt="S" />&nbsp;46</span>&nbsp;<img src="//cdnbunny.org/t/arrowdown.gif" alt="L" /><span class="red">&nbsp;30</span></td></tr><tr class="tum"><td>29&nbsp;Авг&nbsp;26</td><td ><a class="downgif" href="//d.rutor.info/download/1099829"><img src="//cdnbunny.org/i/d.gif" alt="D" /></a><a href="magnet:?xt=urn:btih:7cb7eea0326a8bcd120a8c1e40be8b3f888de202&dn=rutor.info&tr=udp://opentor.net:6969&tr=http://retracker.local/announce"><img src="//cdnbunny.org/i/m.png" alt="M" /></a>
+<a href="/torrent/1099829/vestis_the-westies-s01-2026-webrip-avc-web-dlrip-avc-ot-domino-selezen-d-p-hdrezka-studio">Вестис / The Westies [S01] (2026) WEBRip-AVC, WEB-DLRip-AVC от DoMiNo &amp; селезень | D, P | HDrezka Studio </a></td> <td align="right">3<img src="//cdnbunny.org/i/com.gif" alt="C" /></td>
+<td align="right">6.73&nbsp;GB</td><td align="center"><span class="green"><img src="//cdnbunny.org/t/arrowup.gif" alt="S" />&nbsp;38</span>&nbsp;<img src="//cdnbunny.org/t/arrowdown.gif" alt="L" /><span class="red">&nbsp;14</span></td></tr><tr class="gai"><td>28&nbsp;Авг&nbsp;26</td><td colspan = "2"><a class="downgif" href="//d.rutor.info/download/1104336"><img src="//cdnbunny.org/i/d.gif" alt="D" /></a><a href="magnet:?xt=urn:btih:9e8d4ccb265a07915ebabc528bb2b42edc05386b&dn=rutor.info&tr=udp://opentor.net:6969&tr=http://retracker.local/announce"><img src="//cdnbunny.org/i/m.png" alt="M" /></a>
+<a href="/torrent/1104336/otchajannye-domohozjaeva_house-husbands-s02-05-2013-2017-web-dl-1080p-p">Отчаянные домохозяева / House Husbands [S02-05] (2013-2017) WEB-DL 1080p | P </a></td> 
+<td align="right">66.85&nbsp;GB</td><td align="center"><span class="green"><img src="//cdnbunny.org/t/arrowup.gif" alt="S" />&nbsp;0</span>&nbsp;<img src="//cdnbunny.org/t/arrowdown.gif" alt="L" /><span class="red">&nbsp;1</span></td></tr><tr class="tum"><td>28&nbsp;Авг&nbsp;26</td><td ><a class="downgif" href="//d.rutor.info/download/1104318"><img src="//cdnbunny.org/i/d.gif" alt="D" /></a><a href="magnet:?xt=urn:btih:e7920e3014999e662f495646f4c5d8e5246f903d&dn=rutor.info&tr=udp://opentor.net:6969&tr=http://retracker.local/announce"><img src="//cdnbunny.org/i/m.png" alt="M" /></a>
+<a href="/torrent/1104318/syn_the-son-s01-02-2017-2019-webrip-p-hdrezka-studio">Сын / The Son [S01-02] (2017-2019) WEBRip | P | HDRezka Studio </a></td> <td align="right">1<img src="//cdnbunny.org/i/com.gif" alt="C" /></td>
+<td align="right">9.59&nbsp;GB</td><td align="center"><span class="green"><img src="//cdnbunny.org/t/arrowup.gif" alt="S" />&nbsp;11</span>&nbsp;<img src="//cdnbunny.org/t/arrowdown.gif" alt="L" /><span class="red">&nbsp;3</span></td></tr><tr class="gai"><td>27&nbsp;Авг&nbsp;26</td><td ><a class="downgif" href="//d.rutor.info/download/1104208"><img src="//cdnbunny.org/i/d.gif" alt="D" /></a><a href="magnet:?xt=urn:btih:8d4ae89fc9c90a634c2fe61d7b1bd152ff8f858b&dn=rutor.info&tr=udp://opentor.net:6969&tr=http://retracker.local/announce"><img src="//cdnbunny.org/i/m.png" alt="M" /></a>
+<a href="/torrent/1104208/daleko-vo-vselennoj_farscape-s01-04-the-peacekeeper-wars-1999-2004-bdrip-p-p2-tnt-hallmark">Далеко во Вселенной / Farscape [S01-04 + The Peacekeeper Wars] (1999-2004) BDRip | P, P2 | ТНТ, Hallmark </a></td> <td align="right">3<img src="//cdnbunny.org/i/com.gif" alt="C" /></td>
+<td align="right">69.82&nbsp;GB</td><td align="center"><span class="green"><img src="//cdnbunny.org/t/arrowup.gif" alt="S" />&nbsp;8</span>&nbsp;<img src="//cdnbunny.org/t/arrowdown.gif" alt="L" /><span class="red">&nbsp;6</span></td></tr><tr class="tum"><td>27&nbsp;Авг&nbsp;26</td><td ><a class="downgif" href="//d.rutor.info/download/1103800"><img src="//cdnbunny.org/i/d.gif" alt="D" /></a><a href="magnet:?xt=urn:btih:4dd13088afd040f83767cff71457d78e76010394&dn=rutor.info&tr=udp://opentor.net:6969&tr=http://retracker.local/announce"><img src="//cdnbunny.org/i/m.png" alt="M" /></a>
+<a href="/torrent/1103800/vneshnie-otmeli_outer-banks-s05-2026-web-dl-1080p-p-red-head-sound">Внешние отмели / Outer Banks [S05] (2026) WEB-DL 1080p | P | Red Head Sound </a></td> <td align="right">1<img src="//cdnbunny.org/i/com.gif" alt="C" /></td>
+<td align="right">22.03&nbsp;GB</td><td align="center"><span class="green"><img src="//cdnbunny.org/t/arrowup.gif" alt="S" />&nbsp;15</span>&nbsp;<img src="//cdnbunny.org/t/arrowdown.gif" alt="L" /><span class="red">&nbsp;8</span></td></tr><tr class="gai"><td>27&nbsp;Авг&nbsp;26</td><td ><a class="downgif" href="//d.rutor.info/download/1084619"><img src="//cdnbunny.org/i/d.gif" alt="D" /></a><a href="magnet:?xt=urn:btih:47ef436c9c37fd0bd9b05e0e4b1e3428c769a719&dn=rutor.info&tr=udp://opentor.net:6969&tr=http://retracker.local/announce"><img src="//cdnbunny.org/i/m.png" alt="M" /></a>
+<a href="/torrent/1084619/terror_the-terror-s03-2026-web-dl-1080p-p-l">Террор / The Terror [S03] (2026) WEB-DL 1080p | P, L </a></td> <td align="right">8<img src="//cdnbunny.org/i/com.gif" alt="C" /></td>
+<td align="right">21.40&nbsp;GB</td><td align="center"><span class="green"><img src="//cdnbunny.org/t/arrowup.gif" alt="S" />&nbsp;3</span>&nbsp;<img src="//cdnbunny.org/t/arrowdown.gif" alt="L" /><span class="red">&nbsp;4</span></td></tr><tr class="tum"><td>26&nbsp;Авг&nbsp;26</td><td ><a class="downgif" href="//d.rutor.info/download/1099254"><img src="//cdnbunny.org/i/d.gif" alt="D" /></a><a href="magnet:?xt=urn:btih:bd28d9485b370dc0742b648a37ae298b15132483&dn=rutor.info&tr=udp://opentor.net:6969&tr=http://retracker.local/announce"><img src="//cdnbunny.org/i/m.png" alt="M" /></a>
+<a href="/torrent/1099254/vestis_the-westies-s01-2026-web-dlrip-lostfilm">Вестис / The Westies [S01] (2026) WEB-DLRip | LostFilm </a></td> <td align="right">4<img src="//cdnbunny.org/i/com.gif" alt="C" /></td>
+<td align="right">5.92&nbsp;GB</td><td align="center"><span class="green"><img src="//cdnbunny.org/t/arrowup.gif" alt="S" />&nbsp;153</span>&nbsp;<img src="//cdnbunny.org/t/arrowdown.gif" alt="L" /><span class="red">&nbsp;40</span></td></tr><tr class="gai"><td>26&nbsp;Авг&nbsp;26</td><td colspan = "2"><a class="downgif" href="//d.rutor.info/download/1101538"><img src="//cdnbunny.org/i/d.gif" alt="D" /></a><a href="magnet:?xt=urn:btih:25b5acbd7d99ea9d0acf0fcef47076274323e9c5&dn=rutor.info&tr=udp://opentor.net:6969&tr=http://retracker.local/announce"><img src="//cdnbunny.org/i/m.png" alt="M" /></a>
+<a href="/torrent/1101538/ted-lasso_ted-lasso-04x01-03-iz-10-2026-web-dl-1080p-p-d-p2">Тед Лассо / Ted Lasso [04x01-03 из 10] (2026) WEB-DL 1080p | P, D, P2 </a></td> 
+<td align="right">12.25&nbsp;GB</td><td align="center"><span class="green"><img src="//cdnbunny.org/t/arrowup.gif" alt="S" />&nbsp;9</span>&nbsp;<img src="//cdnbunny.org/t/arrowdown.gif" alt="L" /><span class="red">&nbsp;21</span></td></tr><tr class="tum"><td>26&nbsp;Авг&nbsp;26</td><td colspan = "2"><a class="downgif" href="//d.rutor.info/download/1103987"><img src="//cdnbunny.org/i/d.gif" alt="D" /></a><a href="magnet:?xt=urn:btih:fc2348db80ee3057424f828c9008aaa582124636&dn=rutor.info&tr=udp://opentor.net:6969&tr=http://retracker.local/announce"><img src="//cdnbunny.org/i/m.png" alt="M" /></a>
+<a href="/torrent/1103987/laki_lucky-s01-2026-web-dlrip-1080p-dablin">Лаки / Lucky [S01] (2026) WEB-DLRip 1080p | Даблин </a></td> 
+<td align="right">18.38&nbsp;GB</td><td align="center"><span class="green"><img src="//cdnbunny.org/t/arrowup.gif" alt="S" />&nbsp;19</span>&nbsp;<img src="//cdnbunny.org/t/arrowdown.gif" alt="L" /><span class="red">&nbsp;15</span></td></tr><tr class="gai"><td>25&nbsp;Авг&nbsp;26</td><td ><a class="downgif" href="//d.rutor.info/download/1099276"><img src="//cdnbunny.org/i/d.gif" alt="D" /></a><a href="magnet:?xt=urn:btih:eafc95bd198402261f4e1802287f5a3f4b296004&dn=rutor.info&tr=udp://opentor.net:6969&tr=http://retracker.local/announce"><img src="//cdnbunny.org/i/m.png" alt="M" /></a>
+<a href="/torrent/1099276/laki_lucky-s01-2026-web-dl-1080p-red-head-sound-hdrezka-studio-tvshows-lostfilm-red-head-sound-dubljazhnaja">Лаки / Lucky [S01] (2026) WEB-DL 1080p | Red Head Sound, HDrezka Studio, TVShows, LostFilm, Red Head Sound, Дубляжная </a></td> <td align="right">25<img src="//cdnbunny.org/i/com.gif" alt="C" /></td>
+<td align="right">29.09&nbsp;GB</td><td align="center"><span class="green"><img src="//cdnbunny.org/t/arrowup.gif" alt="S" />&nbsp;88</span>&nbsp;<img src="//cdnbunny.org/t/arrowdown.gif" alt="L" /><span class="red">&nbsp;35</span></td></tr><tr class="tum"><td>25&nbsp;Авг&nbsp;26</td><td colspan = "2"><a class="downgif" href="//d.rutor.info/download/1103976"><img src="//cdnbunny.org/i/d.gif" alt="D" /></a><a href="magnet:?xt=urn:btih:2629047be38f29fbd28d25ee429520cf7afd7229&dn=rutor.info&tr=udp://opentor.net:6969&tr=http://retracker.local/announce"><img src="//cdnbunny.org/i/m.png" alt="M" /></a>
+<a href="/torrent/1103976/syn_the-son-s01-02-2017-2019-web-dlrip-p-tvshows">Сын / The Son [S01-02] (2017-2019) WEB-DLRip | P | TVShows </a></td> 
+<td align="right">12.78&nbsp;GB</td><td align="center"><span class="green"><img src="//cdnbunny.org/t/arrowup.gif" alt="S" />&nbsp;1</span>&nbsp;<img src="//cdnbunny.org/t/arrowdown.gif" alt="L" /><span class="red">&nbsp;3</span></td></tr><tr class="gai"><td>24&nbsp;Авг&nbsp;26</td><td ><a class="downgif" href="//d.rutor.info/download/1099724"><img src="//cdnbunny.org/i/d.gif" alt="D" /></a><a href="magnet:?xt=urn:btih:0455b64564d6f87b13ab0a3a32ebbf5197dc779e&dn=rutor.info&tr=udp://opentor.net:6969&tr=http://retracker.local/announce"><img src="//cdnbunny.org/i/m.png" alt="M" /></a>
+<a href="/torrent/1099724/pugajuwij-roman_spooky-in-love_chilling-romance_ossakhan-yeonae-s01-2026-web-dl-1080p-l2-softbox">Пугающий роман / Spooky in Love / Chilling Romance / Ossakhan Yeonae [S01] (2026) WEB-DL 1080p | L2 | SoftBox </a></td> <td align="right">3<img src="//cdnbunny.org/i/com.gif" alt="C" /></td>
+<td align="right">28.79&nbsp;GB</td><td align="center"><span class="green"><img src="//cdnbunny.org/t/arrowup.gif" alt="S" />&nbsp;11</span>&nbsp;<img src="//cdnbunny.org/t/arrowdown.gif" alt="L" /><span class="red">&nbsp;7</span></td></tr><tr class="tum"><td>24&nbsp;Авг&nbsp;26</td><td colspan = "2"><a class="downgif" href="//d.rutor.info/download/1103756"><img src="//cdnbunny.org/i/d.gif" alt="D" /></a><a href="magnet:?xt=urn:btih:30762a870230a75426c786e46ef506bbaad4ab10&dn=rutor.info&tr=udp://opentor.net:6969&tr=http://retracker.local/announce"><img src="//cdnbunny.org/i/m.png" alt="M" /></a>
+<a href="/torrent/1103756/1670_1670-s01-03-2023-2026-web-dlrip-avc-ot-generalfilm-kpk-d-movie-dubbing">1670 / 1670 [S01-03] (2023-2026) WEB-DLRip-AVC  от Generalfilm | КПК | D | Movie Dubbing </a></td> 
+<td align="right">3.77&nbsp;GB</td><td align="center"><span class="green"><img src="//cdnbunny.org/t/arrowup.gif" alt="S" />&nbsp;13</span>&nbsp;<img src="//cdnbunny.org/t/arrowdown.gif" alt="L" /><span class="red">&nbsp;2</span></td></tr><tr class="gai"><td>24&nbsp;Авг&nbsp;26</td><td ><a class="downgif" href="//d.rutor.info/download/1103509"><img src="//cdnbunny.org/i/d.gif" alt="D" /></a><a href="magnet:?xt=urn:btih:49043de49dbdf150bfb02b88fe5e80ab42e9d144&dn=rutor.info&tr=udp://opentor.net:6969&tr=http://retracker.local/announce"><img src="//cdnbunny.org/i/m.png" alt="M" /></a>
+<a href="/torrent/1103509/vestis_the-westies-s01-2026-webrip-1080p-ot-exkinoray-novamedia">Вестис / The Westies [S01] (2026) WEBRip 1080p от ExKinoRay | Novamedia </a></td> <td align="right">3<img src="//cdnbunny.org/i/com.gif" alt="C" /></td>
+<td align="right">17.88&nbsp;GB</td><td align="center"><span class="green"><img src="//cdnbunny.org/t/arrowup.gif" alt="S" />&nbsp;202</span>&nbsp;<img src="//cdnbunny.org/t/arrowdown.gif" alt="L" /><span class="red">&nbsp;94</span></td></tr><tr class="tum"><td>23&nbsp;Авг&nbsp;26</td><td ><a class="downgif" href="//d.rutor.info/download/1099384"><img src="//cdnbunny.org/i/d.gif" alt="D" /></a><a href="magnet:?xt=urn:btih:3c0d6838f17a2cb28e724468870036060e47f5d3&dn=rutor.info&tr=udp://opentor.net:6969&tr=http://retracker.local/announce"><img src="//cdnbunny.org/i/m.png" alt="M" /></a>
+<a href="/torrent/1099384/laki_lucky-s01-2026-web-dlrip-avc-ot-domino-selezen-hdrezka-studio-tvshows">Лаки / Lucky [S01] (2026) WEB-DLRip-AVC от DoMiNo &amp; селезень | HDrezka Studio, TVShows </a></td> <td align="right">7<img src="//cdnbunny.org/i/com.gif" alt="C" /></td>
+<td align="right">4.78&nbsp;GB</td><td align="center"><span class="green"><img src="//cdnbunny.org/t/arrowup.gif" alt="S" />&nbsp;210</span>&nbsp;<img src="//cdnbunny.org/t/arrowdown.gif" alt="L" /><span class="red">&nbsp;41</span></td></tr><tr class="gai"><td>23&nbsp;Авг&nbsp;26</td><td ><a class="downgif" href="//d.rutor.info/download/1103048"><img src="//cdnbunny.org/i/d.gif" alt="D" /></a><a href="magnet:?xt=urn:btih:8565901073601c489b604feb01b9597b93223a31&dn=rutor.info&tr=udp://opentor.net:6969&tr=http://retracker.local/announce"><img src="//cdnbunny.org/i/m.png" alt="M" /></a>
+<a href="/torrent/1103048/chernyj-dvor-s01-02-2023-2026-webrip-avc-web-dlrip-avc-ot-generalfilm-kpk">Черный двор [S01-02] (2023-2026) WEBRip-AVC, WEB-DLRip-AVC от Generalfilm | КПК </a></td> <td align="right">1<img src="//cdnbunny.org/i/com.gif" alt="C" /></td>
+<td align="right">2.66&nbsp;GB</td><td align="center"><span class="green"><img src="//cdnbunny.org/t/arrowup.gif" alt="S" />&nbsp;19</span>&nbsp;<img src="//cdnbunny.org/t/arrowdown.gif" alt="L" /><span class="red">&nbsp;4</span></td></tr><tr class="tum"><td>22&nbsp;Авг&nbsp;26</td><td ><a class="downgif" href="//d.rutor.info/download/1103303"><img src="//cdnbunny.org/i/d.gif" alt="D" /></a><a href="magnet:?xt=urn:btih:c604e097cdf245ff489effdcde01f45c49897d89&dn=rutor.info&tr=udp://opentor.net:6969&tr=http://retracker.local/announce"><img src="//cdnbunny.org/i/m.png" alt="M" /></a>
+<a href="/torrent/1103303/poka-smert-ne-razluchit-nas_tills-döden-skiljer-oss-s01-2026-webrip-avc-ot-domino-selezen-grebcreative">Пока смерть не разлучит нас / Tills döden skiljer oss [S01] (2026) WEBRip-AVC от DoMiNo &amp; селезень | Greb&amp;Creative </a></td> <td align="right">1<img src="//cdnbunny.org/i/com.gif" alt="C" /></td>
+<td align="right">3.81&nbsp;GB</td><td align="center"><span class="green"><img src="//cdnbunny.org/t/arrowup.gif" alt="S" />&nbsp;30</span>&nbsp;<img src="//cdnbunny.org/t/arrowdown.gif" alt="L" /><span class="red">&nbsp;13</span></td></tr><tr class="gai"><td>22&nbsp;Авг&nbsp;26</td><td ><a class="downgif" href="//d.rutor.info/download/1103202"><img src="//cdnbunny.org/i/d.gif" alt="D" /></a><a href="magnet:?xt=urn:btih:15d2ee9f55f96f14699746f0f334bdd7b915185a&dn=rutor.info&tr=udp://opentor.net:6969&tr=http://retracker.local/announce"><img src="//cdnbunny.org/i/m.png" alt="M" /></a>
+<a href="/torrent/1103202/poka-smert-ne-razluchit-nas_tills-döden-skiljer-oss-s01-2026-webrip-1080p-ot-exkinoray-grebcreative">Пока смерть не разлучит нас / Tills döden skiljer oss [S01] (2026) WEBRip 1080p от ExKinoRay | Greb&amp;Creative </a></td> <td align="right">2<img src="//cdnbunny.org/i/com.gif" alt="C" /></td>
+<td align="right">12.18&nbsp;GB</td><td align="center"><span class="green"><img src="//cdnbunny.org/t/arrowup.gif" alt="S" />&nbsp;22</span>&nbsp;<img src="//cdnbunny.org/t/arrowdown.gif" alt="L" /><span class="red">&nbsp;13</span></td></tr><tr class="tum"><td>22&nbsp;Авг&nbsp;26</td><td colspan = "2"><a class="downgif" href="//d.rutor.info/download/1103584"><img src="//cdnbunny.org/i/d.gif" alt="D" /></a><a href="magnet:?xt=urn:btih:1b46351bd198f32847e0fbfef9a3f7e5399b2502&dn=rutor.info&tr=udp://opentor.net:6969&tr=http://retracker.local/announce"><img src="//cdnbunny.org/i/m.png" alt="M" /></a>
+<a href="/torrent/1103584/skrezhet-metalla_twisted-metal-s02-2025-web-dl-1080p-ot-eniahd-p-the-kitchen-russia">Скрежет металла / Twisted Metal [S02] (2025) WEB-DL 1080p от EniaHD | P | The Kitchen Russia </a></td> 
+<td align="right">23.35&nbsp;GB</td><td align="center"><span class="green"><img src="//cdnbunny.org/t/arrowup.gif" alt="S" />&nbsp;16</span>&nbsp;<img src="//cdnbunny.org/t/arrowdown.gif" alt="L" /><span class="red">&nbsp;7</span></td></tr></table></div><p align="center"><b>1&nbsp;-&nbsp;100</b> | <a href="/browse/1/4/0/0"><b>101&nbsp;-&nbsp;200</b></a> | <a href="/browse/2/4/0/0"><b>201&nbsp;-&nbsp;300</b></a> | ... | <a href="/browse/327/4/0/0"><b>32701&nbsp;-&nbsp;32800</b></a> | <a href="/browse/328/4/0/0"><b>32801&nbsp;-&nbsp;32900</b></a> | <a href="/browse/329/4/0/0"><b>32901&nbsp;-&nbsp;32983</b></a><br /><b>&lt;&lt;&nbsp;Предв.</b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="/browse/1/4/0/0"><b>След.&nbsp;&gt;&gt;</b></a></p>
+
+<center><a href="#up"><img src="//cdnbunny.org/t/top.gif" alt="up" /></a></center>
+
+<!-- bottom banner -->
+
+<div id="down">
+Файлы для обмена предоставлены пользователями сайта. Администрация не несёт ответственности за их содержание.
+На сервере хранятся только торрент-файлы. Это значит, что мы не храним никаких нелегальных материалов. <a href="/advertise.php">Реклама</a>. 
+</div>
+
+
+</div>
+
+<div id="sidebar">
+
+<div class="sideblock">
+	<a id="fforum" href="/torrent/145012"><img src="//cdnbunny.org/i/forum.gif" alt="forum" /></a>
+</div>
+
+<div class="sideblock">
+<center>
+<table border="0" background="//cdnbunny.org/i/poisk_bg.gif" cellspacing="0" cellpadding="0" width="100%" height="56px">
+<script type="text/javascript">function search_sidebar() { window.location.href = '/search/'+$('#in').val(); return false; }</script>
+<form action="/b.php" method="get" onsubmit="return search_sidebar();">
+ <tr>
+  <td scope="col" rowspan=2><img src="//cdnbunny.org/i/lupa.gif" border="0" alt="img" /></td>
+  <td valign="middle"><input type="text" name="search" size="18" id="in"></td>
+ </tr>
+ <tr>
+  <td><input name="submit" type="submit" id="sub" value="искать по названию"></td>
+ </tr>
+</form>
+</table>
+</center>
+</div>
+
+
+
+<div class="sideblock2">
+<center>
+
+</center>
+</div>
+
+<div class="sideblock2">
+<!--LiveInternet counter--><script type="text/javascript"><!--
+document.write("<a href='http://www.liveinternet.ru/click' "+
+"target=_blank><img src='http://counter.yadro.ru/hit?t39.6;r"+
+escape(document.referrer)+((typeof(screen)=="undefined")?"":
+";s"+screen.width+"*"+screen.height+"*"+(screen.colorDepth?
+screen.colorDepth:screen.pixelDepth))+";u"+escape(document.URL)+
+";"+Math.random()+
+"' alt='' title='LiveInternet' "+
+"border=0 width=31 height=31><\/a>")//--></script><!--/LiveInternet-->
+</div>
+
+</div>
+
+</div>
+
+
+
+
+
+
+
+<script type='text/javascript' data-cfasync='false'>
+	let ec592524fc_cnt = 0;
+	let ec592524fc_interval = setInterval(function(){
+		if (typeof ec592524fc_country !== 'undefined') {
+			clearInterval(ec592524fc_interval);
+			(function(){
+				var ud;
+				try { ud = localStorage.getItem('ec592524fc_uid'); } catch (e) { }
+				var script = document.createElement('script');
+				script.type = 'text/javascript';
+				script.charset = 'utf-8';
+				script.async = 'true';
+				script.src = 'https://' + ec592524fc_domain + '/' + ec592524fc_path + '/' + ec592524fc_file + '.js?24105&v=3&u=' + ud + '&a=' + Math.random();
+				document.body.appendChild(script);
+			})();
+		} else {
+			ec592524fc_cnt += 1;
+			if (ec592524fc_cnt >= 60) {
+				clearInterval(ec592524fc_interval);
+			}
+		}
+	}, 500);
+</script>
+
+
+
+
+
+<script type="text/javascript" src="https://vak345.com/s.js?v=ea59f7a89d04d570fbb4ef98a8a1693c" async></script>
+
+</body>
+</html>

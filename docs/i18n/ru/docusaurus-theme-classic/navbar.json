@@ -1,0 +1,30 @@
+{
+  "title": {
+    "message": "CrabIndex",
+    "description": "The title in the navbar"
+  },
+  "logo.alt": {
+    "message": "CrabIndex",
+    "description": "The alt text of navbar logo"
+  },
+  "item.label.Руководство": {
+    "message": "Руководство",
+    "description": "Navbar item with label Руководство"
+  },
+  "item.label.Трекеры": {
+    "message": "Трекеры",
+    "description": "Navbar item with label Трекеры"
+  },
+  "item.label.API": {
+    "message": "API",
+    "description": "Navbar item with label API"
+  },
+  "item.label.Веб-интерфейс": {
+    "message": "Веб-интерфейс",
+    "description": "Navbar item with label Веб-интерфейс"
+  },
+  "item.label.Swagger": {
+    "message": "Swagger",
+    "description": "Navbar item with label Swagger"
+  }
+}

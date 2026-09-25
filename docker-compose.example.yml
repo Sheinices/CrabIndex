@@ -1,0 +1,141 @@
+name: crabindex
+
+services:
+  crabindex:
+    # Prebuilt image, or build locally: `docker compose build` (uses ./Dockerfile)
+    image: crabindex:latest
+    build:
+      context: .
+    container_name: crabindex
+    restart: unless-stopped
+    ports:
+      - "9117:9117"
+    volumes:
+      - crabindex-config:/app/config
+      - crabindex-data:/app/Data
+    environment:
+      - TZ=Europe/London
+      - UMASK=0027
+      # Admin panel path used when the admin token/devkey are generated on first start
+      # (default /admin). Entry URL and devkey are printed to the log:
+      #   docker logs crabindex 2>&1 | grep 'admin:'   or   docker exec crabindex ./crabindex admin
+      # - CRABINDEX_ADMIN_PATH=/my-panel
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      - flaresolverr
+      - flaresolverr-crawl
+      - cffetch
+    healthcheck:
+      test: ["CMD", "curl", "-f", "-s", "--max-time", "10", "http://127.0.0.1:9117/health"]
+      interval: 30s
+      timeout: 15s
+      retries: 3
+      start_period: 45s
+    deploy:
+      resources:
+        limits:
+          memory: 4096M
+          cpus: "4"
+
+  # Cloudflare WARP SOCKS egress for FlareSolverr on datacenter IPs.
+  # Persist /var/lib/cloudflare-warp so registration (reg.json) survives restarts
+  # - otherwise WARP may get a new identity/IP and CF challenges return more often.
+  warp:
+    image: caomingjun/warp
+    container_name: warp
+    hostname: warp
+    restart: unless-stopped
+    device_cgroup_rules:
+      - "c 10:200 rwm"
+    ports:
+      - "127.0.0.1:20001:1080" # SOCKS5 - FlareSolverr PROXY_URL
+      # - "127.0.0.1:20002:8080" # HTTP proxy (optional)
+    environment:
+      - WARP_SLEEP=2
+      # - WARP_LICENSE_KEY=
+    cap_add:
+      - MKNOD
+      - AUDIT_WRITE
+      - NET_ADMIN
+    sysctls:
+      - net.ipv6.conf.all.disable_ipv6=0
+      - net.ipv4.conf.all.src_valid_mark=1
+    volumes:
+      - warp-data:/var/lib/cloudflare-warp
+
+  # Cloudflare bypass for Rutracker (~1 GiB RAM).
+  # With WARP: one Challenge solved after sessions.create (~11s), then
+  # Challenge not detected (~0.5s) while the same FlareSolverr session lives.
+  # Do not publish 8191 externally.
+  # CrabIndex in this compose (bridge): flaresolverr.url http://host.docker.internal:8191/v1
+  # Host-run CrabIndex: flaresolverr.url http://127.0.0.1:8191/v1
+  flaresolverr:
+    image: ghcr.io/flaresolverr/flaresolverr:latest
+    container_name: flaresolverr
+    restart: unless-stopped
+    network_mode: host
+    depends_on:
+      - warp
+    environment:
+      - LOG_LEVEL=info
+      - TZ=Europe/London
+      - PROXY_URL=socks5://127.0.0.1:20001
+      - DISABLE_MEDIA=true
+      # Debug: LOG_LEVEL=debug (LOG_HTML=true is very noisy)
+    deploy:
+      resources:
+        limits:
+          memory: 1024M
+          cpus: "2"
+
+  # Second FlareSolverr for ParseAll / UpdateTasks / ParseLatest (host :8193).
+  # One instance serializes; a second instance is what actually adds throughput.
+  # Hourly parse stays on :8191. CrabIndex: flaresolverr.crawlUrl
+  #   host-run  http://127.0.0.1:8193/v1
+  #   compose   http://host.docker.internal:8193/v1
+  flaresolverr-crawl:
+    image: ghcr.io/flaresolverr/flaresolverr:latest
+    container_name: flaresolverr-crawl
+    restart: unless-stopped
+    network_mode: host
+    depends_on:
+      - warp
+    environment:
+      - LOG_LEVEL=info
+      - TZ=Europe/London
+      - PORT=8193
+      - PROXY_URL=socks5://127.0.0.1:20001
+      - DISABLE_MEDIA=true
+    deploy:
+      resources:
+        limits:
+          memory: 1024M
+          cpus: "1.5"
+
+  # Chrome TLS fast path after FlareSolverr solve (curl_cffi). Host network so
+  # SOCKS hits the same WARP IP as PROXY_URL - cf_clearance is IP-bound.
+  # Binds 127.0.0.1:8192; do not publish. CrabIndex (bridge):
+  #   cffetch.url http://host.docker.internal:8192/fetch
+  # Host-run CrabIndex: http://127.0.0.1:8192/fetch
+  cffetch:
+    image: ghcr.io/jacred-fdb/cffetch:latest
+    container_name: cffetch
+    restart: unless-stopped
+    network_mode: host
+    depends_on:
+      - warp
+    environment:
+      - TZ=Europe/London
+      - CFFETCH_PROXY=socks5://127.0.0.1:20001
+      - CFFETCH_IMPERSONATE=chrome136
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: "1"
+
+volumes:
+  crabindex-config:
+  crabindex-data:
+  warp-data:

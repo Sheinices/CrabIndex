@@ -1,0 +1,45 @@
+[package]
+name = "crabindex"
+version.workspace = true
+edition.workspace = true
+
+[[bin]]
+name = "crabindex"
+path = "src/main.rs"
+
+[dependencies]
+crab-core.workspace = true
+crab-cloudflare = { path = "../crab-cloudflare" }
+crab-trackers-a = { path = "../crab-trackers-a" }
+crab-trackers-b = { path = "../crab-trackers-b" }
+crab-trackers-c = { path = "../crab-trackers-c" }
+crab-trackers-d = { path = "../crab-trackers-d" }
+crab-trackers-e = { path = "../crab-trackers-e" }
+crab-search = { path = "../crab-search" }
+crab-tracks = { path = "../crab-tracks" }
+crab-ops = { path = "../crab-ops" }
+tokio.workspace = true
+tokio-util.workspace = true
+axum.workspace = true
+tower.workspace = true
+tower-http = { workspace = true, features = ["catch-panic"] }
+reqwest.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+serde_yaml.workspace = true
+once_cell.workspace = true
+parking_lot.workspace = true
+dashmap.workspace = true
+indexmap.workspace = true
+chrono.workspace = true
+anyhow.workspace = true
+futures.workspace = true
+urlencoding.workspace = true
+regex.workspace = true
+url.workspace = true
+rand.workspace = true
+sha2.workspace = true
+hex.workspace = true
+
+[build-dependencies]
+chrono.workspace = true

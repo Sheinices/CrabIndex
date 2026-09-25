@@ -1,0 +1,3372 @@
+{
+  "result": {
+    "after_date": 1789063600,
+    "before_date": 1789022912,
+    "items": [
+      {
+        "item": {
+          "torrent": {
+            "id": "728926",
+            "file": "https://bitru.org/api.php?download=728926",
+            "size": "3278034944",
+            "added": 1789063600,
+            "status": "updated",
+            "seeders": "5",
+            "leechers": "22",
+            "last_seeder": 1789063603
+          },
+          "info": {
+            "name": "Тед Лассо 4 сезон (1-6 из 10)",
+            "year": "2026",
+            "country": [
+              "us",
+              "gb"
+            ],
+            "poster": "https://bitru.org/images/torrents/1785953645_220_1.jpg",
+            "screenshots": [
+              "https://bitru.org/images/torrents/1785953646_80_2.jpg",
+              "https://bitru.org/images/torrents/1785953646_420_3.jpg",
+              "https://bitru.org/images/torrents/1785953646_170_4.jpg",
+              "https://bitru.org/images/torrents/1785953646_49_5.jpg"
+            ],
+            "description": "Тед Лассо вновь возвращается в мир большого футбола, где его ждут новые вызовы, неожиданные решения и очередная возможность доказать, что доброта, оптимизм и вера в людей способны менять жизни. Вместе со своей командой он столкнется с непростыми испытаниями как на поле, так и за его пределами, ведь путь к победе требует не только мастерства, но и настоящего единства. Четвертый сезон «Теда Лассо» продолжает историю одного из самых душевных и вдохновляющих сериалов последних лет, сочетая фирменный юмор, искренние эмоции и незабываемых персонажей.",
+            "addition": "[b]Формат: [/b]AVI\r\n[b]Качество: [/b]WEBRip\r\n[b]Видео: [/b]704x352 (2.000), 23.976 кадров/сек, XviD, ~1447 Кбит/сек\r\n[b]Аудио: [/b]48,0 КГц, MP3, 2 канала, 128 Кбит/сек - русский\r\n[b]Субтитры: [/b]Нет"
+          },
+          "template": {
+            "category": "serial",
+            "section": "Зарубежные сериалы",
+            "subsection": [
+              "Комедия",
+              "Спорт"
+            ],
+            "orig_name": "Ted Lasso",
+            "other": "от ViruseProject",
+            "duration": "10 х ~00:40",
+            "directors": "Деклан Лауни, М.Дж. Делани, Эрика Дантон",
+            "actors": "Джейсон Судейкис, Бретт Голдстин, Ханна Уоддингэм, Джереми Свифт, Фил Данстер, Брендан Хант, Ник Мохаммед, Джуно Темпл, Сара Найлз, Энтони Хэд",
+            "video": {
+              "kbps": "1447",
+              "resolution": "704x352",
+              "codec": "XviD",
+              "format": "AVI",
+              "quality": "WEBRip"
+            },
+            "audio": {
+              "kbps": "128",
+              "codec": "MP3",
+              "adds": "2 ch",
+              "track": "Русская"
+            },
+            "translation": "Профессиональный (двухголосый)",
+            "translation_author": "ViruseProject",
+            "subtitles": "Отсутствуют",
+            "kinopoisk": {
+              "link": "https://www.kinopoisk.ru/series/1309707/",
+              "ratio": "8.5"
+            },
+            "imdb": {
+              "link": "https://www.imdb.com/title/tt10986410/",
+              "ratio": "8"
+            },
+            "ad": "yes",
+            "profanity": "no"
+          }
+        }
+      },
+      {
+        "item": {
+          "torrent": {
+            "id": "728925",
+            "file": "https://bitru.org/api.php?download=728925",
+            "size": "9820251453",
+            "added": 1789063582,
+            "status": "updated",
+            "seeders": "5",
+            "leechers": "67",
+            "last_seeder": 1789063585
+          },
+          "info": {
+            "name": "Тед Лассо 4 сезон (1-6 из 10)",
+            "year": "2026",
+            "country": [
+              "us",
+              "gb"
+            ],
+            "poster": "https://bitru.org/images/torrents/1785953558_926_1.jpg",
+            "screenshots": [
+              "https://bitru.org/images/torrents/1785953558_405_2.jpg",
+              "https://bitru.org/images/torrents/1785953558_664_3.jpg",
+              "https://bitru.org/images/torrents/1785953558_842_4.jpg",
+              "https://bitru.org/images/torrents/1785953558_676_5.jpg"
+            ],
+            "description": "Тед Лассо вновь возвращается в мир большого футбола, где его ждут новые вызовы, неожиданные решения и очередная возможность доказать, что доброта, оптимизм и вера в людей способны менять жизни. Вместе со своей командой он столкнется с непростыми испытаниями как на поле, так и за его пределами, ведь путь к победе требует не только мастерства, но и настоящего единства. Четвертый сезон «Теда Лассо» продолжает историю одного из самых душевных и вдохновляющих сериалов последних лет, сочетая фирменный юмор, искренние эмоции и незабываемых персонажей.",
+            "addition": "[b]Формат: [/b]MKV\r\n[b]Качество: [/b]WEBRip 1080p\r\n[b]Видео: [/b]1920x960 (2.000), ~4396 Кбит/сек, AVC, 23.976 кадров/сек, 8 бит\r\n[b]Аудио 1: [/b]48,0 КГц, AАС, 2 канальный, 192 Кбит/сек - русский\r\n[b]Аудио 2: [/b]48,0 КГц, AАC, 2 канальный, 163 Кбит/сек - английский\r\n[b]Субтитры: [/b]Русские, английские"
+          },
+          "template": {
+            "category": "serial",
+            "section": "Зарубежные сериалы",
+            "subsection": [
+              "Комедия",
+              "Спорт"
+            ],
+            "orig_name": "Ted Lasso",
+            "other": "от ViruseProject",
+            "duration": "10 х ~00:40",
+            "directors": "Деклан Лауни, М.Дж. Делани, Эрика Дантон",
+            "actors": "Джейсон Судейкис, Бретт Голдстин, Ханна Уоддингэм, Джереми Свифт, Фил Данстер, Брендан Хант, Ник Мохаммед, Джуно Темпл, Сара Найлз, Энтони Хэд",
+            "video": {
+              "kbps": "4396",
+              "resolution": "1920x960",
+              "codec": "H.264 (AVC)",
+              "format": "MKV",
+              "quality": "WEBRip"
+            },
+            "audio": {
+              "kbps": "192",
+              "codec": "AAC",
+              "adds": "2 ch",
+              "track": "Русская + Английская"
+            },
+            "translation": "Профессиональный (двухголосый)",
+            "translation_author": "ViruseProject",
+            "subtitles": "Русские + Английские",
+            "kinopoisk": {
+              "link": "https://www.kinopoisk.ru/series/1309707/",
+              "ratio": "8.5"
+            },
+            "imdb": {
+              "link": "https://www.imdb.com/title/tt10986410/",
+              "ratio": "8"
+            },
+            "ad": "yes",
+            "profanity": "no"
+          }
+        }
+      },
+      {
+        "item": {
+          "torrent": {
+            "id": "732927",
+            "file": "https://bitru.org/api.php?download=732927",
+            "size": "1960867327",
+            "added": 1789063362,
+            "status": "updated",
+            "seeders": "1",
+            "leechers": "1",
+            "last_seeder": 1789063365
+          },
+          "info": {
+            "name": "Восставший",
+            "year": "2026",
+            "country": [
+              "gb",
+              "de",
+              "us"
+            ],
+            "poster": "https://bitru.org/images/torrents/1788654497_189_1.jpg",
+            "screenshots": [
+              "https://bitru.org/images/torrents/1788654497_806_2.jpg",
+              "https://bitru.org/images/torrents/1788654497_305_3.jpg",
+              "https://bitru.org/images/torrents/1788654497_47_4.jpg",
+              "https://bitru.org/images/torrents/1788654497_399_5.jpg"
+            ],
+            "description": "Англия охвачена беспорядками. Во главе восставших оказывается Уот Тайлер, который никогда не мечтал стать лидером, но именно ему предстоит изменить ход истории.",
+            "addition": "Возраст: 18+ (зрителям, достигшим 18 лет. запрещено для детей)\r\nРейтинг MPAA: R (лицам до 17 лет обязательно присутствие взрослого)\n\nПеревод: Дублированный (Dragon Money Studio, звук с TS)\r\nЯзык озвучки: Русский, украинский, казахский, узбекский\r\nСубтитры: Отсутствуют\r\nРеклама: Присутствуют вставки видео рекламы, баннер + баннер на весь кадр.\n\nВидео: AVC/H.264, 720x388, 1510 kbps, 24.000 FPS\r\nАудио 1: AAC, 2 ch, 192 Kbps, Русский (DUB - Dragon Money Studio)\r\nАудио 2: AAC, 2 ch, 192 Kbps, Русский (DUB - звук с TS)\r\nАудио 3: AAC, 2 ch, 192 Kbps, Украинский (MVO)\r\nАудио 4: AAC, 2 ch, 192 Kbps, Казахский (MVO)\r\nАудио 5: AAC, 2 ch, 192 Kbps, Узбекский (MVO) \n\n[spoiler=MI]General\r\nUnique ID : 76818958818368828109903156326461282097 (0x39CACB1643F8225ECCDF47E362731731)\r\nComplete name : D:\\The.Uprising.2026.TCAM.MULTi.mkv\r\nFormat : Matroska\r\nFormat version : Version 4\r\nFile size : 1.83 GiB\r\nDuration : 2 h 0 min\r\nOverall bit rate : 2 173 kb/s\r\nFrame rate : 24.000 FPS\r\nEncoded date : 2026-09-10 17:56:57 UTC\r\nWriting application : mkvmerge v94.0 ('Initiate') 64-bit\r\nWriting library : libebml v1.4.5 + libmatroska v1.7.1\n\nVideo\r\nID : 1\r\nFormat : AVC\r\nFormat/Info : Advanced Video Codec\r\nFormat profile : High@L4.1\r\nFormat settings : CABAC / 4 Ref Frames\r\nFormat settings, CABAC : Yes\r\nFormat settings, Reference : 4 frames\r\nCodec ID : V_MPEG4/ISO/AVC\r\nDuration : 2 h 0 min\r\nBit rate : 1 208 kb/s\r\nNominal bit rate : 1 510 kb/s\r\nWidth : 720 pixels\r\nHeight : 388 pixels\r\nDisplay aspect ratio : 1.85:1\r\nFrame rate mode : Constant\r\nFrame rate : 24.000 FPS\r\nColor space : YUV\r\nChroma subsampling : 4:2:0\r\nBit depth : 8 bits\r\nScan type : Progressive\r\nBits/(Pixel*Frame) : 0.180\r\nStream size : 1.02 GiB (56%)\r\nWriting library : x264 core 164 r3193 3a8b5be\r\nEncoding settings : cabac=1 / ref=4 / deblock=1:0:0 / analyse=0x3:0x133 / me=hex / subme=3 / psy=1 / psy_rd=1.00:0.00 / mixed_ref=1 / me_range=16 / chroma_me=1 / trellis=1 / 8x8dct=1 / cqm=0 / deadzone=21,11 / fast_pskip=1 / chroma_qp_offset=0 / threads=25 / lookahead_threads=3 / sliced_threads=0 / nr=0 / decimate=1 / interlaced=0 / bluray_compat=0 / constrained_intra=0 / bframes=4 / b_pyramid=2 / b_adapt=1 / b_bias=0 / direct=1 / weightb=1 / open_gop=0 / weightp=2 / keyint=240 / keyint_min=24 / scenecut=40 / intra_refresh=0 / rc_lookahead=40 / rc=cbr / mbtree=1 / bitrate=1510 / ratetol=1.0 / qcomp=0.60 / qpmin=0 / qpmax=69 / qpstep=4 / vbv_maxrate=1510 / vbv_bufsize=1078 / nal_hrd=none / filler=0 / ip_ratio=1.40 / aq=1:1.00\r\nDefault : Yes\r\nForced : No\r\nColor range : Limited\r\nColor primaries : BT.709\r\nTransfer characteristics : BT.709\r\nMatrix coefficients : BT.709\n\nAudio #1\r\nID : 2\r\nFormat : AAC LC\r\nFormat/Info : Advanced Audio Codec Low Complexity\r\nCodec ID : A_AAC-2\r\nDuration : 2 h 0 min\r\nBit rate : 192 kb/s\r\nChannel(s) : 2 channels\r\nChannel layout : L R\r\nSampling rate : 48.0 kHz\r\nFrame rate : 46.875 FPS (1024 SPF)\r\nCompression mode : Lossy\r\nStream size : 165 MiB (9%)\r\nTitle : DUB - Dragon Money Studio\r\nLanguage : Russian\r\nDefault : Yes\r\nForced : No\n\nAudio #2\r\nID : 3\r\nFormat : AAC LC\r\nFormat/Info : Advanced Audio Codec Low Complexity\r\nCodec ID : A_AAC-2\r\nDuration : 2 h 0 min\r\nBit rate : 192 kb/s\r\nChannel(s) : 2 channels\r\nChannel layout : L R\r\nSampling rate : 48.0 kHz\r\nFrame rate : 46.875 FPS (1024 SPF)\r\nCompression mode : Lossy\r\nStream size : 165 MiB (9%)\r\nTitle : DUB - TS\r\nLanguage : Russian\r\nDefault : No\r\nForced : No\n\nAudio #3\r\nID : 4\r\nFormat : AAC LC\r\nFormat/Info : Advanced Audio Codec Low Complexity\r\nCodec ID : A_AAC-2\r\nDuration : 2 h 0 min\r\nBit rate : 192 kb/s\r\nChannel(s) : 2 channels\r\nChannel layout : L R\r\nSampling rate : 48.0 kHz\r\nFrame rate : 46.875 FPS (1024 SPF)\r\nCompression mode : Lossy\r\nStream size : 165 MiB (9%)\r\nTitle : MVO\r\nLanguage : Ukrainian\r\nDefault : No\r\nForced : No\n\nAudio #4\r\nID : 5\r\nFormat : AAC LC\r\nFormat/Info : Advanced Audio Codec Low Complexity\r\nCodec ID : A_AAC-2\r\nDuration : 2 h 0 min\r\nBit rate : 192 kb/s\r\nChannel(s) : 2 channels\r\nChannel layout : L R\r\nSampling rate : 48.0 kHz\r\nFrame rate : 46.875 FPS (1024 SPF)\r\nCompression mode : Lossy\r\nStream size : 165 MiB (9%)\r\nTitle : MVO\r\nLanguage : Kazakh\r\nDefault : No\r\nForced : No\n\nAudio #5\r\nID : 6\r\nFormat : AAC LC\r\nFormat/Info : Advanced Audio Codec Low Complexity\r\nCodec ID : A_AAC-2\r\nDuration : 2 h 0 min\r\nBit rate : 192 kb/s\r\nChannel(s) : 2 channels\r\nChannel layout : L R\r\nSampling rate : 48.0 kHz\r\nFrame rate : 46.875 FPS (1024 SPF)\r\nCompression mode : Lossy\r\nStream size : 165 MiB (9%)\r\nTitle : MVO\r\nLanguage : Uzbek\r\nDefault : No\r\nForced : No\r\n[/spoiler]"
+          },
+          "template": {
+            "category": "movie",
+            "section": "Зарубежное кино",
+            "subsection": [
+              "Боевик",
+              "Драма"
+            ],
+            "orig_name": "The Uprising",
+            "other": "Dragon Money Studio",
+            "duration": "01:59",
+            "directors": "Пол Гринграсс",
+            "actors": "Эндрю Гарфилд, Джейми Белл, Стивен Диллэйн, Том Холландер, Космо Джарвис, Томасин Маккензи, Джонни Ли Миллер, Вуди Норман, Кэтрин Уотерстон, Андреас Брехтельсбауэр",
+            "video": {
+              "kbps": "1510",
+              "resolution": "720x388",
+              "codec": "H.264 (AVC)",
+              "format": "MP4",
+              "quality": "CAMRip"
+            },
+            "audio": {
+              "kbps": "192",
+              "codec": "AAC",
+              "adds": "2 ch",
+              "track": "Русская + Другая"
+            },
+            "translation": "Профессиональный (дублирование)",
+            "translation_author": "Dragon Money Studio",
+            "subtitles": "Отсутствуют",
+            "kinopoisk": {
+              "link": "https://www.kinopoisk.ru/film/8005532/",
+              "ratio": ""
+            },
+            "imdb": {
+              "link": "https://www.imdb.com/title/tt36983905/",
+              "ratio": ""
+            },
+            "ad": "yes",
+            "profanity": "no"
+          }
+        }
+      },
+      {
+        "item": {
+          "torrent": {
+            "id": "732207",
+            "file": "https://bitru.org/api.php?download=732207",
+            "size": "16765784916",
+            "added": 1789058036,
+            "status": "updated",
+            "seeders": "15",
+            "leechers": "105",
+            "last_seeder": 1789066364
+          },
+          "info": {
+            "name": "Пора на завод 1 сезон (1-14 из 16)",
+            "year": "2026",
+            "country": [
+              "ru"
+            ],
+            "poster": "https://bitru.org/images/torrents/1788192768_158_1.jpg",
+            "screenshots": [
+              "https://bitru.org/images/torrents/1788192768_157_2.jpg",
+              "https://bitru.org/images/torrents/1788192768_74_3.jpg",
+              "https://bitru.org/images/torrents/1788192769_472_4.jpg",
+              "https://bitru.org/images/torrents/1788192769_341_5.jpg"
+            ],
+            "description": "Молодой и успешный московский инвестор Вадим ради любви к своей девушке Тане кардинально меняет свою привычную жизнь. Чтобы заслужить уважение отца Тани, сурового бригадира-металлурга Игоря Романовича, Вадим, никогда не державший в руках даже рубанок, устраивается на уральский металлургический завод. Жар цехов, грубый юмор коллег и неподъемные физические нагрузки — лишь малая часть испытаний, с которыми сталкивается Вадим. Сможет ли он продержаться целый месяц без привычного комфорта, найти настоящих друзей и завоевать уважение суровых металлургов? И главное — что Вадиму придётся в себе изменить, чтобы его наконец признали &amp;quot;своим&amp;quot;?",
+            "addition": ""
+          },
+          "template": {
+            "category": "serial",
+            "section": "Наши сериалы",
+            "subsection": [
+              "Комедия"
+            ],
+            "other": "от Files-x",
+            "duration": "16 x ~00:22",
+            "directors": "Василий Свиридов",
+            "actors": "Вячеслав Чепурченко, Рината Тимербаева, Анатолий Журавлёв, Инга Оболдина, Анна Уколова, Анатолий Гущин, Николай Шрайбер, Ренат Мухамбаев, Антон Остерников, Алексей Демидов",
+            "video": {
+              "kbps": "6476",
+              "resolution": "1920x1080",
+              "codec": "H.264 (AVC)",
+              "format": "TS",
+              "quality": "HDTV"
+            },
+            "audio": {
+              "kbps": "192",
+              "codec": "MP2",
+              "adds": "2 ch",
+              "track": "Русская"
+            },
+            "translation": "Не требуется",
+            "subtitles": "Отсутствуют",
+            "kinopoisk": {
+              "link": "https://www.kinopoisk.ru/series/9416705/",
+              "ratio": "7.7"
+            },
+            "imdb": {
+              "link": "https://www.imdb.com/title/tt38756429/",
+              "ratio": ""
+            },
+            "ad": "no",
+            "profanity": "no"
+          }
+        }
+      },
+      {
+        "item": {
+          "torrent": {
+            "id": "732190",
+            "file": "https://bitru.org/api.php?download=732190",
+            "size": "7314104320",
+            "added": 1789058030,
+            "status": "updated",
+            "seeders": "2",
+            "leechers": "9",
+            "last_seeder": 1789065375
+          },
+          "info": {
+            "name": "ОПГ 1 сезон (1-10 из 10)",
+            "year": "2025",
+            "country": [
+              "ru"
+            ],
+            "poster": "https://bitru.org/images/torrents/1788180487_372_1.jpg",
+            "screenshots": [
+              "https://bitru.org/images/torrents/1788180487_528_2.jpg",
+              "https://bitru.org/images/torrents/1788180488_795_3.jpg",
+              "https://bitru.org/images/torrents/1788180489_821_4.jpg",
+              "https://bitru.org/images/torrents/1788180490_710_5.jpg"
+            ],
+            "description": "[center]Провинциальный бандит Воркута жил под девизом «Не мы такие ― жизнь такая», но в 1999 году лихие 90-е закончились, и он получил срок. В тюрьме он лишился сна и через пару недель бессонницы увидел свою совесть в образе человека, который сообщила, что пока тот плохой, то спать он не будет. В 2024 году Воркута выходит на волю, где ему предстоит загладить вину перед теми, чью жизнь он испортил. Воркута обращается за помощью к бывшим подельникам, один из которых живёт с мамой и работает на мусоровозе, а другой нашёл пристанище в местной церкви. Общественно Полезная Группировка с энтузиазмом встаёт на путь исправления и начинает помогать горожанам.[/center]",
+            "addition": "[b]► Релиз группы[/b] https://bitru.org/img/i1788180425_325.png\r\nКачество: WEBRip\r\nФормат: AVI\r\nВидео: 720x304 (2.35:1), 25.000 fps, XviD build 73, ~1620 Kbps\r\nАудио: 48.0 KHz, AC3, 6 ch, 384 kbps\r\nРеклама: Нет"
+          },
+          "template": {
+            "category": "serial",
+            "section": "Наши сериалы",
+            "subsection": [
+              "Комедия"
+            ],
+            "other": "РГ Русские сериалы",
+            "duration": "10 x ~ 00:45",
+            "directors": "Пётр Буслов",
+            "actors": "Пётр Буслов, Максим Лагашкин, Николай Шрайбер, Андрей Мерзликин, Юрий Чурсин, Григорий Сиятвинда, Елена Подкаминская, Денис Дорохов, Павел Деревянко, Алексей Макаров",
+            "video": {
+              "kbps": "1620",
+              "resolution": "720x304",
+              "codec": "XviD",
+              "format": "AVI",
+              "quality": "WEBRip"
+            },
+            "audio": {
+              "kbps": "384",
+              "codec": "AC3",
+              "adds": "6 ch",
+              "track": "Русская"
+            },
+            "translation": "Не требуется",
+            "subtitles": "Отсутствуют",
+            "kinopoisk": {
+              "link": "https://www.kinopoisk.ru/film/6047239/",
+              "ratio": "6.6"
+            },
+            "imdb": {
+              "link": "https://www.imdb.com/title/tt33040550/",
+              "ratio": ""
+            },
+            "ad": "no",
+            "profanity": "no"
+          }
+        }
+      },
+      {
+        "item": {
+          "torrent": {
+            "id": "732209",
+            "file": "https://bitru.org/api.php?download=732209",
+            "size": "4307171328",
+            "added": 1789057938,
+            "status": "updated",
+            "seeders": "14",
+            "leechers": "22",
+            "last_seeder": 1789057941
+          },
+          "info": {
+            "name": "Пора на завод 1 сезон (1-14 из 16)",
+            "year": "2026",
+            "country": [
+              "ru"
+            ],
+            "poster": "https://bitru.org/images/torrents/1788193008_197_1.jpg",
+            "screenshots": [
+              "https://bitru.org/images/torrents/1788193008_728_2.jpg",
+              "https://bitru.org/images/torrents/1788193009_113_3.jpg",
+              "https://bitru.org/images/torrents/1788193009_156_4.jpg",
+              "https://bitru.org/images/torrents/1788193009_51_5.jpg"
+            ],
+            "description": "Молодой и успешный московский инвестор Вадим ради любви к своей девушке Тане кардинально меняет свою привычную жизнь. Чтобы заслужить уважение отца Тани, сурового бригадира-металлурга Игоря Романовича, Вадим, никогда не державший в руках даже рубанок, устраивается на уральский металлургический завод. Жар цехов, грубый юмор коллег и неподъемные физические нагрузки — лишь малая часть испытаний, с которыми сталкивается Вадим. Сможет ли он продержаться целый месяц без привычного комфорта, найти настоящих друзей и завоевать уважение суровых металлургов? И главное — что Вадиму придётся в себе изменить, чтобы его наконец признали &amp;quot;своим&amp;quot;?",
+            "addition": "Кодек: XviD\r\nКачество: HDTVRip\r\nВидео: XviD, ~ 1600 Кбит/с, 720x400, 25 кадр/с\r\nЗвук: AC3, 2 ch, 192 Кбит/с"
+          },
+          "template": {
+            "category": "serial",
+            "section": "Наши сериалы",
+            "subsection": [
+              "Комедия"
+            ],
+            "other": "от Files-x",
+            "duration": "16 x ~00:22",
+            "directors": "Василий Свиридов",
+            "actors": "Вячеслав Чепурченко, Рината Тимербаева, Анатолий Журавлёв, Инга Оболдина, Анна Уколова, Анатолий Гущин, Николай Шрайбер, Ренат Мухамбаев, Антон Остерников, Алексей Демидов",
+            "video": {
+              "kbps": "1600",
+              "resolution": "720x400",
+              "codec": "XviD",
+              "format": "AVI",
+              "quality": "HDTVRip"
+            },
+            "audio": {
+              "kbps": "192",
+              "codec": "AC3",
+              "adds": "2 ch",
+              "track": "Русская"
+            },
+            "translation": "Не требуется",
+            "subtitles": "Отсутствуют",
+            "kinopoisk": {
+              "link": "https://www.kinopoisk.ru/series/9416705/",
+              "ratio": "7.7"
+            },
+            "imdb": {
+              "link": "https://www.imdb.com/title/tt38756429/",
+              "ratio": ""
+            },
+            "ad": "no",
+            "profanity": "no"
+          }
+        }
+      },
+      {
+        "item": {
+          "torrent": {
+            "id": "733566",
+            "file": "https://bitru.org/api.php?download=733566",
+            "size": "8540808283",
+            "added": 1789057385,
+            "status": "new",
+            "seeders": "40",
+            "leechers": "62",
+            "last_seeder": 1789065591
+          },
+          "info": {
+            "name": "Старый орёл",
+            "year": "2026",
+            "country": [
+              "ru"
+            ],
+            "poster": "https://bitru.org/images/torrents/1789057377_52_1.jpg",
+            "screenshots": [
+              "https://bitru.org/images/torrents/1789057378_249_2.jpg",
+              "https://bitru.org/images/torrents/1789057380_176_3.jpg",
+              "https://bitru.org/images/torrents/1789057381_49_4.jpg",
+              "https://bitru.org/images/torrents/1789057383_888_5.jpg"
+            ],
+            "description": "[center]Дед Батраз Зелимханович уединённо живёт в горном селе. К нему приезжает новый глава местной администрации Семён, чтобы сообщить о решении ликвидировать село, потому что «один человек - не административная единица». Семёну нужно получить письменное согласие Батраза на переезд в город, но дед никуда уезжать не собирается. В газете он видит заметку об альпийских поселениях, привлекающих миллионы туристов, и решает превратить своё в экодеревню. Чтобы справиться с этой задачей, ему нужна помощь сына и внуков, которым очень непросто вырваться из городской жизни.[/center]",
+            "addition": "Кодек: MPEG-H HEVC\r\nКачество: WEB-DL-HEVC 2160p\r\nВидео: MPEG-H HEVC, 11.7 Mбит/с, 3840x2160, 8 бит, 24 кадр/с\r\nЗвук: Русский (E-AC3, 6 ch, 384 Кбит/с)\r\nСубтитры: Русские (Forced, Full)"
+          },
+          "template": {
+            "category": "movie",
+            "section": "Наше кино",
+            "subsection": [
+              "Комедия",
+              "Семейный"
+            ],
+            "other": "4К, SDR, 8-bit | от ExKinoRay",
+            "duration": "01:34",
+            "directors": "Мурад Ногмов",
+            "actors": "Алик Караев, Павел Лёвкин, Миша Шульц, Иса Новиков, Надежда Михалкова, Светлана Гуссаова, Павел Деревянко, Дмитрий Ткаченко, Сергей Степин, Гоша Торвич",
+            "video": {
+              "kbps": "11700",
+              "resolution": "3840x2160",
+              "codec": "H.265 (HEVC)",
+              "format": "MKV",
+              "quality": "WEB-DL"
+            },
+            "audio": {
+              "kbps": "384",
+              "codec": "EAC3",
+              "adds": "6 ch",
+              "track": "Русская"
+            },
+            "translation": "Не требуется",
+            "subtitles": "Русские",
+            "kinopoisk": {
+              "link": "https://www.kinopoisk.ru/film/5426269/",
+              "ratio": "7.2"
+            },
+            "imdb": {
+              "link": "https://www.imdb.com/title/tt34269068/",
+              "ratio": "7"
+            },
+            "ad": "no",
+            "profanity": "no"
+          }
+        }
+      },
+      {
+        "item": {
+          "torrent": {
+            "id": "733565",
+            "file": "https://bitru.org/api.php?download=733565",
+            "size": "3346346153",
+            "added": 1789057285,
+            "status": "new",
+            "seeders": "215",
+            "leechers": "177",
+            "last_seeder": 1789065597
+          },
+          "info": {
+            "name": "Старый орёл",
+            "year": "2026",
+            "country": [
+              "ru"
+            ],
+            "poster": "https://bitru.org/images/torrents/1789057276_805_1.jpg",
+            "screenshots": [
+              "https://bitru.org/images/torrents/1789057280_425_2.jpg",
+              "https://bitru.org/images/torrents/1789057281_350_3.jpg",
+              "https://bitru.org/images/torrents/1789057282_76_4.jpg",
+              "https://bitru.org/images/torrents/1789057284_366_5.jpg"
+            ],
+            "description": "[center]Дед Батраз Зелимханович уединённо живёт в горном селе. К нему приезжает новый глава местной администрации Семён, чтобы сообщить о решении ликвидировать село, потому что «один человек - не административная единица». Семёну нужно получить письменное согласие Батраза на переезд в город, но дед никуда уезжать не собирается. В газете он видит заметку об альпийских поселениях, привлекающих миллионы туристов, и решает превратить своё в экодеревню. Чтобы справиться с этой задачей, ему нужна помощь сына и внуков, которым очень непросто вырваться из городской жизни.[/center]",
+            "addition": "Кодек: MPEG-4 AVC\r\nКачество: WEB-DL 1080p\r\nВидео: MPEG-4 AVC, 4000 Кбит/с, 1920x804\r\nЗвук: Русский (AC3, 6 ch, 384 Кбит/с), (E-AC3, 6 ch, 384 Кбит/с)\r\nСубтитры: Русские (Forced, Full)"
+          },
+          "template": {
+            "category": "movie",
+            "section": "Наше кино",
+            "subsection": [
+              "Комедия",
+              "Семейный"
+            ],
+            "other": "от ExKinoRay",
+            "duration": "01:34",
+            "directors": "Мурад Ногмов",
+            "actors": "Алик Караев, Павел Лёвкин, Миша Шульц, Иса Новиков, Надежда Михалкова, Светлана Гуссаова, Павел Деревянко, Дмитрий Ткаченко, Сергей Степин, Гоша Торвич",
+            "video": {
+              "kbps": "4000",
+              "resolution": "1920x804",
+              "codec": "H.264 (AVC)",
+              "format": "MKV",
+              "quality": "WEB-DL"
+            },
+            "audio": {
+              "kbps": "384",
+              "codec": "AC3",
+              "adds": "6 ch",
+              "track": "Русская"
+            },
+            "translation": "Не требуется",
+            "subtitles": "Русские",
+            "kinopoisk": {
+              "link": "https://www.kinopoisk.ru/film/5426269/",
+              "ratio": "7.2"
+            },
+            "imdb": {
+              "link": "https://www.imdb.com/title/tt34269068/",
+              "ratio": "7"
+            },
+            "ad": "no",
+            "profanity": "no"
+          }
+        }
+      },
+      {
+        "item": {
+          "torrent": {
+            "id": "733564",
+            "file": "https://bitru.org/api.php?download=733564",
+            "size": "20096779917",
+            "added": 1789057162,
+            "status": "new",
+            "seeders": "5",
+            "leechers": "44",
+            "last_seeder": 1789068594
+          },
+          "info": {
+            "name": "Ты, я и лето в Тоскане",
+            "year": "2026",
+            "country": [
+              "us"
+            ],
+            "poster": "https://bitru.org/images/torrents/1789057159_840_1.jpg",
+            "screenshots": [
+              "https://bitru.org/images/torrents/1789057160_177_2.jpg",
+              "https://bitru.org/images/torrents/1789057160_455_3.jpg",
+              "https://bitru.org/images/torrents/1789057161_995_4.jpg",
+              "https://bitru.org/images/torrents/1789057162_378_5.jpg"
+            ],
+            "description": "[center]Анна теряет работу няней с проживанием. Внезапно она решает исполнить свою давнюю мечту и отправляется в Тоскану. Поскольку все номера в местных гостиницах заняты, Анна селится в пустующем особняке, который принадлежит Маттео. Когда на виллу приезжает мать владельца, она решает, что незнакомая девушка — невеста сына. Американка подыгрывает, но вскоре в Тоскану также прилетает и брат Маттео Майкл. Анна начинает всё больше времени проводить с Майклом, и между ними возникают чувства, которые грозят раскрыть правду о девушке.[/center]",
+            "addition": "Студия: Universal Pictures, Will Packer Productions\r\nПеревод: Дублированный (профессиональный) | Movie Dubbing\r\nКачество: UHD WEB-DL 2160p\r\nВидео: MPEG-H HEVC, 24.6 Mбит/с, 3840x1606, 23.976 кадр/с, 10 бит\r\nАудио # 1: AC3, 6 ch, 448 Кбит/с - RUS | DUB Movie Dubbing\r\nАудио # 2: Е-AC3+Atmos, 6 ch, 768 Кбит/с - ENG\r\nСубтитры: Русские (Forced, Full), украинские (Full), английские (Forced, SDH)\n\nАвтор релиза: schumaher"
+          },
+          "template": {
+            "category": "movie",
+            "section": "Зарубежное кино",
+            "subsection": [
+              "Комедия",
+              "Мелодрама"
+            ],
+            "orig_name": "You, Me &amp; Tuscany",
+            "other": "HDR10+ | Dolby Vision P8 | от schumaher",
+            "duration": "01:45",
+            "directors": "Кэт Койро",
+            "actors": "Холли Бейли, Реге-Жан Пейдж, Лоренцо де Мур, Марко Калвани, Изабелла Феррари, Паоло Сассанелли, Стефания Казини, Стелла Пеколло, Томмазо Кассисса, Ниа Вардалос",
+            "video": {
+              "kbps": "24600",
+              "resolution": "3840x1606",
+              "codec": "H.265 (HEVC)",
+              "format": "MKV",
+              "quality": "WEB-DL"
+            },
+            "audio": {
+              "kbps": "448",
+              "codec": "AC3",
+              "adds": "6 ch",
+              "track": "Русская + Английская"
+            },
+            "translation": "Профессиональный (дублирование)",
+            "translation_author": "Movie Dubbing",
+            "subtitles": "Русские + Другие",
+            "kinopoisk": {
+              "link": "https://www.kinopoisk.ru/film/10167359/",
+              "ratio": "5.9"
+            },
+            "imdb": {
+              "link": "https://www.imdb.com/title/tt36352591/",
+              "ratio": "6"
+            },
+            "ad": "no",
+            "profanity": "no"
+          }
+        }
+      },
+      {
+        "item": {
+          "torrent": {
+            "id": "733134",
+            "file": "https://bitru.org/api.php?download=733134",
+            "size": "2113586173",
+            "added": 1789056887,
+            "status": "updated",
+            "seeders": "10",
+            "leechers": "18",
+            "last_seeder": 1789056890
+          },
+          "info": {
+            "name": "Родители Родителей 2 сезон (1-6 из 17)",
+            "year": "2025",
+            "country": [
+              "ru"
+            ],
+            "poster": "https://bitru.org/images/torrents/1788753730_451_1.jpg",
+            "screenshots": [
+              "https://bitru.org/images/torrents/1788753730_557_2.jpg",
+              "https://bitru.org/images/torrents/1788753731_463_3.jpg",
+              "https://bitru.org/images/torrents/1788753732_194_4.jpg",
+              "https://bitru.org/images/torrents/1788753733_412_5.jpg"
+            ],
+            "description": "Кажется, Саша и Маша уже выполнили свою главную миссию — вырастили детей, дождались, когда те создадут собственные семьи, и, наконец, могут пожить для себя. Но жизнь приготовила Соколовым очередные испытания. Тимофей и Полина отправляются в длительную командировку в Китай, и Саше с Машей придётся заново вспомнить, каково это — растить детей. Макс и Лера закроют кофейню ради нового, куда более авантюрного бизнеса. А Илья с Соней, недавно ставшие родителями, попробуют совместить современные подходы к воспитанию с опытом старшего поколения.",
+            "addition": "Качество: WEB-DLRip-AVC\r\nВидео: MPEG-4 AVC, ~ 1800 Кбит/с, 1024x576, 25 кадр/с\r\nАудио: AC3, 2 ch, 256 Кбит/с\r\nСубтитры: Русские AI (Сгенерировано ИИ) полные отключаемые"
+          },
+          "template": {
+            "category": "serial",
+            "section": "Наши сериалы",
+            "subsection": [
+              "Комедия",
+              "Семейный"
+            ],
+            "other": "от ExKinoRay",
+            "duration": "17 x ~00:24",
+            "directors": "Александр Жигалкин",
+            "actors": "Мария Порошина, Александр Самойленко, Александр Самойленко (младший), Никита Митасов, Артём Башенин, Анастасия Крылова, Ангелина Поплавская, Борис Дейков, Арина Савостьянова, Лев Зайд",
+            "video": {
+              "kbps": "1800",
+              "resolution": "1024x576",
+              "codec": "H.264 (AVC)",
+              "format": "MKV",
+              "quality": "WEB-DLRip"
+            },
+            "audio": {
+              "kbps": "256",
+              "codec": "AC3",
+              "adds": "2 ch",
+              "track": "Русская"
+            },
+            "translation": "Не требуется",
+            "subtitles": "Русские",
+            "kinopoisk": {
+              "link": "https://www.kinopoisk.ru/film/5501222/",
+              "ratio": "7.2"
+            },
+            "imdb": {
+              "link": "https://www.imdb.com/title/tt33338947/",
+              "ratio": "6"
+            },
+            "ad": "no",
+            "profanity": "no"
+          }
+        }
+      },
+      {
+        "item": {
+          "torrent": {
+            "id": "733225",
+            "file": "https://bitru.org/api.php?download=733225",
+            "size": "4313352788",
+            "added": 1789056872,
+            "status": "updated",
+            "seeders": "8",
+            "leechers": "9",
+            "last_seeder": 1789056875
+          },
+          "info": {
+            "name": "Родители Родителей 2 сезон (1-6 из 17)",
+            "year": "2025",
+            "country": [
+              "ru"
+            ],
+            "poster": "https://bitru.org/images/torrents/1788837572_839_1.jpg",
+            "screenshots": [
+              "https://bitru.org/images/torrents/1788837573_815_2.jpg",
+              "https://bitru.org/images/torrents/1788837574_712_3.jpg",
+              "https://bitru.org/images/torrents/1788837576_954_4.jpg",
+              "https://bitru.org/images/torrents/1788837577_819_5.jpg"
+            ],
+            "description": "Кажется, Саша и Маша уже выполнили свою главную миссию — вырастили детей, дождались, когда те создадут собственные семьи, и, наконец, могут пожить для себя. Но жизнь приготовила Соколовым очередные испытания. Тимофей и Полина отправляются в длительную командировку в Китай, и Саше с Машей придётся заново вспомнить, каково это — растить детей. Макс и Лера закроют кофейню ради нового, куда более авантюрного бизнеса. А Илья с Соней, недавно ставшие родителями, попробуют совместить современные подходы к воспитанию с опытом старшего поколения.",
+            "addition": "Кодек: MPEG-4 AVC\r\nКачество: WEB-DL 1080p\r\nВидео: MPEG-4 AVC, ~ 4000 Кбит/с, 1920x1080\r\nЗвук: Русский (AAC, 2 ch, 256 Кбит/с)\r\nСубтитры: Русские"
+          },
+          "template": {
+            "category": "serial",
+            "section": "Наши сериалы",
+            "subsection": [
+              "Комедия",
+              "Семейный"
+            ],
+            "other": "от ExKinoRay",
+            "duration": "17 x ~00:25",
+            "directors": "Александр Жигалкин",
+            "actors": "Мария Порошина, Александр Самойленко, Александр Самойленко (младший), Никита Митасов, Артём Башенин, Анастасия Крылова, Ангелина Поплавская, Борис Дейков, Арина Савостьянова, Лев Зайд",
+            "video": {
+              "kbps": "4000",
+              "resolution": "1920x1080",
+              "codec": "H.264 (AVC)",
+              "format": "MKV",
+              "quality": "WEB-DL"
+            },
+            "audio": {
+              "kbps": "256",
+              "codec": "AAC",
+              "adds": "2 ch",
+              "track": "Русская"
+            },
+            "translation": "Не требуется",
+            "subtitles": "Русские",
+            "kinopoisk": {
+              "link": "https://www.kinopoisk.ru/film/5501222/",
+              "ratio": "7.2"
+            },
+            "imdb": {
+              "link": "https://www.imdb.com/title/tt33338947/",
+              "ratio": "6"
+            },
+            "ad": "no",
+            "profanity": "no"
+          }
+        }
+      },
+      {
+        "item": {
+          "torrent": {
+            "id": "728258",
+            "file": "https://bitru.org/api.php?download=728258",
+            "size": "28246615601",
+            "added": 1789056786,
+            "status": "updated",
+            "seeders": "5",
+            "leechers": "34",
+            "last_seeder": 1789064996
+          },
+          "info": {
+            "name": "Медиум 5 сезон (1-14 из 16) / Анна Медиум",
+            "year": "2026",
+            "country": [
+              "ru"
+            ],
+            "poster": "https://bitru.org/images/torrents/1785430582_50_1.jpg",
+            "screenshots": [
+              "https://bitru.org/images/torrents/1785430583_998_2.jpg",
+              "https://bitru.org/images/torrents/1785430584_704_3.jpg",
+              "https://bitru.org/images/torrents/1785430586_877_4.jpg",
+              "https://bitru.org/images/torrents/1785430587_135_5.jpg"
+            ],
+            "description": "Благодаря своему изобретению Евгений стал руководителем одного из подразделений крупного холдинга. Его ждет солидная премия в случае выигрыша тендера, и семья Островских уже строит грандиозные планы на приобретение дома в престижном дачном поселке под Санкт-Петербургом. Чтобы привыкнуть к будущему месту жительства они снимают в поселке на лето большую красивую старую дачу. Новое место — это не только новые соседи и новая социальная среда, но и интересные, запутанные преступления, жертвами или виновниками которых становятся соседи Островских. Эти преступления Анна раскрывает с помощью своего дара и тех знаний и навыков, которые она приобрела, работая на Следственный комитет. А на помощь ей приходят друзья и коллеги из СК: Гончаров, Макарова и Старостин. Но сможет ли семья Островских справиться с испытанием внезапным богатством, которое подстерегает их самих?\r\n[spoiler=Интересно:]\n\n[center]&quot;Анна Медиум&quot; возвращается: все, что нужно знать о 5-м сезоне главного мистического детектива\n\nЕсть герои, к которым хочется возвращаться снова и снова. Анна Островская из мистического детектива &quot;Анна Медиум&quot; — именно такая. Уже несколько сезонов она доказывает, что самые загадочные преступления можно раскрыть, если доверять не только логике, но и интуиции. А точнее — своему уникальному дару.\n\nНа медиаплатформе &quot;Смотрим&quot;, начиная с 30 июля 2026 года стартует долгожданный пятый сезон сериала &quot;Анна Медиум&quot;. Любимая героиня в исполнении Марии Порошиной вновь окажется в центре невероятных событий, где мистические знаки и экстрасенсорные способности помогают найти ответы там, где следствие заходит в тупик.\n\nНовые расследования, неожиданные испытания и еще больше семейных историй — рассказываем, чего ждать от продолжения одного из самых популярных российских мистических сериалов.\n\nНовая глава в жизни семьи Островских\n\nЖизнь семьи Островских, кажется, выходит на новый уровень. Благодаря своему изобретению Евгений (Павел Трубинер) становится руководителем одного из подразделений крупного холдинга. Впереди — престижный тендер, солидная премия и мечта о собственном доме в элитном поселке под Санкт-Петербургом.\n\nЧтобы привыкнуть к будущему месту жительства, семья снимает на лето просторную старинную дачу. Но спокойный загородный отдых быстро превращается в череду загадочных событий. Новые соседи, незнакомая атмосфера и преступления, которые происходят совсем рядом, вновь заставляют Анну использовать свой необычный дар.\n\nКаждое расследование становится настоящей головоломкой. Там, где улики молчат, к Анне приходят подсказки из мира, недоступного обычным людям. А разобраться в происходящем ей по-прежнему помогают коллеги из Следственного комитета — Гончаров (Александр Ратников), Макарова (Лаура Кеосаян) и Старостин (Даниил Кокин).\n\nНовые локации — новая атмосфера\n\nПятый сезон заметно отличается от предыдущих. Съемки проходили в Санкт-Петербурге и Ленинградской области, поэтому зрителей ждут живописные загородные пейзажи, старинные дачи, уютные улицы и виды Финского залива, которые стали полноценной частью истории.\n\nРежиссер Елена Николаева отмечает, что создатели сознательно расширили привычный мир сериала:\n\n&quot;В пятом сезоне очень много нового. Во-первых, перед нами стояла творческая задача расширить локации, так что мы переехали за город, в Ленинградскую область, которая очень богата природой, где красивая и уютная, семейная обстановка. Во-вторых, наши юные герои подросли. Мария Порошина и Павел Трубинер и в жизни многодетные родители, так что наши маленькие артисты на площадке с ними работают изумительно, тянутся к ним. И это потрясающе, ведь в нашем сериале дети и семья — это главный акцент. Да, у нас и детектив, и мистика, и навороченные сюжеты, но все равно костяк — это наша многодетная семья, где все уникальные, особенные, добрые и хорошие люди».\n\nИменно семейная линия остается тем, что отличает &quot;Анну Медиум&quot; от многих детективов. За мистическими загадками и криминальными интригами здесь всегда стоят человеческие отношения, взаимная поддержка и ценность семьи.\n\nЛюбимые герои снова вместе\n\nК своим ролям возвращаются: Мария Порошина, Павел Трубинер, Александр Ратников, Лаура Кеосаян, Данил Кокин, Евгения Симонова, Елизавета Бугулова, Екатерина Вуличенко, Анна Михайловская, Полина Айнутдинова, Варвара Куприна и другие актеры.\n\nПремьерный показ нового сезона состоится эксклюзивно на медиаплатформе &quot;Смотрим&quot;, а позже сериал выйдет в эфире телеканала &quot;Россия-1&quot;.\n\nЗа что зрители любят Марию Порошину?\n\nВыход нового сезона — отличный повод вновь вспомнить, почему именно Мария Порошина уже много лет остается одной из самых любимых актрис российского кино и телевидения.\n\nЕё героини никогда не бывают одинаковыми. Они умеют быть сильными, когда кажется, что выхода нет, сохраняют тепло даже в самых драматичных обстоятельствах и всегда вызывают искреннее сопереживание. Именно поэтому Анна Островская получилась такой убедительной: она не просто медиум с необычным даром, а прежде всего любящая жена, заботливая мама и человек, который никогда не проходит мимо чужой беды.\n\nЗа плечами Марии Порошиной десятки ярких ролей: от культового &quot;Ночного дозора&quot; и легендарной &quot;Бригады&quot; до любимых новогодних &quot;Ёлок&quot;, но именно сочетание внутренней силы, доброты и естественности сделало ее одной из самых узнаваемых актрис отечественного экрана. И в пятом сезоне &quot;Анны Медиум&quot; зрителей вновь ждет именно такая героиня — мудрая, искренняя и бесконечно обаятельная.\n\nНе пропустите премьеру\n\nПятый сезон &quot;Анны Медиум&quot; вновь объединит мистику, напряженный детектив, семейную драму и атмосферу, благодаря которой сериал уже несколько лет остается одним из самых популярных проектов своего жанра.\n\nНовые загадки, неожиданные открытия, испытания для семьи Островских и встречи с любимыми героями ждут зрителей в премьерных сериях, нового пятого сезона.\n\nСмотрите премьеру пятого сезона на медиаплатформе &quot;Смотрим&quot; эксклюзивно, в платной подписке.[/center]\r\n[/spoiler]",
+            "addition": "Кодек: AVC\r\nКачество: WEBRip 1080p\r\nВидео: MPEG-4 AVC, ~ 5000 Кбит/с, 1920x1080, 25 кадр/с\r\nЗвук: AC3, 2 ch, 192 Кбит/с"
+          },
+          "template": {
+            "category": "serial",
+            "section": "Наши сериалы",
+            "subsection": [
+              "Мистика",
+              "Детектив"
+            ],
+            "other": "от Files-x",
+            "duration": "16 х ~00:51",
+            "directors": "Елена Николаева (I), Алексей Рудаков",
+            "actors": "Мария Порошина, Павел Трубинер, Сергей Степанченко, Наталья Суркова, Александр Ратников, Лаура Кеосаян, Максим Дрозд, Анна Михайловская, Елизавета Бугулова, Полина Айнутдинова",
+            "video": {
+              "kbps": "5000",
+              "resolution": "1920x1080",
+              "codec": "H.264 (AVC)",
+              "format": "MKV",
+              "quality": "WEBRip"
+            },
+            "audio": {
+              "kbps": "192",
+              "codec": "AC3",
+              "adds": "2 ch",
+              "track": "Русская"
+            },
+            "translation": "Не требуется",
+            "subtitles": "Отсутствуют",
+            "kinopoisk": {
+              "link": "https://www.kinopoisk.ru/series/1405759/",
+              "ratio": "6.8"
+            },
+            "ad": "no",
+            "profanity": "no"
+          }
+        }
+      },
+      {
+        "item": {
+          "torrent": {
+            "id": "728257",
+            "file": "https://bitru.org/api.php?download=728257",
+            "size": "10887503888",
+            "added": 1789056713,
+            "status": "updated",
+            "seeders": "6",
+            "leechers": "34",
+            "last_seeder": 1789066773
+          },
+          "info": {
+            "name": "Медиум 5 сезон (1-14 из 16) / Анна Медиум",
+            "year": "2026",
+            "country": [
+              "ru"
+            ],
+            "poster": "https://bitru.org/images/torrents/1785430417_650_1.jpg",
+            "screenshots": [
+              "https://bitru.org/images/torrents/1785430418_733_2.jpg",
+              "https://bitru.org/images/torrents/1785430419_250_3.jpg",
+              "https://bitru.org/images/torrents/1785430420_519_4.jpg",
+              "https://bitru.org/images/torrents/1785430422_638_5.jpg"
+            ],
+            "description": "Благодаря своему изобретению Евгений стал руководителем одного из подразделений крупного холдинга. Его ждет солидная премия в случае выигрыша тендера, и семья Островских уже строит грандиозные планы на приобретение дома в престижном дачном поселке под Санкт-Петербургом. Чтобы привыкнуть к будущему месту жительства они снимают в поселке на лето большую красивую старую дачу. Новое место — это не только новые соседи и новая социальная среда, но и интересные, запутанные преступления, жертвами или виновниками которых становятся соседи Островских. Эти преступления Анна раскрывает с помощью своего дара и тех знаний и навыков, которые она приобрела, работая на Следственный комитет. А на помощь ей приходят друзья и коллеги из СК: Гончаров, Макарова и Старостин. Но сможет ли семья Островских справиться с испытанием внезапным богатством, которое подстерегает их самих?\r\n[spoiler=Интересно:]\n\n[center]&quot;Анна Медиум&quot; возвращается: все, что нужно знать о 5-м сезоне главного мистического детектива\n\nЕсть герои, к которым хочется возвращаться снова и снова. Анна Островская из мистического детектива &quot;Анна Медиум&quot; — именно такая. Уже несколько сезонов она доказывает, что самые загадочные преступления можно раскрыть, если доверять не только логике, но и интуиции. А точнее — своему уникальному дару.\n\nНа медиаплатформе &quot;Смотрим&quot;, начиная с 30 июля 2026 года стартует долгожданный пятый сезон сериала &quot;Анна Медиум&quot;. Любимая героиня в исполнении Марии Порошиной вновь окажется в центре невероятных событий, где мистические знаки и экстрасенсорные способности помогают найти ответы там, где следствие заходит в тупик.\n\nНовые расследования, неожиданные испытания и еще больше семейных историй — рассказываем, чего ждать от продолжения одного из самых популярных российских мистических сериалов.\n\nНовая глава в жизни семьи Островских\n\nЖизнь семьи Островских, кажется, выходит на новый уровень. Благодаря своему изобретению Евгений (Павел Трубинер) становится руководителем одного из подразделений крупного холдинга. Впереди — престижный тендер, солидная премия и мечта о собственном доме в элитном поселке под Санкт-Петербургом.\n\nЧтобы привыкнуть к будущему месту жительства, семья снимает на лето просторную старинную дачу. Но спокойный загородный отдых быстро превращается в череду загадочных событий. Новые соседи, незнакомая атмосфера и преступления, которые происходят совсем рядом, вновь заставляют Анну использовать свой необычный дар.\n\nКаждое расследование становится настоящей головоломкой. Там, где улики молчат, к Анне приходят подсказки из мира, недоступного обычным людям. А разобраться в происходящем ей по-прежнему помогают коллеги из Следственного комитета — Гончаров (Александр Ратников), Макарова (Лаура Кеосаян) и Старостин (Даниил Кокин).\n\nНовые локации — новая атмосфера\n\nПятый сезон заметно отличается от предыдущих. Съемки проходили в Санкт-Петербурге и Ленинградской области, поэтому зрителей ждут живописные загородные пейзажи, старинные дачи, уютные улицы и виды Финского залива, которые стали полноценной частью истории.\n\nРежиссер Елена Николаева отмечает, что создатели сознательно расширили привычный мир сериала:\n\n&quot;В пятом сезоне очень много нового. Во-первых, перед нами стояла творческая задача расширить локации, так что мы переехали за город, в Ленинградскую область, которая очень богата природой, где красивая и уютная, семейная обстановка. Во-вторых, наши юные герои подросли. Мария Порошина и Павел Трубинер и в жизни многодетные родители, так что наши маленькие артисты на площадке с ними работают изумительно, тянутся к ним. И это потрясающе, ведь в нашем сериале дети и семья — это главный акцент. Да, у нас и детектив, и мистика, и навороченные сюжеты, но все равно костяк — это наша многодетная семья, где все уникальные, особенные, добрые и хорошие люди».\n\nИменно семейная линия остается тем, что отличает &quot;Анну Медиум&quot; от многих детективов. За мистическими загадками и криминальными интригами здесь всегда стоят человеческие отношения, взаимная поддержка и ценность семьи.\n\nЛюбимые герои снова вместе\n\nК своим ролям возвращаются: Мария Порошина, Павел Трубинер, Александр Ратников, Лаура Кеосаян, Данил Кокин, Евгения Симонова, Елизавета Бугулова, Екатерина Вуличенко, Анна Михайловская, Полина Айнутдинова, Варвара Куприна и другие актеры.\n\nПремьерный показ нового сезона состоится эксклюзивно на медиаплатформе &quot;Смотрим&quot;, а позже сериал выйдет в эфире телеканала &quot;Россия-1&quot;.\n\nЗа что зрители любят Марию Порошину?\n\nВыход нового сезона — отличный повод вновь вспомнить, почему именно Мария Порошина уже много лет остается одной из самых любимых актрис российского кино и телевидения.\n\nЕё героини никогда не бывают одинаковыми. Они умеют быть сильными, когда кажется, что выхода нет, сохраняют тепло даже в самых драматичных обстоятельствах и всегда вызывают искреннее сопереживание. Именно поэтому Анна Островская получилась такой убедительной: она не просто медиум с необычным даром, а прежде всего любящая жена, заботливая мама и человек, который никогда не проходит мимо чужой беды.\n\nЗа плечами Марии Порошиной десятки ярких ролей: от культового &quot;Ночного дозора&quot; и легендарной &quot;Бригады&quot; до любимых новогодних &quot;Ёлок&quot;, но именно сочетание внутренней силы, доброты и естественности сделало ее одной из самых узнаваемых актрис отечественного экрана. И в пятом сезоне &quot;Анны Медиум&quot; зрителей вновь ждет именно такая героиня — мудрая, искренняя и бесконечно обаятельная.\n\nНе пропустите премьеру\n\nПятый сезон &quot;Анны Медиум&quot; вновь объединит мистику, напряженный детектив, семейную драму и атмосферу, благодаря которой сериал уже несколько лет остается одним из самых популярных проектов своего жанра.\n\nНовые загадки, неожиданные открытия, испытания для семьи Островских и встречи с любимыми героями ждут зрителей в премьерных сериях, нового пятого сезона.\n\nСмотрите премьеру пятого сезона на медиаплатформе &quot;Смотрим&quot; эксклюзивно, в платной подписке.[/center]\r\n[/spoiler]",
+            "addition": "Качество: WEBRip-AVC\r\nВидео: MPEG-4 AVC, ~ 1800 Кбит/с, 1024x576, 25 кадр/с\r\nАудио: Русский (AAС, 2 ch, 192 Кбит/с)"
+          },
+          "template": {
+            "category": "serial",
+            "section": "Наши сериалы",
+            "subsection": [
+              "Мистика",
+              "Детектив"
+            ],
+            "other": "от ExKinoRay",
+            "duration": "16 х ~00:52",
+            "directors": "Елена Николаева (I), Алексей Рудаков",
+            "actors": "Мария Порошина, Павел Трубинер, Сергей Степанченко, Наталья Суркова, Александр Ратников, Лаура Кеосаян, Максим Дрозд, Анна Михайловская, Елизавета Бугулова, Полина Айнутдинова",
+            "video": {
+              "kbps": "1800",
+              "resolution": "1024x576",
+              "codec": "H.264 (AVC)",
+              "format": "MKV",
+              "quality": "WEBRip"
+            },
+            "audio": {
+              "kbps": "192",
+              "codec": "AAC",
+              "adds": "2 ch",
+              "track": "Русская"
+            },
+            "translation": "Не требуется",
+            "subtitles": "Отсутствуют",
+            "kinopoisk": {
+              "link": "https://www.kinopoisk.ru/series/1405759/",
+              "ratio": "6.8"
+            },
+            "ad": "no",
+            "profanity": "no"
+          }
+        }
+      },
+      {
+        "item": {
+          "torrent": {
+            "id": "728285",
+            "file": "https://bitru.org/api.php?download=728285",
+            "size": "10430005748",
+            "added": 1789056517,
+            "status": "updated",
+            "seeders": "2",
+            "leechers": "2",
+            "last_seeder": 1789066786
+          },
+          "info": {
+            "name": "Медиум 5 сезон (1-14 из 16) / Анна Медиум",
+            "year": "2026",
+            "country": [
+              "ru"
+            ],
+            "poster": "https://bitru.org/images/torrents/1785437419_584_1.jpg",
+            "screenshots": [
+              "https://bitru.org/images/torrents/1785437420_979_2.jpg",
+              "https://bitru.org/images/torrents/1785437421_918_3.jpg",
+              "https://bitru.org/images/torrents/1785437424_725_4.jpg",
+              "https://bitru.org/images/torrents/1785437425_547_5.jpg"
+            ],
+            "description": "Благодаря своему изобретению Евгений стал руководителем одного из подразделений крупного холдинга. Его ждет солидная премия в случае выигрыша тендера, и семья Островских уже строит грандиозные планы на приобретение дома в престижном дачном поселке под Санкт-Петербургом. Чтобы привыкнуть к будущему месту жительства они снимают в поселке на лето большую красивую старую дачу. Новое место — это не только новые соседи и новая социальная среда, но и интересные, запутанные преступления, жертвами или виновниками которых становятся соседи Островских. Эти преступления Анна раскрывает с помощью своего дара и тех знаний и навыков, которые она приобрела, работая на Следственный комитет. А на помощь ей приходят друзья и коллеги из СК: Гончаров, Макарова и Старостин. Но сможет ли семья Островских справиться с испытанием внезапным богатством, которое подстерегает их самих?\r\n[spoiler=Интересно:]\n\n[center]&quot;Анна Медиум&quot; возвращается: все, что нужно знать о 5-м сезоне главного мистического детектива\n\nЕсть герои, к которым хочется возвращаться снова и снова. Анна Островская из мистического детектива &quot;Анна Медиум&quot; — именно такая. Уже несколько сезонов она доказывает, что самые загадочные преступления можно раскрыть, если доверять не только логике, но и интуиции. А точнее — своему уникальному дару.\n\nНа медиаплатформе &quot;Смотрим&quot;, начиная с 30 июля 2026 года стартует долгожданный пятый сезон сериала &quot;Анна Медиум&quot;. Любимая героиня в исполнении Марии Порошиной вновь окажется в центре невероятных событий, где мистические знаки и экстрасенсорные способности помогают найти ответы там, где следствие заходит в тупик.\n\nНовые расследования, неожиданные испытания и еще больше семейных историй — рассказываем, чего ждать от продолжения одного из самых популярных российских мистических сериалов.\n\nНовая глава в жизни семьи Островских\n\nЖизнь семьи Островских, кажется, выходит на новый уровень. Благодаря своему изобретению Евгений (Павел Трубинер) становится руководителем одного из подразделений крупного холдинга. Впереди — престижный тендер, солидная премия и мечта о собственном доме в элитном поселке под Санкт-Петербургом.\n\nЧтобы привыкнуть к будущему месту жительства, семья снимает на лето просторную старинную дачу. Но спокойный загородный отдых быстро превращается в череду загадочных событий. Новые соседи, незнакомая атмосфера и преступления, которые происходят совсем рядом, вновь заставляют Анну использовать свой необычный дар.\n\nКаждое расследование становится настоящей головоломкой. Там, где улики молчат, к Анне приходят подсказки из мира, недоступного обычным людям. А разобраться в происходящем ей по-прежнему помогают коллеги из Следственного комитета — Гончаров (Александр Ратников), Макарова (Лаура Кеосаян) и Старостин (Даниил Кокин).\n\nНовые локации — новая атмосфера\n\nПятый сезон заметно отличается от предыдущих. Съемки проходили в Санкт-Петербурге и Ленинградской области, поэтому зрителей ждут живописные загородные пейзажи, старинные дачи, уютные улицы и виды Финского залива, которые стали полноценной частью истории.\n\nРежиссер Елена Николаева отмечает, что создатели сознательно расширили привычный мир сериала:\n\n&quot;В пятом сезоне очень много нового. Во-первых, перед нами стояла творческая задача расширить локации, так что мы переехали за город, в Ленинградскую область, которая очень богата природой, где красивая и уютная, семейная обстановка. Во-вторых, наши юные герои подросли. Мария Порошина и Павел Трубинер и в жизни многодетные родители, так что наши маленькие артисты на площадке с ними работают изумительно, тянутся к ним. И это потрясающе, ведь в нашем сериале дети и семья — это главный акцент. Да, у нас и детектив, и мистика, и навороченные сюжеты, но все равно костяк — это наша многодетная семья, где все уникальные, особенные, добрые и хорошие люди».\n\nИменно семейная линия остается тем, что отличает &quot;Анну Медиум&quot; от многих детективов. За мистическими загадками и криминальными интригами здесь всегда стоят человеческие отношения, взаимная поддержка и ценность семьи.\n\nЛюбимые герои снова вместе\n\nК своим ролям возвращаются: Мария Порошина, Павел Трубинер, Александр Ратников, Лаура Кеосаян, Данил Кокин, Евгения Симонова, Елизавета Бугулова, Екатерина Вуличенко, Анна Михайловская, Полина Айнутдинова, Варвара Куприна и другие актеры.\n\nПремьерный показ нового сезона состоится эксклюзивно на медиаплатформе &quot;Смотрим&quot;, а позже сериал выйдет в эфире телеканала &quot;Россия-1&quot;.\n\nЗа что зрители любят Марию Порошину?\n\nВыход нового сезона — отличный повод вновь вспомнить, почему именно Мария Порошина уже много лет остается одной из самых любимых актрис российского кино и телевидения.\n\nЕё героини никогда не бывают одинаковыми. Они умеют быть сильными, когда кажется, что выхода нет, сохраняют тепло даже в самых драматичных обстоятельствах и всегда вызывают искреннее сопереживание. Именно поэтому Анна Островская получилась такой убедительной: она не просто медиум с необычным даром, а прежде всего любящая жена, заботливая мама и человек, который никогда не проходит мимо чужой беды.\n\nЗа плечами Марии Порошиной десятки ярких ролей: от культового &quot;Ночного дозора&quot; и легендарной &quot;Бригады&quot; до любимых новогодних &quot;Ёлок&quot;, но именно сочетание внутренней силы, доброты и естественности сделало ее одной из самых узнаваемых актрис отечественного экрана. И в пятом сезоне &quot;Анны Медиум&quot; зрителей вновь ждет именно такая героиня — мудрая, искренняя и бесконечно обаятельная.\n\nНе пропустите премьеру\n\nПятый сезон &quot;Анны Медиум&quot; вновь объединит мистику, напряженный детектив, семейную драму и атмосферу, благодаря которой сериал уже несколько лет остается одним из самых популярных проектов своего жанра.\n\nНовые загадки, неожиданные открытия, испытания для семьи Островских и встречи с любимыми героями ждут зрителей в премьерных сериях, нового пятого сезона.\n\nСмотрите премьеру пятого сезона на медиаплатформе &quot;Смотрим&quot; эксклюзивно, в платной подписке.[/center]\r\n[/spoiler]",
+            "addition": "Качество: WEBRip-AVC\r\nФормат: MKV\r\nВидео кодек: H.264\r\nАудио кодек: AAC\r\nВидео: MPEG4 Video (H264), 1024х576, 25fps, 1600 Kbps, bit/pixel 0.109\r\nАудио: AAC 48000Hz, stereo, 192 kbps, 2 ch"
+          },
+          "template": {
+            "category": "serial",
+            "section": "Наши сериалы",
+            "subsection": [
+              "Мистика",
+              "Детектив"
+            ],
+            "other": "Aleksan55",
+            "duration": "16 х ~00:51",
+            "directors": "Елена Николаева (I), Алексей Рудаков",
+            "actors": "Мария Порошина, Павел Трубинер, Сергей Степанченко, Наталья Суркова, Александр Ратников, Лаура Кеосаян, Максим Дрозд, Анна Михайловская, Елизавета Бугулова, Полина Айнутдинова",
+            "video": {
+              "kbps": "1600",
+              "resolution": "1024x576",
+              "codec": "H.264 (AVC)",
+              "format": "MKV",
+              "quality": "WEBRip"
+            },
+            "audio": {
+              "kbps": "192",
+              "codec": "AAC",
+              "adds": "2 ch",
+              "track": "Русская"
+            },
+            "translation": "Не требуется",
+            "subtitles": "Отсутствуют",
+            "kinopoisk": {
+              "link": "https://www.kinopoisk.ru/series/1405759/",
+              "ratio": "6.8"
+            },
+            "imdb": {
+              "link": "https://www.imdb.com/title/tt31464945/",
+              "ratio": "4"
+            },
+            "ad": "no",
+            "profanity": "no"
+          }
+        }
+      },
+      {
+        "item": {
+          "torrent": {
+            "id": "732670",
+            "file": "https://bitru.org/api.php?download=732670",
+            "size": "16164038424",
+            "added": 1789056482,
+            "status": "updated",
+            "seeders": "16",
+            "leechers": "35",
+            "last_seeder": 1789056485
+          },
+          "info": {
+            "name": "Медиум 5 сезон (7-14 из 16) / Анна Медиум",
+            "year": "2026",
+            "country": [
+              "ru"
+            ],
+            "poster": "https://bitru.org/images/torrents/1788493172_766_1.jpg",
+            "screenshots": [
+              "https://bitru.org/images/torrents/1788493173_296_2.jpg",
+              "https://bitru.org/images/torrents/1788493173_6_3.jpg",
+              "https://bitru.org/images/torrents/1788493173_826_4.jpg",
+              "https://bitru.org/images/torrents/1788493174_910_5.jpg"
+            ],
+            "description": "Благодаря своему изобретению Евгений стал руководителем одного из подразделений крупного холдинга. Его ждет солидная премия в случае выигрыша тендера, и семья Островских уже строит грандиозные планы на приобретение дома в престижном дачном поселке под Санкт-Петербургом. Чтобы привыкнуть к будущему месту жительства они снимают в поселке на лето большую красивую старую дачу. Новое место — это не только новые соседи и новая социальная среда, но и интересные, запутанные преступления, жертвами или виновниками которых становятся соседи Островских. Эти преступления Анна раскрывает с помощью своего дара и тех знаний и навыков, которые она приобрела, работая на Следственный комитет. А на помощь ей приходят друзья и коллеги из СК: Гончаров, Макарова и Старостин. Но сможет ли семья Островских справиться с испытанием внезапным богатством, которое подстерегает их самих?\r\n[spoiler=Интересно:]\n\n[center]&quot;Анна Медиум&quot; возвращается: все, что нужно знать о 5-м сезоне главного мистического детектива\n\nЕсть герои, к которым хочется возвращаться снова и снова. Анна Островская из мистического детектива &quot;Анна Медиум&quot; — именно такая. Уже несколько сезонов она доказывает, что самые загадочные преступления можно раскрыть, если доверять не только логике, но и интуиции. А точнее — своему уникальному дару.\n\nНа медиаплатформе &quot;Смотрим&quot;, начиная с 30 июля 2026 года стартует долгожданный пятый сезон сериала &quot;Анна Медиум&quot;. Любимая героиня в исполнении Марии Порошиной вновь окажется в центре невероятных событий, где мистические знаки и экстрасенсорные способности помогают найти ответы там, где следствие заходит в тупик.\n\nНовые расследования, неожиданные испытания и еще больше семейных историй — рассказываем, чего ждать от продолжения одного из самых популярных российских мистических сериалов.\n\nНовая глава в жизни семьи Островских\n\nЖизнь семьи Островских, кажется, выходит на новый уровень. Благодаря своему изобретению Евгений (Павел Трубинер) становится руководителем одного из подразделений крупного холдинга. Впереди — престижный тендер, солидная премия и мечта о собственном доме в элитном поселке под Санкт-Петербургом.\n\nЧтобы привыкнуть к будущему месту жительства, семья снимает на лето просторную старинную дачу. Но спокойный загородный отдых быстро превращается в череду загадочных событий. Новые соседи, незнакомая атмосфера и преступления, которые происходят совсем рядом, вновь заставляют Анну использовать свой необычный дар.\n\nКаждое расследование становится настоящей головоломкой. Там, где улики молчат, к Анне приходят подсказки из мира, недоступного обычным людям. А разобраться в происходящем ей по-прежнему помогают коллеги из Следственного комитета — Гончаров (Александр Ратников), Макарова (Лаура Кеосаян) и Старостин (Даниил Кокин).\n\nНовые локации — новая атмосфера\n\nПятый сезон заметно отличается от предыдущих. Съемки проходили в Санкт-Петербурге и Ленинградской области, поэтому зрителей ждут живописные загородные пейзажи, старинные дачи, уютные улицы и виды Финского залива, которые стали полноценной частью истории.\n\nРежиссер Елена Николаева отмечает, что создатели сознательно расширили привычный мир сериала:\n\n&quot;В пятом сезоне очень много нового. Во-первых, перед нами стояла творческая задача расширить локации, так что мы переехали за город, в Ленинградскую область, которая очень богата природой, где красивая и уютная, семейная обстановка. Во-вторых, наши юные герои подросли. Мария Порошина и Павел Трубинер и в жизни многодетные родители, так что наши маленькие артисты на площадке с ними работают изумительно, тянутся к ним. И это потрясающе, ведь в нашем сериале дети и семья — это главный акцент. Да, у нас и детектив, и мистика, и навороченные сюжеты, но все равно костяк — это наша многодетная семья, где все уникальные, особенные, добрые и хорошие люди».\n\nИменно семейная линия остается тем, что отличает &quot;Анну Медиум&quot; от многих детективов. За мистическими загадками и криминальными интригами здесь всегда стоят человеческие отношения, взаимная поддержка и ценность семьи.\n\nЛюбимые герои снова вместе\n\nК своим ролям возвращаются: Мария Порошина, Павел Трубинер, Александр Ратников, Лаура Кеосаян, Данил Кокин, Евгения Симонова, Елизавета Бугулова, Екатерина Вуличенко, Анна Михайловская, Полина Айнутдинова, Варвара Куприна и другие актеры.\n\nПремьерный показ нового сезона состоится эксклюзивно на медиаплатформе &quot;Смотрим&quot;, а позже сериал выйдет в эфире телеканала &quot;Россия-1&quot;.\n\nЗа что зрители любят Марию Порошину?\n\nВыход нового сезона — отличный повод вновь вспомнить, почему именно Мария Порошина уже много лет остается одной из самых любимых актрис российского кино и телевидения.\n\nЕё героини никогда не бывают одинаковыми. Они умеют быть сильными, когда кажется, что выхода нет, сохраняют тепло даже в самых драматичных обстоятельствах и всегда вызывают искреннее сопереживание. Именно поэтому Анна Островская получилась такой убедительной: она не просто медиум с необычным даром, а прежде всего любящая жена, заботливая мама и человек, который никогда не проходит мимо чужой беды.\n\nЗа плечами Марии Порошиной десятки ярких ролей: от культового &quot;Ночного дозора&quot; и легендарной &quot;Бригады&quot; до любимых новогодних &quot;Ёлок&quot;, но именно сочетание внутренней силы, доброты и естественности сделало ее одной из самых узнаваемых актрис отечественного экрана. И в пятом сезоне &quot;Анны Медиум&quot; зрителей вновь ждет именно такая героиня — мудрая, искренняя и бесконечно обаятельная.\n\nНе пропустите премьеру\n\nПятый сезон &quot;Анны Медиум&quot; вновь объединит мистику, напряженный детектив, семейную драму и атмосферу, благодаря которой сериал уже несколько лет остается одним из самых популярных проектов своего жанра.\n\nНовые загадки, неожиданные открытия, испытания для семьи Островских и встречи с любимыми героями ждут зрителей в премьерных сериях, нового пятого сезона.\n\nСмотрите премьеру пятого сезона на медиаплатформе &quot;Смотрим&quot; эксклюзивно, в платной подписке.[/center]\r\n[/spoiler]",
+            "addition": "Качество: WEBRip (1080p)\r\nВидео: MPEG-4 AVC, ~ 4970 Кбит/с, 1920x1080, 25 кадр/с\r\nАудио: Русский (AAC, 2 ch, 192 Кбит/с)"
+          },
+          "template": {
+            "category": "serial",
+            "section": "Наши сериалы",
+            "subsection": [
+              "Мистика",
+              "Детектив"
+            ],
+            "duration": "16 х ~00:51",
+            "directors": "Елена Николаева (I), Алексей Рудаков",
+            "actors": "Мария Порошина, Павел Трубинер, Сергей Степанченко, Наталья Суркова, Александр Ратников, Лаура Кеосаян, Максим Дрозд, Анна Михайловская, Елизавета Бугулова, Полина Айнутдинова",
+            "video": {
+              "kbps": "4970",
+              "resolution": "1920x1080",
+              "codec": "H.264 (AVC)",
+              "format": "MP4",
+              "quality": "WEBRip"
+            },
+            "audio": {
+              "kbps": "192",
+              "codec": "AAC",
+              "adds": "2 ch",
+              "track": "Русская"
+            },
+            "translation": "Не требуется",
+            "subtitles": "Отсутствуют",
+            "kinopoisk": {
+              "link": "https://www.kinopoisk.ru/series/1405759/",
+              "ratio": "7.6"
+            },
+            "ad": "no",
+            "profanity": "no"
+          }
+        }
+      },
+      {
+        "item": {
+          "torrent": {
+            "id": "732205",
+            "file": "https://bitru.org/api.php?download=732205",
+            "size": "9561677824",
+            "added": 1789056310,
+            "status": "updated",
+            "seeders": "26",
+            "leechers": "41",
+            "last_seeder": 1789063992
+          },
+          "info": {
+            "name": "Овчарка 2 сезон (1-14 из 16)",
+            "year": "2026",
+            "country": [
+              "ru"
+            ],
+            "poster": "https://bitru.org/images/torrents/1788192622_739_1.jpg",
+            "screenshots": [
+              "https://bitru.org/images/torrents/1788192623_270_2.jpg",
+              "https://bitru.org/images/torrents/1788192623_290_3.jpg",
+              "https://bitru.org/images/torrents/1788192623_226_4.jpg",
+              "https://bitru.org/images/torrents/1788192624_125_5.jpg"
+            ],
+            "description": "За преданность делу, невероятную целеустремленность и смертельную хватку коллеги прозвали Анастасию Нестерову, майора управления собственной безопасности полиции, Овчаркой. После череды драматических событий ее начальник Олег Ребров, с которым в прошлом у Анастасии были не только деловые отношения, отправляет ее в командировку в российскую глубинку. В этом провинциальном городке майор Нестерова оказывается под прицелом тайной преступной группировки и становится часть сложной политической игры. Впереди ее ждут новые испытания: дерзкий напарник Воробьев, новый начальник Ершов и неожиданное чувство к загадочному мужчине, которое лишь подольет масла в огонь...\r\n[center]https://bitru.org/img/i1788192373_794.png[/center]",
+            "addition": "Качество:WEBRip\r\nВидео: XviD, ~ 1600 Кбит/с, 720х400\r\nАудио: Русский (AC3, 2 ch, 192 Кбит/с)"
+          },
+          "template": {
+            "category": "serial",
+            "section": "Наши сериалы",
+            "subsection": [
+              "Детектив",
+              "Криминал"
+            ],
+            "other": "от Files-x",
+            "duration": "16 х ~00:51",
+            "directors": "Дмитрий Черкасов",
+            "actors": "Елена Подкаминская, Антон Батырев, Иван Мулин, Владислав Абашин, Иван Шибанов, Татьяна Бабенкова, Анна Лутцева, Андрей Иванов (I), Алина Кизиярова-Ланина, Мария Антонова",
+            "video": {
+              "kbps": "1600",
+              "resolution": "720x400",
+              "codec": "XviD",
+              "format": "AVI",
+              "quality": "WEB-DLRip"
+            },
+            "audio": {
+              "kbps": "192",
+              "codec": "AC3",
+              "adds": "2 ch",
+              "track": "Русская"
+            },
+            "translation": "Не требуется",
+            "subtitles": "Отсутствуют",
+            "kinopoisk": {
+              "link": "https://www.kinopoisk.ru/series/5356047/",
+              "ratio": "7.8"
+            },
+            "imdb": {
+              "link": "https://www.imdb.com/title/tt28476255/",
+              "ratio": "6"
+            },
+            "ad": "no",
+            "profanity": "no"
+          }
+        }
+      },
+      {
+        "item": {
+          "torrent": {
+            "id": "733563",
+            "file": "https://bitru.org/api.php?download=733563",
+            "size": "1464481557",
+            "added": 1789056162,
+            "status": "new",
+            "seeders": "34",
+            "leechers": "19",
+            "last_seeder": 1789063588
+          },
+          "info": {
+            "name": "Старый орёл",
+            "year": "2026",
+            "country": [
+              "ru"
+            ],
+            "poster": "https://bitru.org/images/torrents/1789056160_64_1.jpg",
+            "screenshots": [
+              "https://bitru.org/images/torrents/1789056161_358_2.jpg",
+              "https://bitru.org/images/torrents/1789056161_438_3.jpg",
+              "https://bitru.org/images/torrents/1789056162_166_4.jpg",
+              "https://bitru.org/images/torrents/1789056162_672_5.jpg"
+            ],
+            "description": "[center]Дед Батраз Зелимханович уединённо живёт в горном селе. К нему приезжает новый глава местной администрации Семён, чтобы сообщить о решении ликвидировать село, потому что «один человек - не административная единица». Семёну нужно получить письменное согласие Батраза на переезд в город, но дед никуда уезжать не собирается. В газете он видит заметку об альпийских поселениях, привлекающих миллионы туристов, и решает превратить своё в экодеревню. Чтобы справиться с этой задачей, ему нужна помощь сына и внуков, которым очень непросто вырваться из городской жизни.[/center]",
+            "addition": "Студия: MEM Cinema Production, Okko\r\nСубтитры: Русские (Forced, Full)\r\nКачество: WEB-DLRip-AVC\r\nВидео: 1024x428 at 24 fps, x264@L4.1, ~1695 kb/s\r\nАудио: AC3, 6 ch, ~384 kb/s - | Русский | \r\nФормат субтитров: softsub (SRT)\n\n***Рип от: -=DoMiNo=-"
+          },
+          "template": {
+            "category": "movie",
+            "section": "Наше кино",
+            "subsection": [
+              "Комедия",
+              "Семейный"
+            ],
+            "other": "от DoMiNo &amp; селезень",
+            "duration": "01:34",
+            "directors": "Мурад Ногмов",
+            "actors": "Алик Караев, Павел Лёвкин, Миша Шульц, Иса Новиков, Надежда Михалкова, Светлана Гуссаова, Павел Деревянко, Дмитрий Ткаченко, Сергей Степин, Гоша Торвич",
+            "video": {
+              "kbps": "1695",
+              "resolution": "1024x428",
+              "codec": "H.264 (AVC)",
+              "format": "MKV",
+              "quality": "WEB-DLRip"
+            },
+            "audio": {
+              "kbps": "384",
+              "codec": "AC3",
+              "adds": "6 ch",
+              "track": "Русская"
+            },
+            "translation": "Не требуется",
+            "subtitles": "Русские",
+            "kinopoisk": {
+              "link": "https://www.kinopoisk.ru/film/5426269/",
+              "ratio": "7.2"
+            },
+            "imdb": {
+              "link": "https://www.imdb.com/title/tt34269068/",
+              "ratio": "7"
+            },
+            "ad": "no",
+            "profanity": "no"
+          }
+        }
+      },
+      {
+        "item": {
+          "torrent": {
+            "id": "732208",
+            "file": "https://bitru.org/api.php?download=732208",
+            "size": "32293104963",
+            "added": 1789056134,
+            "status": "updated",
+            "seeders": "69",
+            "leechers": "65",
+            "last_seeder": 1789064012
+          },
+          "info": {
+            "name": "Овчарка 2 сезон (1-16 из 16)",
+            "year": "2026",
+            "country": [
+              "ru"
+            ],
+            "poster": "https://bitru.org/images/torrents/1788192959_220_1.jpg",
+            "screenshots": [
+              "https://bitru.org/images/torrents/1788192959_285_2.jpg",
+              "https://bitru.org/images/torrents/1788192960_902_3.jpg",
+              "https://bitru.org/images/torrents/1788192960_910_4.jpg",
+              "https://bitru.org/images/torrents/1788192961_979_5.jpg"
+            ],
+            "description": "За преданность делу, невероятную целеустремленность и смертельную хватку коллеги прозвали Анастасию Нестерову, майора управления собственной безопасности полиции, Овчаркой. После череды драматических событий ее начальник Олег Ребров, с которым в прошлом у Анастасии были не только деловые отношения, отправляет ее в командировку в российскую глубинку. В этом провинциальном городке майор Нестерова оказывается под прицелом тайной преступной группировки и становится часть сложной политической игры. Впереди ее ждут новые испытания: дерзкий напарник Воробьев, новый начальник Ершов и неожиданное чувство к загадочному мужчине, которое лишь подольет масла в огонь...\r\n[center]https://bitru.org/img/i1788192373_794.png[/center]",
+            "addition": "[color=#CC0000]Возраст: 18+ (зрителям, достигшим 18 лет. запрещено для детей)[/color]\r\nКачество:WEBRip 1080p\r\nВидео: AVC/H.264, 1920x1080, ~4977 kbps\r\nАудио: AAC, 2 ch, 192 kbps"
+          },
+          "template": {
+            "category": "serial",
+            "section": "Наши сериалы",
+            "subsection": [
+              "Детектив",
+              "Криминал"
+            ],
+            "other": "от NNMClub",
+            "duration": "16 х ~00:52",
+            "directors": "Дмитрий Черкасов",
+            "actors": "Елена Подкаминская, Антон Батырев, Иван Мулин, Владислав Абашин, Иван Шибанов, Татьяна Бабенкова, Анна Лутцева, Андрей Иванов (I), Алина Кизиярова-Ланина, Мария Антонова",
+            "video": {
+              "kbps": "4977",
+              "resolution": "1920x1080",
+              "codec": "H.264 (AVC)",
+              "format": "MKV",
+              "quality": "WEBRip"
+            },
+            "audio": {
+              "kbps": "192",
+              "codec": "AAC",
+              "adds": "2 ch",
+              "track": "Русская"
+            },
+            "translation": "Не требуется",
+            "subtitles": "Отсутствуют",
+            "kinopoisk": {
+              "link": "https://www.kinopoisk.ru/series/5356047/",
+              "ratio": "7.8"
+            },
+            "imdb": {
+              "link": "https://www.imdb.com/title/tt28476255/",
+              "ratio": "6"
+            },
+            "ad": "no",
+            "profanity": "no"
+          }
+        }
+      },
+      {
+        "item": {
+          "torrent": {
+            "id": "732507",
+            "file": "https://bitru.org/api.php?download=732507",
+            "size": "12442693960",
+            "added": 1789055990,
+            "status": "updated",
+            "seeders": "70",
+            "leechers": "48",
+            "last_seeder": 1789068541
+          },
+          "info": {
+            "name": "Овчарка 2 сезон (1-16 из 16)",
+            "year": "2026",
+            "country": [
+              "ru"
+            ],
+            "poster": "https://bitru.org/images/torrents/1788383480_721_1.jpg",
+            "screenshots": [
+              "https://bitru.org/images/torrents/1788383481_247_2.jpg",
+              "https://bitru.org/images/torrents/1788383482_459_3.jpg",
+              "https://bitru.org/images/torrents/1788383483_545_4.jpg",
+              "https://bitru.org/images/torrents/1788383484_147_5.jpg"
+            ],
+            "description": "За преданность делу, невероятную целеустремленность и смертельную хватку коллеги прозвали Анастасию Нестерову, майора управления собственной безопасности полиции, Овчаркой. После череды драматических событий ее начальник Олег Ребров, с которым в прошлом у Анастасии были не только деловые отношения, отправляет ее в командировку в российскую глубинку. В этом провинциальном городке майор Нестерова оказывается под прицелом тайной преступной группировки и становится часть сложной политической игры. Впереди ее ждут новые испытания: дерзкий напарник Воробьев, новый начальник Ершов и неожиданное чувство к загадочному мужчине, которое лишь подольет масла в огонь...\r\n[center]https://bitru.org/img/i1788192373_794.png[/center]",
+            "addition": "[color=#CC0000]Возраст: 18+ (зрителям, достигшим 18 лет. запрещено для детей)[/color]\n\nРелиз от: aleksan66\r\nКачество видео: WEBRip\n\nВидео: AVC/H.264, 1024х576, ~1800 kbps\r\nАудио: AAC, 2 ch, 192 Kbps"
+          },
+          "template": {
+            "category": "serial",
+            "section": "Наши сериалы",
+            "subsection": [
+              "Детектив",
+              "Криминал"
+            ],
+            "other": "Aleksan55",
+            "duration": "16 х ~00:52",
+            "directors": "Дмитрий Черкасов",
+            "actors": "Елена Подкаминская, Антон Батырев, Иван Мулин, Владислав Абашин, Иван Шибанов, Татьяна Бабенкова, Анна Лутцева, Андрей Иванов (I), Алина Кизиярова-Ланина, Мария Антонова",
+            "video": {
+              "kbps": "1800",
+              "resolution": "1024x576",
+              "codec": "H.264 (AVC)",
+              "format": "MKV",
+              "quality": "WEBRip"
+            },
+            "audio": {
+              "kbps": "192",
+              "codec": "AAC",
+              "adds": "2 ch",
+              "track": "Русская"
+            },
+            "translation": "Не требуется",
+            "subtitles": "Отсутствуют",
+            "kinopoisk": {
+              "link": "https://www.kinopoisk.ru/series/5356047/",
+              "ratio": "7.8"
+            },
+            "imdb": {
+              "link": "https://www.imdb.com/title/tt28476255/",
+              "ratio": "6"
+            },
+            "ad": "no",
+            "profanity": "no"
+          }
+        }
+      },
+      {
+        "item": {
+          "torrent": {
+            "id": "733562",
+            "file": "https://bitru.org/api.php?download=733562",
+            "size": "3106572771",
+            "added": 1789055796,
+            "status": "new",
+            "seeders": "40",
+            "leechers": "26",
+            "last_seeder": 1789063298
+          },
+          "info": {
+            "name": "Похотливый викарий",
+            "year": "1970",
+            "country": [
+              "se"
+            ],
+            "poster": "https://bitru.org/images/torrents/1789055791_780_1.jpg",
+            "screenshots": [
+              "https://bitru.org/images/torrents/1789055792_82_2.jpg",
+              "https://bitru.org/images/torrents/1789055793_846_3.jpg",
+              "https://bitru.org/images/torrents/1789055794_804_4.jpg",
+              "https://bitru.org/images/torrents/1789055795_551_5.jpg"
+            ],
+            "description": "[center]Европа, XVIII век. Охота на ведьм. Приходской священник приговаривает к сожжению на костре женщину, которую обвиняет в колдовстве. Казнь матери происходит на глазах её малолетней дочки. Спустя годы, повзрослев и переняв по наследству магические знания, дочь ведьмы решается на месть потомку викария, который принимает должность в той же деревне.[/center]",
+            "addition": "Производство: Швеция / Swedish Film Production (SFP)\r\nЖанр: комедия, эротика\r\nКачество видео: BDRip, исходник sss777sss\r\nПеревод: любительский одноголосый (den904; iDimo; Гундос)\r\nЯзык озвучки: русский, шведский\r\nСубтитры: русские (на песни (DmitriiPestriik) и полные), английские\r\nВидео: AVC/H.264, 1024х428, ~3704 Kbps\r\nАудио 1: AC3, 2 ch, 224 Kbps - русский (VO den904)\r\nАудио 2: AC3, 2 ch, 192 Kbps - русский (VO iDimo)\r\nАудио 3: AC3, 2 ch, 192 Kbps - русский (VO Гундос, со вставками den904)\r\nАудио 4: AC3, 2 ch, 192 Kbps - шведский"
+          },
+          "template": {
+            "category": "movie",
+            "section": "Зарубежное кино",
+            "subsection": [
+              "Комедия",
+              "Эротика"
+            ],
+            "orig_name": "Kyrkoherden",
+            "other": "от msltel",
+            "duration": "01:31",
+            "directors": "Торгни Викман",
+            "actors": "Ярл Борссен, Маргит Карлквист, Магали Ноэль, Диана Кьер, Солвейг Андерссон, Йон Эльфстрём, Дирх Пассер, Хокан Вестергрен, Аке Фриделль, Лисси Аланд",
+            "video": {
+              "kbps": "3704",
+              "resolution": "1024х428",
+              "codec": "H.264 (AVC)",
+              "format": "MKV",
+              "quality": "BDRip"
+            },
+            "audio": {
+              "kbps": "224",
+              "codec": "AC3",
+              "adds": "2 ch",
+              "track": "Русская + Другая"
+            },
+            "translation": "Любительский (одноголосый)",
+            "translation_author": "den904",
+            "subtitles": "Русские + Английские",
+            "kinopoisk": {
+              "link": "https://www.kinopoisk.ru/film/63366/",
+              "ratio": ""
+            },
+            "imdb": {
+              "link": "https://www.imdb.com/title/tt0065954/",
+              "ratio": "4"
+            },
+            "ad": "no",
+            "profanity": "no"
+          }
+        }
+      },
+      {
+        "item": {
+          "torrent": {
+            "id": "733561",
+            "file": "https://bitru.org/api.php?download=733561",
+            "size": "7960386656",
+            "added": 1789055754,
+            "status": "new",
+            "seeders": "33",
+            "leechers": "36",
+            "last_seeder": 1789064375
+          },
+          "info": {
+            "name": "Доктор Краснов 2 сезон (1-4 из 8)",
+            "year": "2025",
+            "country": [
+              "ru"
+            ],
+            "poster": "https://bitru.org/images/torrents/1789055748_369_1.jpg",
+            "screenshots": [
+              "https://bitru.org/images/torrents/1789055748_801_2.jpg",
+              "https://bitru.org/images/torrents/1789055750_724_3.jpg",
+              "https://bitru.org/images/torrents/1789055751_793_4.jpg",
+              "https://bitru.org/images/torrents/1789055753_354_5.jpg"
+            ],
+            "description": "Андрей Краснов – авторитетный врач и гениальный диагност. После ранения в голову из его памяти исчезли девять лет жизни. Амнезия перечеркнула отношения Краснова с Дашей, его бывшей студенткой, а ныне незаменимой коллегой по терапевтическому отделению. Но выстрел из стартового пистолета на марафоне запустил процесс восстановления памяти. В новом сезоне к Краснову возвращаются все его воспоминания, но не слишком ли поздно? В отделении происходит непоправимая трагедия – гибнет один из врачей. Доктору Краснову снова придется делать нелегкий выбор между справедливостью и состраданием, двумя беззаветно любящими его женщинами – бывшей женой Анной и новой любовью Дашей, и, наконец, вступить в схватку с теми, кто пытается отнять у него самое дорогое – его отделение.",
+            "addition": "Кодек: AVC\r\nКачество: WEBRip 1080p\r\nВидео: MPEG-4 AVC, ~ 5000 Кбит/с, 1920x1080, 25 кадр/с\r\nЗвук: AC3, 2 ch, 192 Кбит/с"
+          },
+          "template": {
+            "category": "serial",
+            "section": "Наши сериалы",
+            "subsection": [
+              "Драма"
+            ],
+            "other": "от Files-x",
+            "duration": "8 х 00:51",
+            "directors": "Алёна Райнер",
+            "actors": "Игорь Петренко, Александра Никифорова, Ольга Красько, Александр Ратников, Лариса Домаскина, Гавриил Федотов, Полина Давыдова, Филипп Ершов, Юлия Рутберг, Евгений Шумейко",
+            "video": {
+              "kbps": "5000",
+              "resolution": "1920x1080",
+              "codec": "H.264 (AVC)",
+              "format": "MKV",
+              "quality": "WEBRip"
+            },
+            "audio": {
+              "kbps": "192",
+              "codec": "AC3",
+              "adds": "2 ch",
+              "track": "Русская"
+            },
+            "translation": "Не требуется",
+            "subtitles": "Отсутствуют",
+            "kinopoisk": {
+              "link": "https://www.kinopoisk.ru/film/4959178/",
+              "ratio": "7.1"
+            },
+            "ad": "no",
+            "profanity": "no"
+          }
+        }
+      },
+      {
+        "item": {
+          "torrent": {
+            "id": "733560",
+            "file": "https://bitru.org/api.php?download=733560",
+            "size": "11710723739",
+            "added": 1789055488,
+            "status": "new",
+            "seeders": "2",
+            "leechers": "1",
+            "last_seeder": 1789055491
+          },
+          "info": {
+            "name": "Люди Икс: Первый класс",
+            "year": "2011",
+            "country": [
+              "us",
+              "gb"
+            ],
+            "poster": "https://bitru.org/images/torrents/1789055487_816_1.jpg",
+            "screenshots": [
+              "https://bitru.org/images/torrents/1789055487_399_2.jpg",
+              "https://bitru.org/images/torrents/1789055487_426_3.jpg",
+              "https://bitru.org/images/torrents/1789055487_668_4.jpg",
+              "https://bitru.org/images/torrents/1789055487_303_5.jpg"
+            ],
+            "description": "Фильм расскажет о том, как сформировались профессор Ксавьер и Магнито, о процессе основания школы профессора для детей-мутантов и, наконец, о том, что же произошло между двумя закадычными друзьями и почему они расстались.",
+            "addition": "Возраст: 12+ (зрителям, достигшим 12 лет)\r\nРейтинг MPAA: PG-13 (детям до 13 лет просмотр нежелателен)\n\nРелиз от: [color=#3366FF]Alucard[/color] [URL=https://fastpic.org/view/126/2026/0129/3af6e20b518123296c66be6253ff0cb5.gif.html][IMG]https://i126.fastpic.org/thumb/2026/0129/b5/3af6e20b518123296c66be6253ff0cb5.jpeg[/IMG][/URL]\n\nПродолжительность: 02:11:42\r\nКачество видео: BDRip\r\nПеревод: Дублированный (CPIG)\r\nЯзык озвучки: Русский, английский\r\nСубтитры: Русские (forced, full), английские (forced, full)\n\nВидео: AV1, 3840x1632, ~10.6 Mbps\r\nАудио 1: AC3, 6 ch, 640 Kbps - Русский\r\nАудио 2: AC3, 6 ch, 640 Kbps - Английский\n\nUpscale выполнен с исходника BDRemux 1080p\n\nДобавлены форсированные ASS субтитры, custom forced (by Alucard)\n\nРелизы данного мастера с 01.06.2026 сделаны с новых исходников и НОВЫМИ алгоритмами обработки!!!"
+          },
+          "template": {
+            "category": "movie",
+            "section": "Зарубежное кино",
+            "subsection": [
+              "Фантастика",
+              "Боевик"
+            ],
+            "orig_name": "X-Men: First Class",
+            "other": "AV1 | 4К, SDR, 10-bit | handmade Upscale AI",
+            "duration": "02:11",
+            "directors": "Мэттью Вон",
+            "actors": "Джеймс МакЭвой, Майкл Фассбендер, Кевин Бейкон, Дженнифер Лоуренс, Дженьюэри Джонс, Роуз Бирн, Оливер Платт, Николас Холт, Зои Кравиц, Калеб Лэндри Джонс и др.",
+            "video": {
+              "kbps": "10600",
+              "resolution": "3840x1632",
+              "codec": "AV1",
+              "format": "MKV",
+              "quality": "BDRip"
+            },
+            "audio": {
+              "kbps": "640",
+              "codec": "AC3",
+              "adds": "6 ch",
+              "track": "Русская + Английская"
+            },
+            "translation": "Профессиональный (дублирование)",
+            "translation_author": "CPIG",
+            "subtitles": "Русские + Английские",
+            "kinopoisk": {
+              "link": "https://www.kinopoisk.ru/film/462358/",
+              "ratio": "7.6"
+            },
+            "imdb": {
+              "link": "https://www.imdb.com/title/tt1270798/",
+              "ratio": "7"
+            },
+            "ad": "no",
+            "profanity": "no"
+          }
+        }
+      },
+      {
+        "item": {
+          "torrent": {
+            "id": "732204",
+            "file": "https://bitru.org/api.php?download=732204",
+            "size": "12411018318",
+            "added": 1789055207,
+            "status": "updated",
+            "seeders": "11",
+            "leechers": "31",
+            "last_seeder": 1789067575
+          },
+          "info": {
+            "name": "Овчарка 2 сезон (1-16 из 16)",
+            "year": "2026",
+            "country": [
+              "ru"
+            ],
+            "poster": "https://bitru.org/images/torrents/1788192380_722_1.jpg",
+            "screenshots": [
+              "https://bitru.org/images/torrents/1788192380_40_2.jpg",
+              "https://bitru.org/images/torrents/1788192381_164_3.jpg",
+              "https://bitru.org/images/torrents/1788192381_376_4.jpg",
+              "https://bitru.org/images/torrents/1788192382_526_5.jpg"
+            ],
+            "description": "За преданность делу, невероятную целеустремленность и смертельную хватку коллеги прозвали Анастасию Нестерову, майора управления собственной безопасности полиции, Овчаркой. После череды драматических событий ее начальник Олег Ребров, с которым в прошлом у Анастасии были не только деловые отношения, отправляет ее в командировку в российскую глубинку. В этом провинциальном городке майор Нестерова оказывается под прицелом тайной преступной группировки и становится часть сложной политической игры. Впереди ее ждут новые испытания: дерзкий напарник Воробьев, новый начальник Ершов и неожиданное чувство к загадочному мужчине, которое лишь подольет масла в огонь...\r\n[center]https://bitru.org/img/i1788192373_794.png[/center]",
+            "addition": "Качество:WEBRip 720p\r\nВидео: MPEG-4 AVC, ~ 1900 Кбит/с, 1280x720\r\nАудио: Русский (AC3, 2 ch, 192 Кбит/с)"
+          },
+          "template": {
+            "category": "serial",
+            "section": "Наши сериалы",
+            "subsection": [
+              "Детектив",
+              "Криминал"
+            ],
+            "other": "от Files-x",
+            "duration": "16 х ~00:51",
+            "directors": "Дмитрий Черкасов",
+            "actors": "Елена Подкаминская, Антон Батырев, Иван Мулин, Владислав Абашин, Иван Шибанов, Татьяна Бабенкова, Анна Лутцева, Андрей Иванов (I), Алина Кизиярова-Ланина, Мария Антонова",
+            "video": {
+              "kbps": "1900",
+              "resolution": "1280x720",
+              "codec": "H.264 (AVC)",
+              "format": "MKV",
+              "quality": "WEBRip"
+            },
+            "audio": {
+              "kbps": "192",
+              "codec": "AC3",
+              "adds": "2 ch",
+              "track": "Русская"
+            },
+            "translation": "Не требуется",
+            "subtitles": "Отсутствуют",
+            "kinopoisk": {
+              "link": "https://www.kinopoisk.ru/series/5356047/",
+              "ratio": "7.8"
+            },
+            "imdb": {
+              "link": "https://www.imdb.com/title/tt28476255/",
+              "ratio": "6"
+            },
+            "ad": "no",
+            "profanity": "no"
+          }
+        }
+      },
+      {
+        "item": {
+          "torrent": {
+            "id": "733351",
+            "file": "https://bitru.org/api.php?download=733351",
+            "size": "32289717019",
+            "added": 1789055090,
+            "status": "updated",
+            "seeders": "7",
+            "leechers": "50",
+            "last_seeder": 1789063663
+          },
+          "info": {
+            "name": "Овчарка 2 сезон (1-16 из 16)",
+            "year": "2026",
+            "country": [
+              "ru"
+            ],
+            "poster": "https://bitru.org/images/torrents/1788893559_374_1.jpg",
+            "screenshots": [
+              "https://bitru.org/images/torrents/1788893559_774_2.jpg",
+              "https://bitru.org/images/torrents/1788893559_253_3.jpg",
+              "https://bitru.org/images/torrents/1788893560_957_4.jpg",
+              "https://bitru.org/images/torrents/1788893561_684_5.jpg"
+            ],
+            "description": "За преданность делу, невероятную целеустремленность и смертельную хватку коллеги прозвали Анастасию Нестерову, майора управления собственной безопасности полиции, Овчаркой. После череды драматических событий ее начальник Олег Ребров, с которым в прошлом у Анастасии были не только деловые отношения, отправляет ее в командировку в российскую глубинку. В этом провинциальном городке майор Нестерова оказывается под прицелом тайной преступной группировки и становится часть сложной политической игры. Впереди ее ждут новые испытания: дерзкий напарник Воробьев, новый начальник Ершов и неожиданное чувство к загадочному мужчине, которое лишь подольет масла в огонь...\r\n[center]https://bitru.org/img/i1788192373_794.png[/center]",
+            "addition": "Качество:WEBRip 1080p\r\nВидео: MPEG-4 AVC, ~ 5000 Кбит/с, 1920x1080\r\nАудио: Русский (AC3, 2 ch, 192 Кбит/с)"
+          },
+          "template": {
+            "category": "serial",
+            "section": "Наши сериалы",
+            "subsection": [
+              "Детектив",
+              "Криминал"
+            ],
+            "other": "от Files-x",
+            "duration": "16 х ~00:51",
+            "directors": "Дмитрий Черкасов",
+            "actors": "Елена Подкаминская, Антон Батырев, Иван Мулин, Владислав Абашин, Иван Шибанов, Татьяна Бабенкова, Анна Лутцева, Андрей Иванов (I), Алина Кизиярова-Ланина, Мария Антонова",
+            "video": {
+              "kbps": "5000",
+              "resolution": "1920x1080",
+              "codec": "H.264 (AVC)",
+              "format": "MKV",
+              "quality": "WEBRip"
+            },
+            "audio": {
+              "kbps": "192",
+              "codec": "AC3",
+              "adds": "2 ch",
+              "track": "Русская"
+            },
+            "translation": "Не требуется",
+            "subtitles": "Отсутствуют",
+            "kinopoisk": {
+              "link": "https://www.kinopoisk.ru/series/5356047/",
+              "ratio": "7.9"
+            },
+            "imdb": {
+              "link": "https://www.imdb.com/title/tt28476255/",
+              "ratio": "6"
+            },
+            "ad": "no",
+            "profanity": "no"
+          }
+        }
+      },
+      {
+        "item": {
+          "torrent": {
+            "id": "733559",
+            "file": "https://bitru.org/api.php?download=733559",
+            "size": "3261963042",
+            "added": 1789054659,
+            "status": "new",
+            "seeders": "503",
+            "leechers": "325",
+            "last_seeder": 1789061945
+          },
+          "info": {
+            "name": "Капкан времени",
+            "year": "2026",
+            "country": [
+              "us"
+            ],
+            "poster": "https://bitru.org/images/torrents/1789054657_401_1.jpg",
+            "screenshots": [
+              "https://bitru.org/images/torrents/1789054658_831_2.jpg",
+              "https://bitru.org/images/torrents/1789054658_123_3.jpg",
+              "https://bitru.org/images/torrents/1789054659_373_4.jpg",
+              "https://bitru.org/images/torrents/1789054659_208_5.jpg"
+            ],
+            "description": "[center]Недалёкое будущее. Мир разорён Третьей мировой войной, из-за которой рухнули ключевые экосистемы, а Северная Америка оказалась разделена на четыре основных квадранта. Благодаря учёному Айону Прескотту, человечеству удалось избежать вымирания. Компания Прескотта Alpire создала Onyx — смертоносный нановирус, который распространяется через часы, заражает носителя и указывает ему цель для устранения в обмен на противоядие.[/center]\r\n[center]https://bitru.org/img/i1784696181_737.png[/center]",
+            "addition": "Озвучивание: Дублированное | Official\n\nФормат: MKV\r\nКачество: WEB-DL 1080p\r\nВидео: MPEG-4 AVC, 3990 Kb/s, 1920x1040\r\nАудио: Russian: AC3, 384 Kb/s (6 ch) / E-AC3, 384 Kb/s (6 ch)\r\nСубтитры: Russian (Full AI)"
+          },
+          "template": {
+            "category": "movie",
+            "section": "Зарубежное кино",
+            "subsection": [
+              "Фантастика",
+              "Боевик"
+            ],
+            "orig_name": "Hard Matter",
+            "other": "от ELEKTRI4KA",
+            "duration": "01:31",
+            "directors": "Джастин Прайс",
+            "actors": "Харви Кейтель, Тайриз Гибсон, Франци Шисслер, Фрэнк Грилло, Джейкоб Артист, Петер Стормаре, Сесили Леон Коннелл, Бретт Каллен, Ник Лорен, Джозеф Джулиан Сория",
+            "video": {
+              "kbps": "3990",
+              "resolution": "1920x1040",
+              "codec": "H.264 (AVC)",
+              "format": "MKV",
+              "quality": "WEB-DL"
+            },
+            "audio": {
+              "kbps": "384",
+              "codec": "AC3",
+              "adds": "6 ch",
+              "track": "Русская"
+            },
+            "translation": "Профессиональный (дублирование)",
+            "translation_author": "Official",
+            "subtitles": "Русские",
+            "kinopoisk": {
+              "link": "https://www.kinopoisk.ru/film/4860480/",
+              "ratio": ""
+            },
+            "imdb": {
+              "link": "https://www.imdb.com/title/tt18212138/",
+              "ratio": "4"
+            },
+            "ad": "no",
+            "profanity": "no"
+          }
+        }
+      },
+      {
+        "item": {
+          "torrent": {
+            "id": "733558",
+            "file": "https://bitru.org/api.php?download=733558",
+            "size": "1570162097",
+            "added": 1789054521,
+            "status": "new",
+            "seeders": "277",
+            "leechers": "116",
+            "last_seeder": 1789062131
+          },
+          "info": {
+            "name": "Капкан времени",
+            "year": "2026",
+            "country": [
+              "us"
+            ],
+            "poster": "https://bitru.org/images/torrents/1789054519_134_1.jpg",
+            "screenshots": [
+              "https://bitru.org/images/torrents/1789054520_817_2.jpg",
+              "https://bitru.org/images/torrents/1789054520_891_3.jpg",
+              "https://bitru.org/images/torrents/1789054520_472_4.jpg",
+              "https://bitru.org/images/torrents/1789054521_931_5.jpg"
+            ],
+            "description": "[center]Недалёкое будущее. Мир разорён Третьей мировой войной, из-за которой рухнули ключевые экосистемы, а Северная Америка оказалась разделена на четыре основных квадранта. Благодаря учёному Айону Прескотту, человечеству удалось избежать вымирания. Компания Прескотта Alpire создала Onyx — смертоносный нановирус, который распространяется через часы, заражает носителя и указывает ему цель для устранения в обмен на противоядие.[/center]\r\n[center]https://bitru.org/img/i1784696181_737.png[/center]",
+            "addition": "Озвучивание: Дублированное | Official\n\nФормат: AVI\r\nКачество: WEB-DLRip\r\nВидео: XviD, 1898 Kb/s, 704x384\r\nАудио: Russian: AC3, 384 Kb/s (6 ch)\r\nСубтитры: Russian (Full AI) отдельно"
+          },
+          "template": {
+            "category": "movie",
+            "section": "Зарубежное кино",
+            "subsection": [
+              "Фантастика",
+              "Боевик"
+            ],
+            "orig_name": "Hard Matter",
+            "other": "от ELEKTRI4KA",
+            "duration": "01:31",
+            "directors": "Джастин Прайс",
+            "actors": "Харви Кейтель, Тайриз Гибсон, Франци Шисслер, Фрэнк Грилло, Джейкоб Артист, Петер Стормаре, Сесили Леон Коннелл, Бретт Каллен, Ник Лорен, Джозеф Джулиан Сория",
+            "video": {
+              "kbps": "1898",
+              "resolution": "704x384",
+              "codec": "XviD",
+              "format": "AVI",
+              "quality": "WEB-DLRip"
+            },
+            "audio": {
+              "kbps": "384",
+              "codec": "AC3",
+              "adds": "6 ch",
+              "track": "Русская"
+            },
+            "translation": "Профессиональный (дублирование)",
+            "translation_author": "Official",
+            "subtitles": "Русские",
+            "kinopoisk": {
+              "link": "https://www.kinopoisk.ru/film/4860480/",
+              "ratio": ""
+            },
+            "imdb": {
+              "link": "https://www.imdb.com/title/tt18212138/",
+              "ratio": "4"
+            },
+            "ad": "no",
+            "profanity": "no"
+          }
+        }
+      },
+      {
+        "item": {
+          "torrent": {
+            "id": "733551",
+            "file": "https://bitru.org/api.php?download=733551",
+            "size": "1370023087",
+            "added": 1789042896,
+            "status": "new",
+            "seeders": "129",
+            "leechers": "49",
+            "last_seeder": 1789066885
+          },
+          "info": {
+            "name": "Капкан времени",
+            "year": "2026",
+            "country": [
+              "us"
+            ],
+            "poster": "https://bitru.org/images/torrents/1789042893_868_1.jpg",
+            "screenshots": [
+              "https://bitru.org/images/torrents/1789042894_393_2.jpg",
+              "https://bitru.org/images/torrents/1789042894_250_3.jpg",
+              "https://bitru.org/images/torrents/1789042895_549_4.jpg",
+              "https://bitru.org/images/torrents/1789042895_923_5.jpg"
+            ],
+            "description": "[center]Недалёкое будущее. Мир разорён Третьей мировой войной, из-за которой рухнули ключевые экосистемы, а Северная Америка оказалась разделена на четыре основных квадранта. Благодаря учёному Айону Прескотту, человечеству удалось избежать вымирания. Компания Прескотта Alpire создала Onyx — смертоносный нановирус, который распространяется через часы, заражает носителя и указывает ему цель для устранения в обмен на противоядие.[/center]\r\n[center]https://bitru.org/img/i1784696181_737.png[/center]",
+            "addition": "Студия: Powell and Price Productions\r\nПеревод: Дублированный (официальный)\r\nСубтитры: Русские (Full AI)\r\nКачество: WEB-DLRip-AVC\r\nВидео: 1024x554 at 24 fps, x264@L4.1, ~1613 kb/s\r\nАудио: AC3, 6 ch, ~384 kb/s - | Русский | \r\nФормат субтитров: softsub (SRT)\n\n***Рип от: -=DoMiNo=-"
+          },
+          "template": {
+            "category": "movie",
+            "section": "Зарубежное кино",
+            "subsection": [
+              "Фантастика",
+              "Боевик"
+            ],
+            "orig_name": "Hard Matter",
+            "other": "от DoMiNo &amp; селезень",
+            "duration": "01:31",
+            "directors": "Джастин Прайс",
+            "actors": "Харви Кейтель, Тайриз Гибсон, Франци Шисслер, Фрэнк Грилло, Джейкоб Артист, Петер Стормаре, Сесили Леон Коннелл, Бретт Каллен, Ник Лорен, Джозеф Джулиан Сория",
+            "video": {
+              "kbps": "1613",
+              "resolution": "1024x554",
+              "codec": "H.264 (AVC)",
+              "format": "MKV",
+              "quality": "WEB-DLRip"
+            },
+            "audio": {
+              "kbps": "384",
+              "codec": "AC3",
+              "adds": "6 ch",
+              "track": "Русская"
+            },
+            "translation": "Профессиональный (дублирование)",
+            "translation_author": "Official",
+            "subtitles": "Русские",
+            "kinopoisk": {
+              "link": "https://www.kinopoisk.ru/film/4860480/",
+              "ratio": ""
+            },
+            "imdb": {
+              "link": "https://www.imdb.com/title/tt18212138/",
+              "ratio": "4"
+            },
+            "ad": "no",
+            "profanity": "no"
+          }
+        }
+      },
+      {
+        "item": {
+          "torrent": {
+            "id": "733480",
+            "file": "https://bitru.org/api.php?download=733480",
+            "size": "3467542289",
+            "added": 1789041952,
+            "status": "updated",
+            "seeders": "64",
+            "leechers": "31",
+            "last_seeder": 1789065645
+          },
+          "info": {
+            "name": "На деревню дедушке 2",
+            "year": "2026",
+            "country": [
+              "ru"
+            ],
+            "poster": "https://bitru.org/images/torrents/1789013670_913_1.jpg",
+            "screenshots": [
+              "https://bitru.org/images/torrents/1789041940_948_2.jpg",
+              "https://bitru.org/images/torrents/1789041941_931_3.jpg",
+              "https://bitru.org/images/torrents/1789041942_414_4.jpg",
+              "https://bitru.org/images/torrents/1789041942_22_5.jpg"
+            ],
+            "description": "[center]Владик снова проводит летние каникулы у деда Юры, когда в деревне неожиданно появляется Виктор, бывший дипломат и дедушка Владика по папе. Он быстро находит общий язык с местными, дарит внуку дорогие подарки и увлекает его историями о путешествиях по миру. Между дедами вспыхивает соперничество за внимание внука — от едких подколов до открытого противостояния. Дед Юра всё больше чувствует, что проигрывает, но, когда всплывает опасная тайна из прошлого Виктора, у него появляется возможность избавиться от конкурента.[/center]",
+            "addition": "Качество: WEB-DL (1080p)\r\nВидео: MPEG-4 AVC, 4850 Кбит/с, 1920x1080\r\nАудио: Русский (E-AC3, 6 ch, 384 Кбит/с)\n\nРелиз группы: ELEKTRI4KA\n\nОзвучивание: Оригинальное\n\n[b]Субтитры: Russian (Full AI)[/b]"
+          },
+          "template": {
+            "category": "movie",
+            "section": "Наше кино",
+            "subsection": [
+              "Комедия",
+              "Семейный"
+            ],
+            "other": "ELEKTRI4KA",
+            "duration": "01:29",
+            "directors": "Максим Колиганов, Владимир Котт",
+            "actors": "Юрий Стоянов, Фёдор Добронравов, Ярослав Головнёв, Ингрид Олеринская, Татьяна Орлова, Антон Филипенко, Александр Ильин, Мирон Лебедев, Алиса Руденко, Владислав Фокин",
+            "video": {
+              "kbps": "4850",
+              "resolution": "1920x1080",
+              "codec": "H.264 (AVC)",
+              "format": "MKV",
+              "quality": "WEB-DL"
+            },
+            "audio": {
+              "kbps": "384",
+              "codec": "EAC3",
+              "adds": "6 ch",
+              "track": "Русская"
+            },
+            "translation": "Не требуется",
+            "subtitles": "Русские",
+            "kinopoisk": {
+              "link": "https://www.kinopoisk.ru/film/10850417/",
+              "ratio": "7.0"
+            },
+            "imdb": {
+              "link": "https://www.imdb.com/title/tt40754818/",
+              "ratio": "3"
+            },
+            "ad": "no",
+            "profanity": "no"
+          }
+        }
+      },
+      {
+        "item": {
+          "torrent": {
+            "id": "733546",
+            "file": "https://bitru.org/api.php?download=733546",
+            "size": "4837132945",
+            "added": 1789040966,
+            "status": "new",
+            "seeders": "18",
+            "leechers": "65",
+            "last_seeder": 1789067212
+          },
+          "info": {
+            "name": "Зачем мы опять женимся",
+            "year": "2026",
+            "country": [
+              "us"
+            ],
+            "poster": "https://bitru.org/images/torrents/1789040960_274_1.jpg",
+            "screenshots": [
+              "https://bitru.org/images/torrents/1789040961_538_2.jpg",
+              "https://bitru.org/images/torrents/1789040962_164_3.jpg",
+              "https://bitru.org/images/torrents/1789040964_373_4.jpg",
+              "https://bitru.org/images/torrents/1789040965_581_5.jpg"
+            ],
+            "description": "Повзрослевшие дети главных героев уже наступают родителям на пятки. Много лет спустя старая компания друзей собирается вместе в Италии, чтобы отпраздновать свадьбу Жасмин — дочери Маркуса и Анджелы. Молодая пара кажется идеальной, но строгий отец невесты и другие родственники не одобряют этот союз. Праздничная атмосфера быстро накаляется: старые секреты, недомолвки и новые измены выходят наружу. Наблюдая за драмой молодоженов, давние семейные пары снова начинают сомневаться в прочности своих собственных «идеальных» браков и задаются тем самым вопросом: а зачем они вообще когда-то поженились?",
+            "addition": "Релиз от: FILVOVAN\n\nКачество видео: WEB-DL\r\nПеревод: Дублированный (Официальный)\r\nЯзык озвучки: Русский, Английский\r\nСубтитры: Русские (forced, full), Английские (full, SDH)\n\nВидео: AVC/H.264, 1920x1080, ~5000 Kbps\r\nАудио 1: AC3, 2 ch, 192 Kbps - Русский\r\nАудио 2: E-AC3 JOC, 6 ch, 768 Kbps - Английский"
+          },
+          "template": {
+            "category": "movie",
+            "section": "Зарубежное кино",
+            "subsection": [
+              "Драма",
+              "Комедия"
+            ],
+            "orig_name": "Why Did I Get Married Again?",
+            "other": "от FILVOVAN",
+            "duration": "01:51",
+            "directors": "Тайлер Перри",
+            "actors": "Тараджи П. Хенсон, Майкл Джей Уайт, Тайлер Перри, Ричард Т. Джонс, Таша Смит, Шэрон Лил, Лайя ДеЛеон Хэйес, Джилл Скотт, Джейден Майкл, Да’Винчи",
+            "video": {
+              "kbps": "5000",
+              "resolution": "1920x1080",
+              "codec": "H.264 (AVC)",
+              "format": "MKV",
+              "quality": "WEB-DL"
+            },
+            "audio": {
+              "kbps": "192",
+              "codec": "AC3",
+              "adds": "2 ch",
+              "track": "Русская + Английская"
+            },
+            "translation": "Профессиональный (дублирование)",
+            "translation_author": "Официальный",
+            "subtitles": "Русские + Английские",
+            "kinopoisk": {
+              "link": "https://www.kinopoisk.ru/film/14034684/",
+              "ratio": ""
+            },
+            "imdb": {
+              "link": "https://www.imdb.com/title/tt38061210/",
+              "ratio": ""
+            },
+            "ad": "no",
+            "profanity": "no"
+          }
+        }
+      },
+      {
+        "item": {
+          "torrent": {
+            "id": "733545",
+            "file": "https://bitru.org/api.php?download=733545",
+            "size": "16135762580",
+            "added": 1789040832,
+            "status": "new",
+            "seeders": "11",
+            "leechers": "55",
+            "last_seeder": 1789057053
+          },
+          "info": {
+            "name": "Зачем мы опять женимся",
+            "year": "2026",
+            "country": [
+              "us"
+            ],
+            "poster": "https://bitru.org/images/torrents/1789040805_218_1.jpg",
+            "screenshots": [
+              "https://bitru.org/images/torrents/1789040806_968_2.jpg",
+              "https://bitru.org/images/torrents/1789040808_985_3.jpg",
+              "https://bitru.org/images/torrents/1789040811_769_4.jpg",
+              "https://bitru.org/images/torrents/1789040814_292_5.jpg"
+            ],
+            "description": "Повзрослевшие дети главных героев уже наступают родителям на пятки. Много лет спустя старая компания друзей собирается вместе в Италии, чтобы отпраздновать свадьбу Жасмин — дочери Маркуса и Анджелы. Молодая пара кажется идеальной, но строгий отец невесты и другие родственники не одобряют этот союз. Праздничная атмосфера быстро накаляется: старые секреты, недомолвки и новые измены выходят наружу. Наблюдая за драмой молодоженов, давние семейные пары снова начинают сомневаться в прочности своих собственных «идеальных» браков и задаются тем самым вопросом: а зачем они вообще когда-то поженились?",
+            "addition": "Релиз от: schumaher\n\nКачество видео: WEB-DL\r\nПеревод: Дублированный (Официальный)\r\nЯзык озвучки: Русский, Английский\r\nСубтитры: Русские (forced, full), Английские (full, SDH)\n\nВидео: НЕVC/H.265, 3840x2160, ~18.3 Мbps\r\nАудио 1: AC3, 2 ch, 192 Kbps - Русский\r\nАудио 2: E-AC3 JOC, 6 ch, 768 Kbps - Английский"
+          },
+          "template": {
+            "category": "movie",
+            "section": "Зарубежное кино",
+            "subsection": [
+              "Драма",
+              "Комедия"
+            ],
+            "orig_name": "Why Did I Get Married Again?",
+            "other": "4К, HDR10, DV 8.1, 10-bit | от schumaher",
+            "duration": "01:51",
+            "directors": "Тайлер Перри",
+            "actors": "Тараджи П. Хенсон, Майкл Джей Уайт, Тайлер Перри, Ричард Т. Джонс, Таша Смит, Шэрон Лил, Лайя ДеЛеон Хэйес, Джилл Скотт, Джейден Майкл, Да’Винчи",
+            "video": {
+              "kbps": "18300",
+              "resolution": "3840x2160",
+              "codec": "H.265 (HEVC)",
+              "format": "MKV",
+              "quality": "WEB-DL"
+            },
+            "audio": {
+              "kbps": "192",
+              "codec": "AC3",
+              "adds": "2 ch",
+              "track": "Русская + Английская"
+            },
+            "translation": "Профессиональный (дублирование)",
+            "translation_author": "Официальный",
+            "subtitles": "Русские + Английские",
+            "kinopoisk": {
+              "link": "https://www.kinopoisk.ru/film/14034684/",
+              "ratio": ""
+            },
+            "imdb": {
+              "link": "https://www.imdb.com/title/tt38061210/",
+              "ratio": ""
+            },
+            "ad": "no",
+            "profanity": "no"
+          }
+        }
+      },
+      {
+        "item": {
+          "torrent": {
+            "id": "733544",
+            "file": "https://bitru.org/api.php?download=733544",
+            "size": "2476002675",
+            "added": 1789040773,
+            "status": "new",
+            "seeders": "1",
+            "leechers": "5",
+            "last_seeder": 1789062291
+          },
+          "info": {
+            "name": "Любовь и трон 1 сезон (1- из ??)",
+            "year": "2026",
+            "country": [
+              "tr"
+            ],
+            "poster": "https://bitru.org/images/torrents/1789040760_157_1.jpg",
+            "screenshots": [
+              "https://bitru.org/images/torrents/1789040761_396_2.jpg",
+              "https://bitru.org/images/torrents/1789040763_612_3.jpg",
+              "https://bitru.org/images/torrents/1789040768_335_4.jpg",
+              "https://bitru.org/images/torrents/1789040772_397_5.jpg"
+            ],
+            "description": "Действие разворачивается среди захватывающих дворцовых интриг эпохи султана Алааддина Кейкубата, также известного как «Великий Кейкубат». Он привёл Анано-Сельджукское государство к наивысшему расцвету, а дворцовые тайны, борьба за власть и страсти правителей становятся центром каждого события.",
+            "addition": "Релиз от: Ay Oasis\n\nКачество видео: WEB-DLRip\r\nПеревод: Одноголосый любительский (turok1990)\r\nЯзык озвучки: Русский\r\nСубтитры: отсутствуют\n\nВидео: AVC/H.264, 1920x1080 (16:9), ~2230 kbps\r\nАудио: AAC, 2 ch, 192 kbps"
+          },
+          "template": {
+            "category": "serial",
+            "section": "Зарубежные сериалы",
+            "subsection": [
+              "Исторический",
+              "Военный"
+            ],
+            "orig_name": "Ask ve Taht",
+            "other": "от Ay Oasis",
+            "duration": "1 x ~02:15",
+            "directors": "Дурул и Ягмур Тайлан",
+            "actors": "Акын Акынозю, Мерьем Шиляк, Симай Барлас, Айча Бингёль, Идиль Йенер, Джерен Бендерлиоглу, Джем Бендер, Ферит Кая, Халиль Ибрагим Джейхан, Селин Генч",
+            "video": {
+              "kbps": "2230",
+              "resolution": "1920x1080",
+              "codec": "H.264 (AVC)",
+              "format": "MKV",
+              "quality": "WEB-DLRip"
+            },
+            "audio": {
+              "kbps": "192",
+              "codec": "AAC",
+              "adds": "2 ch",
+              "track": "Русская"
+            },
+            "translation": "Любительский (одноголосый)",
+            "translation_author": "turok1990",
+            "subtitles": "Отсутствуют",
+            "imdb": {
+              "link": "https://www.imdb.com/title/tt45351792/",
+              "ratio": ""
+            },
+            "ad": "no",
+            "profanity": "no"
+          }
+        }
+      },
+      {
+        "item": {
+          "torrent": {
+            "id": "733540",
+            "file": "https://bitru.org/api.php?download=733540",
+            "size": "6923611736",
+            "added": 1789039816,
+            "status": "new",
+            "seeders": "76",
+            "leechers": "42",
+            "last_seeder": 1789068954
+          },
+          "info": {
+            "name": "Нюрнберг",
+            "year": "2025",
+            "country": [
+              "us",
+              "hu"
+            ],
+            "poster": "https://bitru.org/images/torrents/1789039816_353_1.jpg",
+            "screenshots": [
+              "https://bitru.org/images/torrents/1789039816_25_2.jpg",
+              "https://bitru.org/images/torrents/1789039816_582_3.jpg",
+              "https://bitru.org/images/torrents/1789039816_75_4.jpg",
+              "https://bitru.org/images/torrents/1789039816_713_5.jpg"
+            ],
+            "description": "История о психологическом противостоянии талантливого психиатра Дугласа Келли и рейхсмаршала нацистской Германии Германа Геринга, от результатов которого зависит исход Нюрнбергского процесса.",
+            "addition": "[b]Качество:[/b] BDRip 720p [color=gray]| Nuremberg 2025 1080p BluRay REMUX AVC DTS-HD MA 5 1-KitKat[/color]\r\n[b]Видео:[/b] AVC/H.264, 1280x536 (2.39:1), ~4543 Kbps, 23.976 fps\r\n[b]Аудио 1:[/b] 48.0 kHz, AC3, 6 ch, 640 Kbps - Русский (MVO, ДАБЛИН)\r\n[b]Аудио 2:[/b] 48.0 kHz, AC3, 6 ch, 384 Kbps - Русский (AVO, Ю.Сербин)\r\n[b]Аудио 3:[/b] 48.0 kHz, AC3, 6 ch, 640 Kbps - Английский\r\n[b]Субтитры:[/b] русские (forced, full), английские (full, SDH)\r\n[spoiler=MediaInfo]\r\nОбщее\r\nУникальный идентификатор : 125968590406259175080006250752403852283 (0x5EC4AB041DE2E8E43A9B06EF863C4BFB)\r\nПолное имя : Nuremberg.2025.BDRip.720p.x264_New-Team_il68k.mkv\r\nФормат : Matroska\r\nВерсия формата : Version 4\r\nРазмер файла : 6,45 Гбайт\r\nПродолжительность : 2 ч. 28 м.\r\nОбщий битрейт : 6 209 Кбит/сек\r\nЧастота кадров : 23,976 кадра/сек\r\nДата кодирования : 2026-09-10 08:04:21 UTC\r\nПрограмма кодирования : mkvmerge 50.0.0 ('Awakenings') 64-bit\r\nБиблиотека кодирования : libebml v1.4.0 + libmatroska v1.6.2\r\nОбложка : Yes\r\nОписание обложки : Cover_mini.jpg\r\nТип обложки : Обложка\r\nMIME-тип обложки : image/jpeg\r\nВложения : Cover_mini.jpg / Nuremberg.2025.BDRip.720p.x264_New-Team_il68k.mkv.encoding.log\n\nВидео\r\nИдентификатор : 1\r\nФормат : AVC\r\nФормат/Информация : Advanced Video Codec\r\nПрофиль формата : High@L4.1\r\nНастройки формата : CABAC / 12 Ref Frames\r\nПараметр CABAC формата : Да\r\nПараметр RefFrames формата : 12 кадров\r\nИдентификатор кодека : V_MPEG4/ISO/AVC\r\nПродолжительность : 2 ч. 28 м.\r\nБитрейт : 4 543 Кбит/сек\r\nШирина : 1 280 пикселей\r\nВысота : 536 пикселей\r\nСоотношение сторон : 2,39:1\r\nРежим частоты кадров : Постоянный\r\nЧастота кадров : 23,976 (24000/1001) кадра/сек\r\nЦветовое пространство : YUV\r\nЦветовая субдискретизация : 4:2:0\r\nБитовая глубина : 8 бит\r\nТип развёртки : Прогрессивная\r\nБит/(Пиксели*Кадры) : 0.276\r\nРазмер потока : 4,72 Гбайт (73%)\r\nЗаголовок : Rip by il68k@New-Team\r\nБиблиотека кодирования : x264 core 165 r3223+40-[il68k] [Mod by Patman]\r\nПараметры библиотеки кодирования : cabac=1 / ref=12 / deblock=1:-3:-3 / analyse=0x3:0x133 / me=umh / subme=10 / psy=1 / psy_rd=1.03:0.02 / mixed_ref=1 / me_range=32 / chroma_me=1 / trellis=2 / 8x8dct=1 / cqm=0 / deadzone=21,11 / fast_pskip=0 / chroma_qp_offset=-3 / threads=16 / lookahead_threads=8 / sliced_threads=0 / nr=0 / decimate=1 / interlaced=0 / bluray_compat=0 / constrained_intra=0 / bframes=10 / b_pyramid=2 / b_adapt=2 / b_bias=0 / direct=3 / weightb=1 / open_gop=0 / weightp=2 / keyint=240 / keyint_min=23 / scenecut=40 / intra_refresh=0 / rc_lookahead=60 / rc=crf / mbtree=0 / crf=17.2 / qcomp=0.60 / qpmin=0 / qpmax=69 / qpstep=4 / vbv_maxrate=50000 / vbv_bufsize=62500 / crf_max=0.0 / nal_hrd=none / filler=0 / ip_ratio=1.40 / pb_ratio=1.30 / aq=3:1.00:1.00\r\nЯзык : Английский (US)\r\nПо умолчанию : Да\r\nПринудительно : Нет\n\nАудио #1\r\nИдентификатор : 2\r\nФормат : AC-3\r\nФормат/Информация : Audio Coding 3\r\nКоммерческое название : Dolby Digital\r\nИдентификатор кодека : A_AC3\r\nПродолжительность : 2 ч. 28 м.\r\nВид битрейта : Постоянный\r\nБитрейт : 640 Кбит/сек\r\nКаналы : 6 каналов\r\nРасположение каналов : L R C LFE Ls Rs\r\nЧастота дискретизации : 48,0 КГц\r\nЧастота кадров : 31,250 кадров/сек (1536 SPF)\r\nМетод сжатия : С потерями\r\nРазмер потока : 681 Мбайт (10%)\r\nЗаголовок : MVO | ДАБЛИН\r\nЯзык : Русский (RU)\r\nВид сервиса : Complete Main\r\nПо умолчанию : Да\r\nПринудительно : Нет\r\nНормализация звука речи : -18 dB\r\ncompr : -0.28 dB\r\nУровень сведения центрального канала (cm : -3.0 dB\r\nУровень сведения объёмного канала (surmi : -3 dB\r\ndmixmod : Lo/Ro\r\nltrtcmixlev : -3.0 dB\r\nltrtsurmixlev : -3.0 dB\r\nlorocmixlev : -3.0 dB\r\nlorosurmixlev : -3.0 dB\r\nНормализация звука речи, среднее : -18 dB\r\nНормализация звука речи, минимум : -18 dB\r\nНормализация звука речи, максимум : -18 dB\n\nАудио #2\r\nИдентификатор : 3\r\nФормат : AC-3\r\nФормат/Информация : Audio Coding 3\r\nКоммерческое название : Dolby Digital\r\nИдентификатор кодека : A_AC3\r\nПродолжительность : 2 ч. 28 м.\r\nВид битрейта : Постоянный\r\nБитрейт : 384 Кбит/сек\r\nКаналы : 6 каналов\r\nРасположение каналов : L R C LFE Ls Rs\r\nЧастота дискретизации : 48,0 КГц\r\nЧастота кадров : 31,250 кадров/сек (1536 SPF)\r\nМетод сжатия : С потерями\r\nРазмер потока : 408 Мбайт (6%)\r\nЗаголовок : AVO | Юрий Сербин\r\nЯзык : Русский (RU)\r\nВид сервиса : Complete Main\r\nПо умолчанию : Нет\r\nПринудительно : Нет\r\nНормализация звука речи : -25 dB\r\ncompr : -0.28 dB\r\nУровень сведения центрального канала (cm : -3.0 dB\r\nУровень сведения объёмного канала (surmi : -3 dB\r\ndmixmod : Lo/Ro\r\nltrtcmixlev : -3.0 dB\r\nltrtsurmixlev : -3.0 dB\r\nlorocmixlev : -3.0 dB\r\nlorosurmixlev : -3.0 dB\r\nНормализация звука речи, среднее : -25 dB\r\nНормализация звука речи, минимум : -25 dB\r\nНормализация звука речи, максимум : -25 dB\n\nАудио #3\r\nИдентификатор : 4\r\nФормат : AC-3\r\nФормат/Информация : Audio Coding 3\r\nКоммерческое название : Dolby Digital\r\nИдентификатор кодека : A_AC3\r\nПродолжительность : 2 ч. 28 м.\r\nВид битрейта : Постоянный\r\nБитрейт : 640 Кбит/сек\r\nКаналы : 6 каналов\r\nРасположение каналов : L R C LFE Ls Rs\r\nЧастота дискретизации : 48,0 КГц\r\nЧастота кадров : 31,250 кадров/сек (1536 SPF)\r\nМетод сжатия : С потерями\r\nРазмер потока : 681 Мбайт (10%)\r\nЗаголовок : Original\r\nЯзык : Английский (US)\r\nВид сервиса : Complete Main\r\nПо умолчанию : Нет\r\nПринудительно : Нет\r\nНормализация звука речи : -26 dB\r\ncompr : -0.28 dB\r\nУровень сведения центрального канала (cm : -3.0 dB\r\nУровень сведения объёмного канала (surmi : -3 dB\r\ndmixmod : Lo/Ro\r\nltrtcmixlev : -3.0 dB\r\nltrtsurmixlev : -3.0 dB\r\nlorocmixlev : -3.0 dB\r\nlorosurmixlev : -3.0 dB\r\nНормализация звука речи, среднее : -26 dB\r\nНормализация звука речи, минимум : -26 dB\r\nНормализация звука речи, максимум : -26 dB\n\nТекст #1\r\nИдентификатор : 5\r\nФормат : UTF-8\r\nИдентификатор кодека : S_TEXT/UTF8\r\nИдентификатор кодека/Информация : UTF-8 Plain Text\r\nПродолжительность : 2 ч. 4 м.\r\nБитрейт : 1 бит/сек\r\nЧастота кадров : 0,006 кадр/сек\r\nЧисло элементов : 48\r\nРазмер потока : 1,54 КиБ (0%)\r\nЗаголовок : Forced | ДАБЛИН\r\nЯзык : Русский (RU)\r\nПо умолчанию : Да\r\nПринудительно : Нет\n\nТекст #2\r\nИдентификатор : 6\r\nФормат : UTF-8\r\nИдентификатор кодека : S_TEXT/UTF8\r\nИдентификатор кодека/Информация : UTF-8 Plain Text\r\nПродолжительность : 2 ч. 21 м.\r\nБитрейт : 95 бит/сек\r\nЧастота кадров : 0,226 кадр/сек\r\nЧисло элементов : 1919\r\nРазмер потока : 99,3 КиБ (0%)\r\nЗаголовок : Full | ДАБЛИН\r\nЯзык : Русский (RU)\r\nПо умолчанию : Нет\r\nПринудительно : Нет\n\nТекст #3\r\nИдентификатор : 7\r\nФормат : UTF-8\r\nИдентификатор кодека : S_TEXT/UTF8\r\nИдентификатор кодека/Информация : UTF-8 Plain Text\r\nПродолжительность : 2 ч. 15 м.\r\nБитрейт : 65 бит/сек\r\nЧастота кадров : 0,245 кадр/сек\r\nЧисло элементов : 1999\r\nРазмер потока : 65,2 КиБ (0%)\r\nЗаголовок : Full\r\nЯзык : Английский (US)\r\nПо умолчанию : Нет\r\nПринудительно : Нет\n\nТекст #4\r\nИдентификатор : 8\r\nФормат : UTF-8\r\nИдентификатор кодека : S_TEXT/UTF8\r\nИдентификатор кодека/Информация : UTF-8 Plain Text\r\nПродолжительность : 2 ч. 27 м.\r\nБитрейт : 68 бит/сек\r\nЧастота кадров : 0,247 кадр/сек\r\nЧисло элементов : 2189\r\nРазмер потока : 73,8 КиБ (0%)\r\nЗаголовок : SDH\r\nЯзык : Английский (US)\r\nПо умолчанию : Нет\r\nПринудительно : Нет\n\nИзображение\r\nТип : Обложка\r\nЗаголовок : Cover_mini.jpg\r\nФормат : JPEG\r\nРежим сведения : Attachment\r\nШирина : 272 пикселя\r\nВысота : 395 пикселей\r\nЦветовое пространство : YUV\r\nЦветовая субдискретизация : 4:2:0\r\nБитовая глубина : 8 бит\r\nМетод сжатия : С потерями\r\nРазмер потока : 27,9 КиБ (0%)\n\nМеню\r\n00:00:00.000 : Chapter 01\r\n00:08:30.218 : Chapter 02\r\n00:17:26.545 : Chapter 03\r\n00:25:32.822 : Chapter 04\r\n00:34:05.084 : Chapter 05\r\n00:44:53.607 : Chapter 06\r\n00:55:27.907 : Chapter 07\r\n01:02:23.948 : Chapter 08\r\n01:12:40.314 : Chapter 09\r\n01:20:50.428 : Chapter 10\r\n01:30:21.833 : Chapter 11\r\n01:36:09.764 : Chapter 12\r\n01:45:33.285 : Chapter 13\r\n02:06:04.431 : Chapter 14\r\n02:10:28.320 : Chapter 15\r\n02:15:52.811 : Chapter 16\r\n[/spoiler]\r\n[spoiler=Дополнительная информация][color=#015C65]\r\nДорожка [b]ДАБЛИН[/b] получена путём наложения чистых голосов на центр декодированного оригинала.\r\nРабота со звуком [b]il68k[/b].\r\n[/color][/spoiler]\r\n[spoiler=Благодарность][color=#015C65]\r\nБольшое спасибо студии [b]ДАБЛИН[/b] за перевод и предоставленную звуковую дорожку и субтитры.\n\n[b]Роли озвучивали:[/b] Пётр Овсянников, Владимир Степанов, Олег Куприянов, Дмитрий Щеглов, Николай Шевченко, Фредерик Пак, Егор Давыдов, Никита Забелин, Никита Печерский, Софья Попова, Любовь Стрельцова\n\n[b]Звукорежиссер:[/b] Максим Жарихин\r\n[b]Режиссер:[/b] Макс Белый\r\n[b]Сборка проекта:[/b] Глеб Кириленко\r\n[/color][/spoiler]\r\n[b]Релиз от: [/b][color=#6600CC][b]il68k[/b][/color] [img]https://i5.imageban.ru/out/2026/02/13/6e978825688192931e3a484e7e9b4f20.gif[/img]"
+          },
+          "template": {
+            "category": "movie",
+            "section": "Зарубежное кино",
+            "subsection": [
+              "Триллер",
+              "Драма"
+            ],
+            "orig_name": "Nuremberg",
+            "other": "от New-Team",
+            "duration": "02:28",
+            "directors": "Джеймс Вандербилт",
+            "actors": "Рами Малек, Рассел Кроу, Майкл Шеннон, Лидия Пекхэм, Лео Вудалл, Колин Хэнкс, Ричард Э. Грант, Джон Слэттери, Бен Майлз, Ренн Шмидт",
+            "video": {
+              "kbps": "4543",
+              "resolution": "1280x536",
+              "codec": "H.264 (AVC)",
+              "format": "MKV",
+              "quality": "BDRip"
+            },
+            "audio": {
+              "kbps": "640",
+              "codec": "AC3",
+              "adds": "6 ch",
+              "track": "Русская + Английская"
+            },
+            "translation": "Любительский (многоголосый)",
+            "translation_author": "ДАБЛИН",
+            "subtitles": "Русские + Английские",
+            "kinopoisk": {
+              "link": "https://www.kinopoisk.ru/film/5427688/",
+              "ratio": "6.6"
+            },
+            "imdb": {
+              "link": "https://www.imdb.com/title/tt29567915/",
+              "ratio": "7"
+            },
+            "ad": "no",
+            "profanity": "no"
+          }
+        }
+      },
+      {
+        "item": {
+          "torrent": {
+            "id": "733538",
+            "file": "https://bitru.org/api.php?download=733538",
+            "size": "7127483030",
+            "added": 1789034858,
+            "status": "new",
+            "seeders": "108",
+            "leechers": "91",
+            "last_seeder": 1789056283
+          },
+          "info": {
+            "name": "Ты, я и лето в Тоскане",
+            "year": "2026",
+            "country": [
+              "us"
+            ],
+            "poster": "https://bitru.org/images/torrents/1789034857_982_1.jpg",
+            "screenshots": [
+              "https://bitru.org/images/torrents/1789034857_379_2.jpg",
+              "https://bitru.org/images/torrents/1789034857_998_3.jpg",
+              "https://bitru.org/images/torrents/1789034858_832_4.jpg",
+              "https://bitru.org/images/torrents/1789034858_160_5.jpg"
+            ],
+            "description": "Анна теряет работу няней с проживанием. Внезапно она решает исполнить свою давнюю мечту и отправляется в Тоскану. Поскольку все номера в местных гостиницах заняты, Анна селится в пустующем особняке, который принадлежит Маттео. Когда на виллу приезжает мать владельца, она решает, что незнакомая девушка — невеста сына. Американка подыгрывает, но вскоре в Тоскану также прилетает и брат Маттео Майкл. Анна начинает всё больше времени проводить с Майклом, и между ними возникают чувства, которые грозят раскрыть правду о девушке.",
+            "addition": "Перевод: Профессиональный (дублированный) — Movie Dubbing\n\nВидео: MPEG-4 AVC, 1920x960, 23.976 fps, 7825 kbps\r\nАудио 1: RUS AC3, 5.1, 48 kHz, 448 kbps\r\nАудио 2: ENG E-AC3 JOC, 5.1, 48 kHz, 768 kbps\r\nСубтитры: русские (Forced, Full |iTunes|), английские (Forced, SDH), французские, немецкие, итальянские, корейские, португальские, румынские, испанские, украинские\r\nНавигация по главам: есть\n\nНа [url=https://slow.pics/c/7AM5Jjzw]BLU-RAY[/url] меньшее наполнение кадра и вшитые субтитры (73 строки)"
+          },
+          "template": {
+            "category": "movie",
+            "section": "Зарубежное кино",
+            "subsection": [
+              "Мелодрама",
+              "Комедия"
+            ],
+            "orig_name": "You, Me &amp; Tuscany",
+            "other": "от EniaHD",
+            "duration": "01:45",
+            "directors": "Кэт Койро / Kat Coiro",
+            "actors": "Холли Бейли, Реге-Жан Пейдж, Лоренцо де Мур, Марко Калвани, Изабелла Феррари, Паоло Сассанелли, Стефания Казини, Стелла Пеколло, Томмазо Кассисса, Ниа Вардалос",
+            "video": {
+              "kbps": "7825",
+              "resolution": "1920x960",
+              "codec": "H.264 (AVC)",
+              "format": "MKV",
+              "quality": "WEB-DL"
+            },
+            "audio": {
+              "kbps": "448",
+              "codec": "AC3",
+              "adds": "6 ch",
+              "track": "Русская + Английская"
+            },
+            "translation": "Профессиональный (дублирование)",
+            "translation_author": "Movie Dubbing",
+            "subtitles": "Русские + Другие",
+            "kinopoisk": {
+              "link": "https://www.kinopoisk.ru/film/10167359/",
+              "ratio": "5.9"
+            },
+            "imdb": {
+              "link": "https://www.imdb.com/title/tt36352591/",
+              "ratio": "6"
+            },
+            "ad": "no",
+            "profanity": "no"
+          }
+        }
+      },
+      {
+        "item": {
+          "torrent": {
+            "id": "728850",
+            "file": "https://bitru.org/api.php?download=728850",
+            "size": "24472931765",
+            "added": 1789032888,
+            "status": "updated",
+            "seeders": "10",
+            "leechers": "15",
+            "last_seeder": 1789068671
+          },
+          "info": {
+            "name": "Зловещие мертвецы: Пекло",
+            "year": "2026",
+            "country": [
+              "nz",
+              "us",
+              "ca"
+            ],
+            "poster": "https://bitru.org/images/torrents/1785904317_305_1.jpg",
+            "screenshots": [
+              "https://bitru.org/images/torrents/1785904318_335_2.jpg",
+              "https://bitru.org/images/torrents/1785904319_975_3.jpg",
+              "https://bitru.org/images/torrents/1785904320_201_4.jpg",
+              "https://bitru.org/images/torrents/1785904321_280_5.jpg"
+            ],
+            "description": "Самый жестокий и беспощадный фильм франшизы за последние годы!\r\nПосле внезапной смерти мужа Элис приезжает в уединённый семейный дом свёкров, чтобы вместе пережить горе. Но вместо утешения их ждёт настоящий семейный кошмар из ада. Один за другим родственники превращаются в одержимых демонами — Deadites. Элис предстоит понять: клятвы, данные в жизни, не заканчиваются даже после смерти. Кровь, мясо, безумие и фирменный фирменный evil dead-вайб в новом, ещё более жестоком исполнении.",
+            "addition": "[color=#CC0000]Возраст: 18+ (зрителям, достигшим 18 лет. запрещено для детей)[/color]\r\nРейтинг MPAA: R (лицам до 17 лет обязательно присутствие взрослого)\n\nРелиз от: [color=#000099]schumaher[/color]\n\nКачество видео: WEB-DL\r\nПеревод: Дублированный (Movie Dubbing, Flarrow Films, HDRezka), Многоголосый (HDRezka), Двуголосый (ViruseProject), Авторский (Яроцкий)\r\nЯзык озвучки: Русский, Украинский, Английский\r\nСубтитры: Русские (Forced, Full), Украинские (Forced, Full), Английские (Forced, Full, SDH)\n\nВидео: НЕVC/H.265, 3840x2160, ~24.7 Мbps\r\nАудио 1: AC3, 6 ch, 448 Кbps - Русский (DUB, Movie Dubbing) - официальный дубляж для СНГ\r\nАудио 2: Е-AC3, 6 ch, 448 Кbps - Русский (DUB, Flarrow Films) - официальный дубляж для РФ\r\nАудио 3: AC3, 6 ch, 640 Kbps - Русский (DVO, ViruseProject)\r\nАудио 4: AC3, 2 ch, 384 Кbps - Русский (MVO, HDRezka Studio)\r\nАудио 5: AC3, 2 ch, 384 Кbps - Русский (MVO, HDRezka Studio 18+)\r\nАудио 6: AC3, 2 ch, 384 Кbps - Русский (DUB, HDRezka Studio 18+)\r\nАудио 7: Е-AC3, 6 ch, 768 Кbps - Русский (АVO, М.Яроцкий 18+)\r\nАудио 8: Е-AC3, 6 ch, 640 Кbps - Украинский (DUB, LeDoyen)\r\nАудио 9: E-AC3 JOC, 6 ch, 768 Kbps - Английский"
+          },
+          "template": {
+            "category": "movie",
+            "section": "Зарубежное кино",
+            "subsection": [
+              "Ужасы"
+            ],
+            "orig_name": "Evil Dead Burn",
+            "other": "4К, HDR10, DV 8.1, 10-bit | от schumaher",
+            "duration": "01:50",
+            "directors": "Себастьян Ваничек",
+            "actors": "Сухейла Якуб, Люсиан Бьюкенен, Хантер Духэн, Эролл Шанд, Грета ван ден Бринк, Тэнди Райт, Мод Дэвей, Джордж Пуллар, Ален Шаба, Кеану Карим",
+            "video": {
+              "kbps": "24700",
+              "resolution": "3840x2160",
+              "codec": "H.265 (HEVC)",
+              "format": "MKV",
+              "quality": "WEB-DL"
+            },
+            "audio": {
+              "kbps": "448",
+              "codec": "AC3",
+              "adds": "6 ch",
+              "track": "Русская + Другая"
+            },
+            "translation": "Профессиональный (дублирование)",
+            "translation_author": "Movie Dubbing, Flarrow Films",
+            "subtitles": "Русские + Другие",
+            "kinopoisk": {
+              "link": "https://www.kinopoisk.ru/film/5463793/",
+              "ratio": "6.8"
+            },
+            "imdb": {
+              "link": "https://www.imdb.com/title/tt31170389/",
+              "ratio": "6"
+            },
+            "ad": "no",
+            "profanity": "no"
+          }
+        }
+      },
+      {
+        "item": {
+          "torrent": {
+            "id": "728851",
+            "file": "https://bitru.org/api.php?download=728851",
+            "size": "24144711833",
+            "added": 1789032729,
+            "status": "updated",
+            "seeders": "1",
+            "leechers": "3",
+            "last_seeder": 1789063157
+          },
+          "info": {
+            "name": "Зловещие мертвецы: Пекло",
+            "year": "2026",
+            "country": [
+              "nz",
+              "us",
+              "ca"
+            ],
+            "poster": "https://bitru.org/images/torrents/1785904319_968_1.jpg",
+            "screenshots": [
+              "https://bitru.org/images/torrents/1785904319_360_2.jpg",
+              "https://bitru.org/images/torrents/1785904320_777_3.jpg",
+              "https://bitru.org/images/torrents/1785904320_440_4.jpg",
+              "https://bitru.org/images/torrents/1785904321_380_5.jpg"
+            ],
+            "description": "Самый жестокий и беспощадный фильм франшизы за последние годы!\r\nПосле внезапной смерти мужа Элис приезжает в уединённый семейный дом свёкров, чтобы вместе пережить горе. Но вместо утешения их ждёт настоящий семейный кошмар из ада. Один за другим родственники превращаются в одержимых демонами — Deadites. Элис предстоит понять: клятвы, данные в жизни, не заканчиваются даже после смерти. Кровь, мясо, безумие и фирменный фирменный evil dead-вайб в новом, ещё более жестоком исполнении.",
+            "addition": "[color=#3333FF]Возраст: 18+ (зрителям, достигшим 18 лет. запрещено для детей)[/color]\r\nРейтинг MPAA: R (лицам до 17 лет обязательно присутствие взрослого)\n\nРелиз от: [color=#000099]schumaher[/color]\n\nКачество видео: WEB-DL\r\nПеревод: Дублированный (Movie Dubbing, HDRezka), Многоголосый (HDRezka), Двуголосый (ViruseProject), Авторский (Яроцкий)\r\nЯзык озвучки: Русский, Украинский, Английский\r\nСубтитры: Русские (Forced, Full), Украинские (Forced, Full), Английские (Forced, Full, SDH)\n\nВидео: НЕVC/H.265, 3840x2160, ~24.7 Мbps\r\nАудио 1: AC3, 6 ch, 448 Кbps - Русский (DUB, Movie Dubbing)\r\nАудио 2: AC3, 6 ch, 640 Kbps - Русский (DVO, ViruseProject)\r\nАудио 3: AC3, 2 ch, 384 Кbps - Русский (MVO, HDRezka Studio)\r\nАудио 4: AC3, 2 ch, 384 Кbps - Русский (MVO, HDRezka Studio 18+)\r\nАудио 5: AC3, 2 ch, 384 Кbps - Русский (DUB, HDRezka Studio 18+)\r\nАудио 6: Е-AC3, 6 ch, 768 Кbps - Русский (АVO, М.Яроцкий 18+)\r\nАудио 7: Е-AC3, 6 ch, 640 Кbps - Украинский (DUB, LeDoyen)\r\nАудио 8: E-AC3 JOC, 6 ch, 768 Kbps - Английский"
+          },
+          "template": {
+            "category": "movie",
+            "section": "Зарубежное кино",
+            "subsection": [
+              "Ужасы"
+            ],
+            "orig_name": "Evil Dead Burn",
+            "other": "4К, SDR, 10-bit | от schumaher",
+            "duration": "01:50",
+            "directors": "Себастьян Ваничек",
+            "actors": "Сухейла Якуб, Люсиан Бьюкенен, Хантер Духэн, Эролл Шанд, Грета ван ден Бринк, Тэнди Райт, Мод Дэвей, Джордж Пуллар, Ален Шаба, Кеану Карим",
+            "video": {
+              "kbps": "24700",
+              "resolution": "3840x2160",
+              "codec": "H.265 (HEVC)",
+              "format": "MKV",
+              "quality": "WEB-DL"
+            },
+            "audio": {
+              "kbps": "448",
+              "codec": "AC3",
+              "adds": "6 ch",
+              "track": "Русская + Другая"
+            },
+            "translation": "Профессиональный (дублирование)",
+            "translation_author": "Movie Dubbing, HDRezka",
+            "subtitles": "Русские + Другие",
+            "kinopoisk": {
+              "link": "https://www.kinopoisk.ru/film/5463793/",
+              "ratio": "6.8"
+            },
+            "imdb": {
+              "link": "https://www.imdb.com/title/tt31170389/",
+              "ratio": "6"
+            },
+            "ad": "no",
+            "profanity": "no"
+          }
+        }
+      },
+      {
+        "item": {
+          "torrent": {
+            "id": "731139",
+            "file": "https://bitru.org/api.php?download=731139",
+            "size": "73601029535",
+            "added": 1789029099,
+            "status": "updated",
+            "seeders": "4",
+            "leechers": "28",
+            "last_seeder": 1789065538
+          },
+          "info": {
+            "name": "Звездный путь: Странные новые миры 4 сезон (1-7 из 10)",
+            "year": "2026",
+            "country": [
+              "us"
+            ],
+            "poster": "https://bitru.org/images/torrents/1787469290_589_1.jpg",
+            "screenshots": [
+              "https://bitru.org/images/torrents/1787469290_453_2.jpg",
+              "https://bitru.org/images/torrents/1787469298_842_3.jpg",
+              "https://bitru.org/images/torrents/1787469299_91_4.jpg",
+              "https://bitru.org/images/torrents/1787469300_603_5.jpg"
+            ],
+            "description": "В четвёртом сезоне капитан Кристофер Пайк продолжает свою легендарную пятилетнюю миссию, шаг за шагом приближаясь к трагическому финалу, предначертанному судьбой. Экипаж «Энтерпрайза» исследует самые далекие сектора галактики, сталкиваясь со сложными дипломатическими вызовами и смертоносными космическими угрозами.\r\n[spoiler=Интересные факты:]\r\nСериал родился исключительно благодаря фанатам. После появления Кристофера Пайка во втором сезоне «Дискавери» зрители запустили массовую онлайн-кампанию с требованием дать герою Энсона Маунта собственное шоу. Продюсеры студии прислушались к аудитории и официально дали зеленый свет спин-оффу.\n\nПроект ознаменовал возвращение франшизы к классической процедуральной структуре. Отказавшись от сквозных сюжетов, доминировавших в «Дискавери» и «Пикаре», авторы вернули формат «одна серия — одна планета». Это позволило сценаристам свободнее экспериментировать с жанрами в рамках одного сезона.\n\nДля создания масштабных инопланетных пейзажей создатели отказались от традиционного хромакея в пользу новейшей технологии дополненной реальности. Съемочный павильон оборудовали гигантскими LED-экранами, проецирующими локации в реальном времени, что ранее успешно применялось в «Мандалорце».\r\n[/spoiler]",
+            "addition": "[color=#CC0000][b]Возраст: 18+ (зрителям, достигшим 18 лет. запрещено для детей)[/color]\n\nРелиз от: [color=#000099]RG Зарубежные сериалы[/color][/b] https://bitru.org/img/i1787469269_412.png\n\nКачество видео: WEB-DL\r\nПеревод: Многоголосый (HDrezka, Contentica, LostFilm, NewComers, TVShows)\r\nЯзык озвучки: Русский, Английский\r\nСубтитры: Русские (Forced, Full), Английские (Full, SDH)\n\nВидео: HEVC/H.265, 3832x1600, ~23.5 Мbps\r\nАудио 1: AC3, 2 ch, 192 Kbps - русский (MVO, HDrezka)\r\nАудио 2: AC3, 6 ch, 384 Kbps - русский (MVO, Contentica)\r\nАудио 3: AC3, 2 ch, 384 Kbps - русский (MVO, LostFilm)\r\nАудио 4: AC3, 6 ch, 640 Kbps - русский (MVO, NewComers) серии 1-6\r\nАудио 5: AC3, 6 ch, 384 Kbps - русский (MVO, TVShows)\r\nАудио 6: E-AC3, 6 ch, 640 Kbps - английский"
+          },
+          "template": {
+            "category": "serial",
+            "section": "Зарубежные сериалы",
+            "subsection": [
+              "Фантастика",
+              "Боевик"
+            ],
+            "orig_name": "Star Trek: Strange New Worlds",
+            "other": "4К, HDR10+, DV 8.1, 10-bit | от RG Зарубежные сериалы",
+            "duration": "10 х ~00:59",
+            "directors": "Крис Фишер, Аманда Роу, Энди Армаганян",
+            "actors": "Энсон Маунт, Ребекка Ромейн, Кристина Чонг, Итэн Пек, Джессика Буш, Бабс Олусанмокун, Мелисса Навия, Селия Роуз Гудинг, Брюс Горак, Андре Ким",
+            "video": {
+              "kbps": "23500",
+              "resolution": "3832x1600",
+              "codec": "H.265 (HEVC)",
+              "format": "MKV",
+              "quality": "WEB-DL"
+            },
+            "audio": {
+              "kbps": "192",
+              "codec": "AC3",
+              "adds": "2 ch",
+              "track": "Русская + Английская"
+            },
+            "translation": "Профессиональный (многоголосый)",
+            "translation_author": "HDrezka, Contentica, LostFilm",
+            "subtitles": "Русские + Английские",
+            "kinopoisk": {
+              "link": "https://www.kinopoisk.ru/film/1379545/",
+              "ratio": "7.9"
+            },
+            "imdb": {
+              "link": "https://www.imdb.com/title/tt12327578/",
+              "ratio": "8"
+            },
+            "ad": "no",
+            "profanity": "no"
+          }
+        }
+      },
+      {
+        "item": {
+          "torrent": {
+            "id": "730359",
+            "file": "https://bitru.org/api.php?download=730359",
+            "size": "20803548618",
+            "added": 1789028971,
+            "status": "updated",
+            "seeders": "29",
+            "leechers": "25",
+            "last_seeder": 1789064537
+          },
+          "info": {
+            "name": "Стюарт Блум не смог спасти вселенную 1 сезон (1-7 из 10)",
+            "year": "2026",
+            "country": [
+              "us"
+            ],
+            "poster": "https://bitru.org/images/torrents/1787035530_438_1.jpg",
+            "screenshots": [
+              "https://bitru.org/images/torrents/1787035531_72_2.jpg",
+              "https://bitru.org/images/torrents/1787035532_556_3.jpg",
+              "https://bitru.org/images/torrents/1787035536_121_4.jpg",
+              "https://bitru.org/images/torrents/1787035537_311_5.jpg"
+            ],
+            "description": "Владелец магазина комиксов устраивает апокалипсис в нескольких измерениях. Спин-офф «Теории большого взрыва»&amp;amp; Владелец магазина комиксов Стюарт Блум должен восстановить реальность после того, как он сломал построенное Шелдоном и Леонардом устройство, случайно вызвав Армагеддон мультивселенной. Стюарту в этом деле помогают его девушка Дениз, друг-геолог Берт и дотошный квантовый физик Барри Крипке.",
+            "addition": "[b][color=#CC0000]Возраст: 18+ (зрителям, достигшим 18 лет. запрещено для детей)[/color]\n\nРелиз от: [color=#000099]EniaHD[/color][/b] https://bitru.org/img/i1787035433_412.png\n\nКачество видео: WEB-DL\r\nПеревод: Одноголосый (Кураж Бамбей)\r\nЯзык озвучки: Русский, Английский\r\nСубтитры: Английские (Full, SDH)\n\nВидео: НЕVC/H.265, 3840x2160, ~17,2 Mbps\r\nАудио 1: AC3, 2 ch, 192 Kbps - Русский (VO, Кураж Бамбей)\r\nАудио 2: E-AC3 JOC, 6 ch, 640 Kbps - Английский"
+          },
+          "template": {
+            "category": "serial",
+            "section": "Зарубежные сериалы",
+            "subsection": [
+              "Фантастика",
+              "Фэнтези"
+            ],
+            "orig_name": "Stuart Fails to Save the Universe",
+            "other": "4К, HDR10, DV 8.1, 10-bit | от EniaHD",
+            "duration": "10 х ~00:25",
+            "directors": "Кайл Ньюачек",
+            "actors": "Лорен Лапкус, Кевин Сассмэн, Брайан Посен, Джон Росс Боуи, Уил Уитон, Луис Мустилльо, Рич Тин, Jascha Slesers, Брэндон Моралес, Violette Neawedde",
+            "video": {
+              "kbps": "17200",
+              "resolution": "3840x2160",
+              "codec": "H.265 (HEVC)",
+              "format": "MKV",
+              "quality": "WEB-DL"
+            },
+            "audio": {
+              "kbps": "192",
+              "codec": "AC3",
+              "adds": "2 ch",
+              "track": "Русская + Английская"
+            },
+            "translation": "Профессиональный (одноголосый)",
+            "translation_author": "Кураж Бамбей",
+            "subtitles": "Английские",
+            "kinopoisk": {
+              "link": "https://www.kinopoisk.ru/film/5310825/",
+              "ratio": "7.4"
+            },
+            "imdb": {
+              "link": "https://www.imdb.com/title/tt27497393/",
+              "ratio": "7"
+            },
+            "ad": "no",
+            "profanity": "no"
+          }
+        }
+      },
+      {
+        "item": {
+          "torrent": {
+            "id": "728628",
+            "file": "https://bitru.org/api.php?download=728628",
+            "size": "2925767559",
+            "added": 1789028845,
+            "status": "updated",
+            "seeders": "14",
+            "leechers": "51",
+            "last_seeder": 1789044179
+          },
+          "info": {
+            "name": "Стюарт Блум не смог спасти вселенную 1 сезон (1-7 из 10)",
+            "year": "2026",
+            "country": [
+              "us"
+            ],
+            "poster": "https://bitru.org/images/torrents/1785734466_574_1.jpg",
+            "screenshots": [
+              "https://bitru.org/images/torrents/1785734467_103_2.jpg",
+              "https://bitru.org/images/torrents/1785734467_433_3.jpg",
+              "https://bitru.org/images/torrents/1785734467_751_4.jpg",
+              "https://bitru.org/images/torrents/1785734468_894_5.jpg"
+            ],
+            "description": "[center]Владелец магазина комиксов устраивает апокалипсис в нескольких измерениях. Спин-офф «Теории большого взрыва»&amp; Владелец магазина комиксов Стюарт Блум должен восстановить реальность после того, как он сломал построенное Шелдоном и Леонардом устройство, случайно вызвав Армагеддон мультивселенной. Стюарту в этом деле помогают его девушка Дениз, друг-геолог Берт и дотошный квантовый физик Барри Крипке.[/center]",
+            "addition": "Аудио 1: AC3, 6 ch, ~448 kb/s - | Русский | | Кураж-Бамбей\r\nАудио 2: AC3, 6 ch, ~448 kb/s - | Русский | | LostFilm\n\nПеревод 1: Профессиональный (Одноголосый закадровый) | Кураж-Бамбей\r\nПеревод 2: Профессиональный (Многоголосый закадровый) | LostFilm\r\nСубтитры: Русские (Forced, Full), Английские"
+          },
+          "template": {
+            "category": "serial",
+            "section": "Зарубежные сериалы",
+            "subsection": [
+              "Фантастика",
+              "Фэнтези"
+            ],
+            "orig_name": "Stuart Fails to Save the Universe",
+            "other": "DoMiNo &amp; селезень",
+            "duration": "10 х ~00:25",
+            "directors": "Кайл Ньюачек",
+            "actors": "Лорен Лапкус, Кевин Сассмэн, Брайан Посен, Джон Росс Боуи, Уил Уитон, Луис Мустилльо, Рич Тин, Кейли Куоко, Брэндон Моралес, Даг Симпсон",
+            "video": {
+              "kbps": "1800",
+              "resolution": "1024x576",
+              "codec": "H.264 (AVC)",
+              "format": "MKV",
+              "quality": "WEB-DLRip"
+            },
+            "audio": {
+              "kbps": "448",
+              "codec": "AC3",
+              "adds": "6 ch",
+              "track": "Русская"
+            },
+            "translation": "Профессиональный (двухголосый)",
+            "translation_author": "Кураж-Бамбей, LostFilm",
+            "subtitles": "Русские + Английские",
+            "kinopoisk": {
+              "link": "https://www.kinopoisk.ru/film/5310825/",
+              "ratio": "7.1"
+            },
+            "imdb": {
+              "link": "https://www.imdb.com/title/tt27497393/",
+              "ratio": "7"
+            },
+            "ad": "no",
+            "profanity": "no"
+          }
+        }
+      },
+      {
+        "item": {
+          "torrent": {
+            "id": "733537",
+            "file": "https://bitru.org/api.php?download=733537",
+            "size": "10466444496",
+            "added": 1789028520,
+            "status": "new",
+            "seeders": "6",
+            "leechers": "4",
+            "last_seeder": 1789050259
+          },
+          "info": {
+            "name": "Повелитель духов 1 сезон (1-18 из 18)",
+            "year": "2026",
+            "country": [
+              "cn"
+            ],
+            "poster": "https://bitru.org/images/torrents/1789028518_268_1.jpg",
+            "screenshots": [
+              "https://bitru.org/images/torrents/1789028519_994_2.jpg",
+              "https://bitru.org/images/torrents/1789028519_728_3.jpg",
+              "https://bitru.org/images/torrents/1789028520_727_4.jpg",
+              "https://bitru.org/images/torrents/1789028520_684_5.jpg"
+            ],
+            "description": "[center]У известного автора комиксов кризис идей. Из страха, что читатели потеряют интерес к его творению, он начинает «топить» своих лучших персонажей одного за другим. Но однажды — то ли в наказание за пренебрежение к созданному им же миру, то ли по чистой случайности — писатель оказывается внутри своего же произведения. Однако в фэнтези-вселенной, законы которой ему прекрасно знакомы, он рождается не всесильным главным героем Е Сяо, а его обычным другом — Ван Сяомином. Теперь автору придётся на собственной шкуре прочувствовать все жестокие сюжетные ходы и приёмы, а также придумать, как «прокачать» самого себя и своего нового спутника — обаятельного питомца Крылатого тигра.[/center]",
+            "addition": "Качество: WEBRip (2160p)\r\nВидео: MPEG-4 AVC, 3511 Кбит/с, 3840x1632, 8 бит\r\nАудио: Русский (AAC, 2 ch, 265 Кбит/с)\r\nПеревод: Дублированный\n\n[b]Релиз: [color=#000099]МИР ДОНХУА[/color][/b]\r\n[color=#990000]Присутствует логотип релиз группы.[/color]\r\nСубтитры: Китайские (хардсаб)\r\n8 bit, озвучка в контейнере, на телевизоре без проблем воспроизводится.\r\nОзвучка [[color=#3333FF]Дубляжная[/color]]"
+          },
+          "template": {
+            "category": "serial",
+            "section": "Зарубежные сериалы",
+            "subsection": [
+              "Мультфильм",
+              "Фэнтези"
+            ],
+            "orig_name": "Yu Ling Shi / B.King / Spirit Master",
+            "duration": "18 x ~ 00:17",
+            "directors": "N/A",
+            "actors": "",
+            "video": {
+              "kbps": "3511",
+              "resolution": "3840x1632",
+              "codec": "H.264 (AVC)",
+              "format": "MP4",
+              "quality": "WEBRip"
+            },
+            "audio": {
+              "kbps": "265",
+              "codec": "AAC",
+              "adds": "2 ch",
+              "track": "Русская"
+            },
+            "translation": "Профессиональный (дублирование)",
+            "translation_author": "Дубляжная",
+            "subtitles": "Китайские",
+            "kinopoisk": {
+              "link": "https://www.kinopoisk.ru/film/9114745/",
+              "ratio": ""
+            },
+            "imdb": {
+              "link": "https://www.imdb.com/title/tt40299229/",
+              "ratio": "7"
+            },
+            "ad": "no",
+            "profanity": "no"
+          }
+        }
+      },
+      {
+        "item": {
+          "torrent": {
+            "id": "733530",
+            "file": "https://bitru.org/api.php?download=733530",
+            "size": "19723453935",
+            "added": 1789027578,
+            "status": "new",
+            "seeders": "35",
+            "leechers": "106",
+            "last_seeder": 1789068654
+          },
+          "info": {
+            "name": "Всего одна ночь",
+            "year": "2026",
+            "country": [
+              "us"
+            ],
+            "poster": "https://bitru.org/images/torrents/1789027575_626_1.jpg",
+            "screenshots": [
+              "https://bitru.org/images/torrents/1789027575_882_2.jpg",
+              "https://bitru.org/images/torrents/1789027576_661_3.jpg",
+              "https://bitru.org/images/torrents/1789027577_165_4.jpg",
+              "https://bitru.org/images/torrents/1789027577_733_5.jpg"
+            ],
+            "description": "[center]Нью-Йорк, город, где единственная ночь в году становится временем, когда дозволен секс. Оуэн, недавно переживший разрыв отношений, и Элли, мечтающая о настоящей любви, неожиданно встречаются, и между ними с первых же минут возникает взаимное притяжение. Но на пути к сближению их поджидают многочисленные преграды и недоразумения, которые возникают из-за случайных знакомств и непредвиденных обстоятельств.[/center]\r\n[center][img]https://i127.fastpic.org/big/2026/0504/f0/db4974f001fd73dc21eef59906b742f0.jpg[/img]\r\n[/center]",
+            "addition": "Качество: UHD WEB-DL 2160p\r\nВидео: MPEG-H HEVC, 24.6 Mбит/с, 3840x2160, 23.976 кадр/с, 10 бит\r\nАудио # 1: AC3, 6 ch, 384 Кбит/с - RUS | MVO WinMedia\r\nАудио # 2: Е-AC3+Atmos, 6 ch, 640 Кбит/с - ENG\r\nСубтитры: Английские (Full, SDH)\n\n[b]Автор релиза: schumaher[/b]"
+          },
+          "template": {
+            "category": "movie",
+            "section": "Зарубежное кино",
+            "subsection": [
+              "Драма",
+              "Мелодрама"
+            ],
+            "orig_name": "One Night Only",
+            "other": "4К | HDR10 | Dolby Vision Profile 8",
+            "duration": "01:42",
+            "directors": "Уилл Глак",
+            "actors": "Каллум Тёрнер, Моника Барбаро, Элла Лаудон, Куинтесса Суинделл, Майя Хоук, Эндрю Бёрнап, Молли Рингуолд, Кинг Принцесс, Чарльз Гиллеспи, ЛеВар Бёртон",
+            "video": {
+              "kbps": "24600",
+              "resolution": "3840x2160",
+              "codec": "H.265 (HEVC)",
+              "format": "MKV",
+              "quality": "WEB-DL"
+            },
+            "audio": {
+              "kbps": "384",
+              "codec": "AC3",
+              "adds": "6 ch",
+              "track": "Русская + Английская"
+            },
+            "translation": "Профессиональный (многоголосый)",
+            "translation_author": "WinMedia",
+            "subtitles": "Английские",
+            "imdb": {
+              "link": "https://www.imdb.com/title/tt37853455/",
+              "ratio": "6"
+            },
+            "ad": "no",
+            "profanity": "no"
+          }
+        }
+      },
+      {
+        "item": {
+          "torrent": {
+            "id": "702299",
+            "file": "https://bitru.org/api.php?download=702299",
+            "size": "429186973263",
+            "added": 1789027338,
+            "status": "updated",
+            "seeders": "2",
+            "leechers": "12",
+            "last_seeder": 1789054260
+          },
+          "info": {
+            "name": "Окутывая Небеса 1-2 сезон (1-180 из 208)",
+            "year": "2023-2025",
+            "country": [
+              "cn"
+            ],
+            "poster": "https://bitru.org/images/torrents/1769108921_85_1.jpg",
+            "screenshots": [
+              "https://bitru.org/images/torrents/1769108921_487_2.jpg",
+              "https://bitru.org/images/torrents/1769108922_567_3.jpg",
+              "https://bitru.org/images/torrents/1769108923_27_4.jpg",
+              "https://bitru.org/images/torrents/1769108923_561_5.jpg"
+            ],
+            "description": "Староста класса, который пришел на вечеринку, вместе с одноклассниками оказывается втянутым в опасное путешествие в другие миры. Мечтая о возвращении в родной мир, Е Фань понимает, что только достижение огромной силы поможет ему в этом. Случайно попав в секту культиваторов, ему предстоит выжить самому и попытаться сберечь своих бывших одноклассников. Необычное древнее тело, оказавшееся у старосты, сулит ему массу приключений и трудностей на Пути Домой.\r\n[spoiler=Дополнительно:]\r\n[quote]Коллекционная версия.\r\nВ данном релизе представлены компиляции по 10 серий в каждой (две первые части двойные), каждая из которых собрана как единый фильм без швов, продолжительностью примерно 3ч.\r\nЗа основу взят релиз группы АнимеТВ4К (телега), мною лишь переведено в DV8.\n\nПо мере появления новых компиляций релиз будет обновлен.[/quote]\r\n[/spoiler]",
+            "addition": "[b]Релиз от: [color=#000099]АнимеТВ4К, Nick Lee[/color][/b]\r\n[img]https://bitru.org/img/i1769108777_249.webp[/img]\r\nКачество видео: UHDTV\r\nПеревод: Многоголосый профессиональный ([color=#3333FF]Анистар[/color])\r\nЯзык озвучки: Русский\r\nСубтитры: Китайские (неотключаемые)\n\nВидео: HEVC/H.265, 3840х2160, ~20.6 Mbps\r\nАудио: AAC LC, 2 ch, 256 Kbps"
+          },
+          "template": {
+            "category": "serial",
+            "section": "Зарубежные сериалы",
+            "subsection": [
+              "Мультфильм",
+              "Фэнтези"
+            ],
+            "orig_name": "Zhe Tian",
+            "other": "АнимеТВ4К, Nick Lee",
+            "duration": "208 х ~00:17",
+            "directors": "Ся Чжао",
+            "actors": "Сюй Сян, Чжао Цяньцзин, Ли Чаньфэй",
+            "video": {
+              "kbps": "20600",
+              "resolution": "3840х2160",
+              "codec": "H.265 (HEVC)",
+              "format": "MP4",
+              "quality": "HDTV"
+            },
+            "audio": {
+              "kbps": "256",
+              "codec": "AAC",
+              "adds": "2 ch",
+              "track": "Русская"
+            },
+            "translation": "Профессиональный (многоголосый)",
+            "translation_author": "Анистар",
+            "subtitles": "Китайские",
+            "kinopoisk": {
+              "link": "https://www.kinopoisk.ru/film/7679842/",
+              "ratio": ""
+            },
+            "imdb": {
+              "link": "https://www.imdb.com/title/tt27617390/",
+              "ratio": "7"
+            },
+            "ad": "no",
+            "profanity": "no"
+          }
+        }
+      },
+      {
+        "item": {
+          "torrent": {
+            "id": "732619",
+            "file": "https://bitru.org/api.php?download=732619",
+            "size": "1948956467",
+            "added": 1789026347,
+            "status": "updated",
+            "seeders": "94",
+            "leechers": "164",
+            "last_seeder": 1789063943
+          },
+          "info": {
+            "name": "Трудно быть богом 1 сезон (1-5 из 10)",
+            "year": "2026",
+            "country": [
+              "ru"
+            ],
+            "poster": "https://bitru.org/images/torrents/1788422372_330_1.jpg",
+            "screenshots": [
+              "https://bitru.org/images/torrents/1788422372_674_2.jpg",
+              "https://bitru.org/images/torrents/1788422373_349_3.jpg",
+              "https://bitru.org/images/torrents/1788422373_541_4.jpg",
+              "https://bitru.org/images/torrents/1788422373_841_5.jpg"
+            ],
+            "description": "[center]Далекое будущее. Земляне помогают менее развитым цивилизациям преодолеть тяжелые этапы развития. Сотрудник Института истории Антон отправляется в средневековый Арканар, чтобы спасти ученых, способных продвинуть прогресс. Ему предстоит стать доном Руматой Эсторским — богатым аристократом, любителем драк, выпивки и женщин. Главное правило прогрессоров — не вмешиваться напрямую в естественный ход истории, точечно спасая немногочисленных просветителей от гибели. Но у Антона есть личный интерес, который он скрыл от Института: где-то в Арканаре без вести пропал его отец.[/center]",
+            "addition": "Качество: WEBRip-AVC (Без логотипа - заблюрен.)\r\nВидео: 720x302 at 25 fps, x264@L4.1, ~900 kb/s\r\nАудио: AAC, 2 ch, ~120 kb/s - | Русский | \r\nСубтитры: Нет"
+          },
+          "template": {
+            "category": "serial",
+            "section": "Наши сериалы",
+            "subsection": [
+              "Фантастика",
+              "Драма"
+            ],
+            "other": "DoMiNo &amp; селезень",
+            "duration": "10 х ~00:50",
+            "directors": "Дмитрий Тюрин",
+            "actors": "Фёдор Бондарчук, Александар Радойичич, Сергей Безруков, Виктория Исакова, Никита Кологривый, Фёдор Лавров, Владимир Юматов, Николай Козак, Ирина Паутова, Лев Зулькарнаев",
+            "video": {
+              "kbps": "900",
+              "resolution": "720x302",
+              "codec": "H.264 (AVC)",
+              "format": "MKV",
+              "quality": "WEBRip"
+            },
+            "audio": {
+              "kbps": "120",
+              "codec": "AAC",
+              "adds": "2 ch",
+              "track": "Русская"
+            },
+            "translation": "Не требуется",
+            "subtitles": "Отсутствуют",
+            "kinopoisk": {
+              "link": "https://www.kinopoisk.ru/film/7954692/",
+              "ratio": "6.6"
+            },
+            "imdb": {
+              "link": "https://www.imdb.com/title/tt37185587/",
+              "ratio": "4"
+            },
+            "ad": "no",
+            "profanity": "no"
+          }
+        }
+      },
+      {
+        "item": {
+          "torrent": {
+            "id": "733521",
+            "file": "https://bitru.org/api.php?download=733521",
+            "size": "1270098951",
+            "added": 1789026260,
+            "status": "new",
+            "seeders": "161",
+            "leechers": "42",
+            "last_seeder": 1789062028
+          },
+          "info": {
+            "name": "На деревню дедушке 2",
+            "year": "2026",
+            "country": [
+              "ru"
+            ],
+            "poster": "https://bitru.org/images/torrents/1789026259_74_1.jpg",
+            "screenshots": [
+              "https://bitru.org/images/torrents/1789026259_391_2.jpg",
+              "https://bitru.org/images/torrents/1789026259_132_3.jpg",
+              "https://bitru.org/images/torrents/1789026260_307_4.jpg",
+              "https://bitru.org/images/torrents/1789026260_339_5.jpg"
+            ],
+            "description": "[center]Владик снова проводит летние каникулы у деда Юры, когда в деревне неожиданно появляется Виктор, бывший дипломат и дедушка Владика по папе. Он быстро находит общий язык с местными, дарит внуку дорогие подарки и увлекает его историями о путешествиях по миру. Между дедами вспыхивает соперничество за внимание внука — от едких подколов до открытого противостояния. Дед Юра всё больше чувствует, что проигрывает, но, когда всплывает опасная тайна из прошлого Виктора, у него появляется возможность избавиться от конкурента.[/center]",
+            "addition": ""
+          },
+          "template": {
+            "category": "movie",
+            "section": "Наше кино",
+            "subsection": [
+              "Комедия",
+              "Семейный"
+            ],
+            "duration": "01:29",
+            "directors": "Максим Колиганов, Владимир Котт",
+            "actors": "Юрий Стоянов, Фёдор Добронравов, Ярослав Головнёв, Ингрид Олеринская, Татьяна Орлова, Антон Филипенко, Александр Ильин, Мирон Лебедев, Алиса Руденко, Владислав Фокин",
+            "video": {
+              "kbps": "1500",
+              "resolution": "1024x426",
+              "codec": "H.264 (AVC)",
+              "format": "MKV",
+              "quality": "WEB-DLRip"
+            },
+            "audio": {
+              "kbps": "384",
+              "codec": "AC3",
+              "adds": "6 ch",
+              "track": "Русская"
+            },
+            "translation": "Не требуется",
+            "subtitles": "Отсутствуют",
+            "kinopoisk": {
+              "link": "https://www.kinopoisk.ru/film/10850417/",
+              "ratio": "7.0"
+            },
+            "ad": "no",
+            "profanity": "no"
+          }
+        }
+      },
+      {
+        "item": {
+          "torrent": {
+            "id": "733380",
+            "file": "https://bitru.org/api.php?download=733380",
+            "size": "2436694990",
+            "added": 1789023699,
+            "status": "updated",
+            "seeders": "61",
+            "leechers": "51",
+            "last_seeder": 1789057773
+          },
+          "info": {
+            "name": "Почти настоящий детектив 1 сезон (1-6 из 12)",
+            "year": "2026",
+            "country": [
+              "ru"
+            ],
+            "poster": "https://bitru.org/images/torrents/1788924502_530_1.jpg",
+            "screenshots": [
+              "https://bitru.org/images/torrents/1788924502_730_2.jpg",
+              "https://bitru.org/images/torrents/1788924502_551_3.jpg",
+              "https://bitru.org/images/torrents/1788924504_908_4.jpg",
+              "https://bitru.org/images/torrents/1788924504_681_5.jpg"
+            ],
+            "description": "Харизматичный и самовлюблённый артист и шоумен приезжает в небольшой городок, чтобы стать лицом рекламной кампании банка своего друга, самого влиятельного человека города Аркадия Шмакова. Его встречают фанфары и громкие речи, но пышный праздник оборачивается громким криминальным делом: банк захватывают, хозяина ранят, а артиста объявляют главным подозреваемым. Расследование берёт в свои руки Надежда — майор полиции и, по совместительству, будущая мать. Она приступает к делу на девятом месяце беременности. Начальник местной полиции не очень рад возвращению Надежды в строй и всячески пытается отстранить её от расследования. Чтобы докопаться до правды, артисту и Надежде придётся объединить усилия, невзирая на личные страхи и обстоятельства.",
+            "addition": "Качество: WEB-DLRip-AVC\r\nВидео: MPEG-4 AVC, ~ 1800 Кбит/с, 1024x466\r\nАудио: Русский (AC3, 6 ch, 448 Кбит/с)"
+          },
+          "template": {
+            "category": "serial",
+            "section": "Наши сериалы",
+            "subsection": [
+              "Комедия",
+              "Детектив"
+            ],
+            "other": "от ExKinoRay",
+            "duration": "10 x ~00:23",
+            "directors": "Дмитрий Булейко",
+            "actors": "Максим Лагашкин, Ольга Лерман, Гоша Куценко, Виталий Хаев, Александра Ревенко, Елена Валюшкина, Роза Хайруллина, Наталья Бочкарёва, Сабина Ахмедова, Андрей Титченко",
+            "video": {
+              "kbps": "1800",
+              "resolution": "1024x466",
+              "codec": "H.264 (AVC)",
+              "format": "MKV",
+              "quality": "WEB-DLRip"
+            },
+            "audio": {
+              "kbps": "448",
+              "codec": "AC3",
+              "adds": "6 ch",
+              "track": "Русская"
+            },
+            "translation": "Не требуется",
+            "subtitles": "Отсутствуют",
+            "kinopoisk": {
+              "link": "https://www.kinopoisk.ru/series/8738133/",
+              "ratio": "7.2"
+            },
+            "imdb": {
+              "link": "https://www.imdb.com/title/tt37815546/",
+              "ratio": ""
+            },
+            "ad": "no",
+            "profanity": "no"
+          }
+        }
+      },
+      {
+        "item": {
+          "torrent": {
+            "id": "733379",
+            "file": "https://bitru.org/api.php?download=733379",
+            "size": "5268767757",
+            "added": 1789023666,
+            "status": "updated",
+            "seeders": "113",
+            "leechers": "123",
+            "last_seeder": 1789063820
+          },
+          "info": {
+            "name": "Почти настоящий детектив 1 сезон (1-6 из 12)",
+            "year": "2026",
+            "country": [
+              "ru"
+            ],
+            "poster": "https://bitru.org/images/torrents/1788924400_486_1.jpg",
+            "screenshots": [
+              "https://bitru.org/images/torrents/1788924401_836_2.jpg",
+              "https://bitru.org/images/torrents/1788924403_816_3.jpg",
+              "https://bitru.org/images/torrents/1788924404_638_4.jpg",
+              "https://bitru.org/images/torrents/1788924405_98_5.jpg"
+            ],
+            "description": "Харизматичный и самовлюблённый артист и шоумен приезжает в небольшой городок, чтобы стать лицом рекламной кампании банка своего друга, самого влиятельного человека города Аркадия Шмакова. Его встречают фанфары и громкие речи, но пышный праздник оборачивается громким криминальным делом: банк захватывают, хозяина ранят, а артиста объявляют главным подозреваемым. Расследование берёт в свои руки Надежда — майор полиции и, по совместительству, будущая мать. Она приступает к делу на девятом месяце беременности. Начальник местной полиции не очень рад возвращению Надежды в строй и всячески пытается отстранить её от расследования. Чтобы докопаться до правды, артисту и Надежде придётся объединить усилия, невзирая на личные страхи и обстоятельства.",
+            "addition": "Качество: WEB-DL 1080p\r\nВидео: MPEG-4 AVC, ~ 4800 Кбит/с, 1920x872\r\nАудио: Русский (AAC, 2 ch, 192 Кбит/с), (AC3, 6 ch, 448 Кбит/с), (E-AC, 6 ch, 448 Кбит/с)"
+          },
+          "template": {
+            "category": "serial",
+            "section": "Наши сериалы",
+            "subsection": [
+              "Комедия",
+              "Детектив"
+            ],
+            "other": "от ExKinoRay",
+            "duration": "10 x ~00:23",
+            "directors": "Дмитрий Булейко",
+            "actors": "Максим Лагашкин, Ольга Лерман, Гоша Куценко, Виталий Хаев, Александра Ревенко, Елена Валюшкина, Роза Хайруллина, Наталья Бочкарёва, Сабина Ахмедова, Андрей Титченко",
+            "video": {
+              "kbps": "4800",
+              "resolution": "1920x872",
+              "codec": "H.264 (AVC)",
+              "format": "MKV",
+              "quality": "WEB-DL"
+            },
+            "audio": {
+              "kbps": "192",
+              "codec": "AAC",
+              "adds": "2 ch",
+              "track": "Русская"
+            },
+            "translation": "Не требуется",
+            "subtitles": "Отсутствуют",
+            "kinopoisk": {
+              "link": "https://www.kinopoisk.ru/series/8738133/",
+              "ratio": "7.2"
+            },
+            "imdb": {
+              "link": "https://www.imdb.com/title/tt37815546/",
+              "ratio": ""
+            },
+            "ad": "no",
+            "profanity": "no"
+          }
+        }
+      },
+      {
+        "item": {
+          "torrent": {
+            "id": "733512",
+            "file": "https://bitru.org/api.php?download=733512",
+            "size": "1092062517",
+            "added": 1789023611,
+            "status": "new",
+            "seeders": "36",
+            "leechers": "22",
+            "last_seeder": 1789063982
+          },
+          "info": {
+            "name": "Почти настоящий детектив 1 сезон (1-6 из 12)",
+            "year": "2026",
+            "country": [
+              "ru"
+            ],
+            "poster": "https://bitru.org/images/torrents/1789023609_486_1.jpg",
+            "screenshots": [
+              "https://bitru.org/images/torrents/1789023610_800_2.jpg",
+              "https://bitru.org/images/torrents/1789023610_192_3.jpg",
+              "https://bitru.org/images/torrents/1789023611_720_4.jpg",
+              "https://bitru.org/images/torrents/1789023611_919_5.jpg"
+            ],
+            "description": "[center]Харизматичный и самовлюблённый артист и шоумен приезжает в небольшой городок, чтобы стать лицом рекламной кампании банка своего друга, самого влиятельного человека города Аркадия Шмакова. Его встречают фанфары и громкие речи, но пышный праздник оборачивается громким криминальным делом: банк захватывают, хозяина ранят, а артиста объявляют главным подозреваемым. Расследование берёт в свои руки Надежда - майор полиции и, по совместительству, будущая мать. Она приступает к делу на девятом месяце беременности. Начальник местной полиции не очень рад возвращению Надежды в строй и всячески пытается отстранить её от расследования. Чтобы докопаться до правды, артисту и Надежде придётся объединить усилия, невзирая на личные страхи и обстоятельства.\r\n[/center]",
+            "addition": ""
+          },
+          "template": {
+            "category": "serial",
+            "section": "Наши сериалы",
+            "subsection": [
+              "Комедия",
+              "Детектив"
+            ],
+            "other": "DoMiNo &amp; селезень",
+            "duration": "12 x ~ 00:23",
+            "directors": "Дмитрий Булейко",
+            "actors": "Максим Лагашкин, Ольга Лерман, Гоша Куценко, Виталий Хаев, Александра Ревенко, Елена Валюшкина, Роза Хайруллина, Наталья Бочкарёва, Сабина Ахмедова, Андрей Титченко",
+            "video": {
+              "kbps": "900",
+              "resolution": "720x328",
+              "codec": "H.264 (AVC)",
+              "format": "MKV",
+              "quality": "WEB-DLRip"
+            },
+            "audio": {
+              "kbps": "106",
+              "codec": "AAC",
+              "adds": "2 ch",
+              "track": "Русская"
+            },
+            "translation": "Не требуется",
+            "subtitles": "Отсутствуют",
+            "kinopoisk": {
+              "link": "https://www.kinopoisk.ru/film/8738133/",
+              "ratio": "7.2"
+            },
+            "ad": "no",
+            "profanity": "no"
+          }
+        }
+      },
+      {
+        "item": {
+          "torrent": {
+            "id": "733511",
+            "file": "https://bitru.org/api.php?download=733511",
+            "size": "2798302256",
+            "added": 1789023295,
+            "status": "new",
+            "seeders": "21",
+            "leechers": "14",
+            "last_seeder": 1789069459
+          },
+          "info": {
+            "name": "Шарлотта развлекается",
+            "year": "2018",
+            "country": [
+              "ca"
+            ],
+            "poster": "https://bitru.org/images/torrents/1789023292_139_1.jpg",
+            "screenshots": [
+              "https://bitru.org/images/torrents/1789023293_812_2.jpg",
+              "https://bitru.org/images/torrents/1789023294_433_3.jpg",
+              "https://bitru.org/images/torrents/1789023294_659_4.jpg",
+              "https://bitru.org/images/torrents/1789023295_862_5.jpg"
+            ],
+            "description": "[center]Одним пьяным вечером Шарлота, недавно расставшаяся с парнем, Меган, циник-анархист, и Об, застенчивый романтик, забредают в “Депо Игрушек”. Очаровавшись парнями из магазина, девушки подают заявки на работу и быстро становятся частью команды. Вот только Шарлота сразу пускается во все тяжкие, и возможно, заходит слишком далеко..[/center]",
+            "addition": "Качество: WEBRip 1080p\r\nВидео: MPEG-4 AVC, 4000 Кбит/с, 1920x1032\r\nАудио: Русский, французский (AAC, 2 ch, 192 Кбит/с)\r\nСубтитры: нет"
+          },
+          "template": {
+            "category": "movie",
+            "section": "Зарубежное кино",
+            "subsection": [
+              "Комедия"
+            ],
+            "orig_name": "Charlotte a du fun / Slut in a good way",
+            "duration": "01:25",
+            "directors": "Софи Лорейн",
+            "actors": "Маргарита Бушар, Романа Дени, Роуз Адам, Алекс Годбоу, Мэрилу Белугу, Вассили Шнайдер, Клаудия Буветт, Одри Роджер, Энтони Терриен, Николя Фонтейн",
+            "video": {
+              "kbps": "4000",
+              "resolution": "1920x1032",
+              "codec": "H.264 (AVC)",
+              "format": "MKV",
+              "quality": "WEBRip"
+            },
+            "audio": {
+              "kbps": "192",
+              "codec": "AAC",
+              "adds": "2 ch",
+              "track": "Русская + Французская"
+            },
+            "translation": "Профессиональный (многоголосый)",
+            "translation_author": "Viasat Kino",
+            "subtitles": "Отсутствуют",
+            "kinopoisk": {
+              "link": "https://www.kinopoisk.ru/film/1111526/",
+              "ratio": ""
+            },
+            "imdb": {
+              "link": "https://www.imdb.com/title/tt7740284/",
+              "ratio": "6"
+            },
+            "ad": "no",
+            "profanity": "no"
+          }
+        }
+      },
+      {
+        "item": {
+          "torrent": {
+            "id": "733510",
+            "file": "https://bitru.org/api.php?download=733510",
+            "size": "19793519445",
+            "added": 1789023158,
+            "status": "new",
+            "seeders": "24",
+            "leechers": "30",
+            "last_seeder": 1789068714
+          },
+          "info": {
+            "name": "Всего одна ночь",
+            "year": "2026",
+            "country": [
+              "us"
+            ],
+            "poster": "https://bitru.org/images/torrents/1789023155_530_1.jpg",
+            "screenshots": [
+              "https://bitru.org/images/torrents/1789023155_126_2.jpg",
+              "https://bitru.org/images/torrents/1789023155_351_3.jpg",
+              "https://bitru.org/images/torrents/1789023156_298_4.jpg"
+            ],
+            "description": "[center]Нью-Йорк, город, где единственная ночь в году становится временем, когда дозволен секс. Оуэн, недавно переживший разрыв отношений, и Элли, мечтающая о настоящей любви, неожиданно встречаются, и между ними с первых же минут возникает взаимное притяжение. Но на пути к сближению их поджидают многочисленные преграды и недоразумения, которые возникают из-за случайных знакомств и непредвиденных обстоятельств.[/center]",
+            "addition": "Качество: WEB-DL-HEVC 2160p | 4K | SDR\r\nФормат: MKV\r\nВидео: HEVC/H.265, 3840x2160, ~24.7 Mbps\r\nАудио 1: AC3, 6 ch, 384 Kbps - Русский\r\nАудио 2: E-AC3 JOC, 6 ch, 640 Kbps - Английский\r\nСубтитры: Английские (full, SDH)\n\n[b]Автор релиза: schumaher[/b]"
+          },
+          "template": {
+            "category": "movie",
+            "section": "Зарубежное кино",
+            "subsection": [
+              "Драма",
+              "Мелодрама"
+            ],
+            "orig_name": "One Night Only",
+            "other": "4К | SDR",
+            "duration": "01:42",
+            "directors": "Уилл Глак",
+            "actors": "Каллум Тернер, Моника Барбаро, Элла Лаудон, Куинтесса Суинделл, Майя Хоук, Эндрю Бёрнап, Молли Рингуолд, Кинг Принцесс, Чарльз Гиллеспи, ЛеВар Бёртон",
+            "video": {
+              "kbps": "24700",
+              "resolution": "3840x2160",
+              "codec": "H.265 (HEVC)",
+              "format": "MKV",
+              "quality": "WEB-DL"
+            },
+            "audio": {
+              "kbps": "384",
+              "codec": "AC3",
+              "adds": "6 ch",
+              "track": "Русская + Английская"
+            },
+            "translation": "Профессиональный (многоголосый)",
+            "translation_author": "WinMedia",
+            "subtitles": "Английские",
+            "kinopoisk": {
+              "link": "https://www.kinopoisk.ru/film/10628572/",
+              "ratio": "6.4"
+            },
+            "imdb": {
+              "link": "https://www.imdb.com/title/tt37853455/",
+              "ratio": "6"
+            },
+            "ad": "no",
+            "profanity": "no"
+          }
+        }
+      },
+      {
+        "item": {
+          "torrent": {
+            "id": "732210",
+            "file": "https://bitru.org/api.php?download=732210",
+            "size": "4780785664",
+            "added": 1789022954,
+            "status": "updated",
+            "seeders": "26",
+            "leechers": "48",
+            "last_seeder": 1789050170
+          },
+          "info": {
+            "name": "Хозяин Москвы 1 сезон (1-7 из 12)",
+            "year": "2026",
+            "country": [
+              "ru"
+            ],
+            "poster": "https://bitru.org/images/torrents/1788193194_218_1.jpg",
+            "screenshots": [
+              "https://bitru.org/images/torrents/1788193194_719_2.jpg",
+              "https://bitru.org/images/torrents/1788193194_132_3.jpg",
+              "https://bitru.org/images/torrents/1788193194_954_4.jpg",
+              "https://bitru.org/images/torrents/1788193195_189_5.jpg"
+            ],
+            "description": "Первая половина XIX-го века, Москва, куда накануне войны 1812 года приезжают крепостные Никишины: семнадцатилетний Иван с отцом Терентием, старшим братом Василием и младшей сестрой Агашей. Терентий хочет выкупить себя и детей, но их помещик продает имение и крестьян богатому графу Лебедеву. Так крепостные Никишины вынужденно остаются в Москве. Иван влюбляется в купеческую дочь Машу Клыкову, но не может жениться, пока он крепостной. Агаша становится актрисой домашнего театра Лебедевых, ёе соблазняет сын хозяина – Павел, который служит адъютантом у генерал-губернатора Гудовича. А брат Василий устраивается приказчиком к купцу Клыкову и тоже влюбляется в Машу. Впереди Никишиных ждет много испытаний, самым грозным из которых оказывается оккупация Москвы Наполеоном, а также любовь, карьерные свершения, свобода и новая жизнь…",
+            "addition": "Кодек: XviD\r\nКачество: SATRip\r\nВидео: XviD, ~ 1600 Кбит/с, 720x400, 25 кадр/с\r\nЗвук: AC3, 2 ch, 192 Кбит/с"
+          },
+          "template": {
+            "category": "serial",
+            "section": "Наши сериалы",
+            "subsection": [
+              "Драма",
+              "Исторический"
+            ],
+            "other": "от Files-x",
+            "duration": "12 x ~00:50",
+            "directors": "Игорь Зайцев, Валерия Вегнер",
+            "actors": "Сергей Шакуров, Виталий Кищенко, Игорь Гордин, Игорь Петренко, Александр Лазарев (младший), Наташа Швец (II), Сергей Беляев, Алексей Шевченков, Егор Кирячок, Виктория Разумовская",
+            "video": {
+              "kbps": "1600",
+              "resolution": "720x400",
+              "codec": "XviD",
+              "format": "AVI",
+              "quality": "SATRip"
+            },
+            "audio": {
+              "kbps": "192",
+              "codec": "AC3",
+              "adds": "2 ch",
+              "track": "Русская"
+            },
+            "translation": "Не требуется",
+            "subtitles": "Отсутствуют",
+            "kinopoisk": {
+              "link": "https://www.kinopoisk.ru/series/8552285/",
+              "ratio": ""
+            },
+            "imdb": {
+              "link": "https://www.imdb.com/title/tt42555704/",
+              "ratio": "3"
+            },
+            "ad": "no",
+            "profanity": "no"
+          }
+        }
+      },
+      {
+        "item": {
+          "torrent": {
+            "id": "732263",
+            "file": "https://bitru.org/api.php?download=732263",
+            "size": "11952049010",
+            "added": 1789022912,
+            "status": "updated",
+            "seeders": "23",
+            "leechers": "112",
+            "last_seeder": 1789053889
+          },
+          "info": {
+            "name": "Хозяин Москвы 1 сезон (1-7 из 12)",
+            "year": "2026",
+            "country": [
+              "ru"
+            ],
+            "poster": "https://bitru.org/images/torrents/1788235971_624_1.jpg",
+            "screenshots": [
+              "https://bitru.org/images/torrents/1788235971_940_2.jpg",
+              "https://bitru.org/images/torrents/1788235972_101_3.jpg",
+              "https://bitru.org/images/torrents/1788235973_904_4.jpg",
+              "https://bitru.org/images/torrents/1788235974_931_5.jpg"
+            ],
+            "description": "Первая половина XIX-го века, Москва, куда накануне войны 1812 года приезжают крепостные Никишины: семнадцатилетний Иван с отцом Терентием, старшим братом Василием и младшей сестрой Агашей. Терентий хочет выкупить себя и детей, но их помещик продает имение и крестьян богатому графу Лебедеву. Так крепостные Никишины вынужденно остаются в Москве. Иван влюбляется в купеческую дочь Машу Клыкову, но не может жениться, пока он крепостной. Агаша становится актрисой домашнего театра Лебедевых, ёе соблазняет сын хозяина – Павел, который служит адъютантом у генерал-губернатора Гудовича. А брат Василий устраивается приказчиком к купцу Клыкову и тоже влюбляется в Машу. Впереди Никишиных ждет много испытаний, самым грозным из которых оказывается оккупация Москвы Наполеоном, а также любовь, карьерные свершения, свобода и новая жизнь…",
+            "addition": "Качество: WEB-DL 1080p\r\nВидео: MPEG-4 AVC, ~ 4800 Кбит/с, 1920х1080\r\nАудио: Русский (AAC, 2 ch, 192 Кбит/с)\r\nСубтитры: Русские (SDH) полне отключаемые [Kino1tv]"
+          },
+          "template": {
+            "category": "serial",
+            "section": "Наши сериалы",
+            "subsection": [
+              "Драма",
+              "Исторический"
+            ],
+            "other": "от ExKinoRay",
+            "duration": "12 x ~00:50",
+            "directors": "Игорь Зайцев, Валерия Вегнер",
+            "actors": "Сергей Шакуров, Виталий Кищенко, Игорь Гордин, Игорь Петренко, Александр Лазарев (младший), Наташа Швец (II), Сергей Беляев, Алексей Шевченков, Егор Кирячок, Виктория Разумовская",
+            "video": {
+              "kbps": "4800",
+              "resolution": "1920x1080",
+              "codec": "H.264 (AVC)",
+              "format": "MKV",
+              "quality": "WEB-DL"
+            },
+            "audio": {
+              "kbps": "192",
+              "codec": "AAC",
+              "adds": "2 ch",
+              "track": "Русская"
+            },
+            "translation": "Не требуется",
+            "subtitles": "Русские",
+            "kinopoisk": {
+              "link": "https://www.kinopoisk.ru/series/8552285/",
+              "ratio": ""
+            },
+            "imdb": {
+              "link": "https://www.imdb.com/title/tt42555704/",
+              "ratio": "3"
+            },
+            "ad": "no",
+            "profanity": "no"
+          }
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,5 @@
+{
+  "streams": [{ "index": 0, "codec_type": "audio", "codec_name": "ac3", "tags": { "language": "eng" } }],
+  "chapters": [{ "id": 0, "start_time": "0", "end_time": "10" }],
+  "format": { "nb_streams": 1 }
+}

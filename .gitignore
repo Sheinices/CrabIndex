@@ -1,0 +1,18 @@
+/target
+/Data/fdb
+/Data/temp
+/Data/log
+/Data/tracks
+/Data/masterDb*.bz
+/wwwroot
+/init.yaml
+/init.conf
+node_modules
+
+# runtime data written by tests / local runs
+**/Data/log/
+**/Data/temp/
+**/Data/fdb/
+**/Data/tracks/
+.DS_Store
+/Data/waf.json

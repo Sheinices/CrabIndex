@@ -1,0 +1,224 @@
+# CrabIndex host crontab - edit by hand (source of truth).
+# Install: crontab /opt/crabindex/Data/crontab
+# Runner:  /opt/crabindex/Data/run-job.sh <name> <url> <max_time>
+#   flock (no curl pile-up) + curl --max-time
+# Default base: http://127.0.0.1:9117 - change host/port if needed.
+# If apikey/devkey is set, append ?apikey=... or ?devkey=... to each URL.
+
+SHELL=/bin/bash
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+
+# jsondb-save -> /jsondb/save (max_time=60s)
+# every 5 min (e.g. :00,:05,:10,…)
+*/5 * * * *  /opt/crabindex/Data/run-job.sh jsondb-save http://127.0.0.1:9117/jsondb/save 60
+
+# cloudflare-warmup keep-alive -> /cron/cloudflare/Warmup (max_time=300s)
+# every 20 min - keeps FlareSolverr session `crabindex-rutracker_org` warm (cf_clearance in browser)
+5,25,45 * * * *  /opt/crabindex/Data/run-job.sh cloudflare-keepalive http://127.0.0.1:9117/cron/cloudflare/Warmup 300
+
+# cloudflare-warmup -> /cron/cloudflare/Warmup (max_time=300s)
+# every hour at :55 - warm FlareSolverr session before rutracker-parse at :00
+55 * * * *  /opt/crabindex/Data/run-job.sh cloudflare-warmup http://127.0.0.1:9117/cron/cloudflare/Warmup 300
+
+# maintenance-check -> /cron/maintenance/Check?mode=report (max_time=60s)
+# Sunday 05:00
+0 5 * * 0  /opt/crabindex/Data/run-job.sh maintenance-check http://127.0.0.1:9117/cron/maintenance/Check?mode=report 60
+
+# parseall-resume -> /cron/maintenance/ResumeParseAll (max_time=60s)
+# continue incomplete cycles after restart / hung cancel; idle if pending=0
+*/15 * * * *  /opt/crabindex/Data/run-job.sh parseall-resume http://127.0.0.1:9117/cron/maintenance/ResumeParseAll 60
+
+# --- rutracker (~1.5M) ---
+# rutracker-parse -> /cron/rutracker/parse (max_time=3600s)
+# every hour at :00 (after cloudflare-warmup :55)
+0 * * * *  /opt/crabindex/Data/run-job.sh rutracker-parse http://127.0.0.1:9117/cron/rutracker/parse 3600
+
+# rutracker-UpdateTasksParse -> /cron/rutracker/UpdateTasksParse (max_time=60s)
+20 3 * * *  /opt/crabindex/Data/run-job.sh rutracker-UpdateTasksParse http://127.0.0.1:9117/cron/rutracker/UpdateTasksParse 60
+
+# rutracker-ParseAllTask -> /cron/rutracker/ParseAllTask (max_time=60s)
+# Multi-day cycle (~16k pages). Daily kick starts a new round only when pending=0;
+# while running cron returns work. ResumeParseAll covers restarts. Do not add extra kicks.
+40 4 * * *  /opt/crabindex/Data/run-job.sh rutracker-ParseAllTask http://127.0.0.1:9117/cron/rutracker/ParseAllTask 60
+
+# --- kinozal (~550k) ---
+# kinozal-parse -> /cron/kinozal/parse (max_time=900s)
+3,18,33,48 * * * *  /opt/crabindex/Data/run-job.sh kinozal-parse http://127.0.0.1:9117/cron/kinozal/parse 900
+
+# kinozal-UpdateTasksParse -> /cron/kinozal/UpdateTasksParse (max_time=60s)
+10 2 * * *  /opt/crabindex/Data/run-job.sh kinozal-UpdateTasksParse http://127.0.0.1:9117/cron/kinozal/UpdateTasksParse 60
+
+# kinozal-ParseAllTask -> /cron/kinozal/ParseAllTask (max_time=60s)
+# ~4h cycle; 05:xx and 17:xx. New round only when pending=0.
+35 5,17 * * *  /opt/crabindex/Data/run-job.sh kinozal-ParseAllTask http://127.0.0.1:9117/cron/kinozal/ParseAllTask 60
+
+# --- rutor (~550k) ---
+# rutor-parse -> /cron/rutor/parse (max_time=900s)
+1,16,31,46 * * * *  /opt/crabindex/Data/run-job.sh rutor-parse http://127.0.0.1:9117/cron/rutor/parse 900
+
+# rutor-UpdateTasksParse -> /cron/rutor/UpdateTasksParse (max_time=60s)
+5 2 * * *  /opt/crabindex/Data/run-job.sh rutor-UpdateTasksParse http://127.0.0.1:9117/cron/rutor/UpdateTasksParse 60
+
+# rutor-ParseAllTask -> /cron/rutor/ParseAllTask (max_time=60s)
+# ~3.5h cycle; 05:xx and 17:xx. New round only when pending=0.
+30 5,17 * * *  /opt/crabindex/Data/run-job.sh rutor-ParseAllTask http://127.0.0.1:9117/cron/rutor/ParseAllTask 60
+
+# --- bitru (~175k; high update churn - parse + archive backfill) ---
+# bitru-parse -> /cron/bitru/parse (max_time=900s) - newest page only
+10,30,50 * * * *  /opt/crabindex/Data/run-job.sh bitru-parse http://127.0.0.1:9117/cron/bitru/parse 900
+
+# bitru-backfill -> /cron/bitru/backfill?pages=20 (max_time=900s)
+# default/clamp 1..50; pages=20 ≈ up to 2000 torrents/hour (~3.5d full pass).
+# finished ends this pass; next :40 kick starts again from the newest page (ParseAll analog).
+# Do not raise pages: backfill holds the parse lock and can skip :50 parse.
+40 * * * *  /opt/crabindex/Data/run-job.sh bitru-backfill "http://127.0.0.1:9117/cron/bitru/backfill?pages=20" 900
+
+# --- nnmclub (~145k) ---
+# nnmclub-parse -> /cron/nnmclub/parse (max_time=900s)
+5,20,35,50 * * * *  /opt/crabindex/Data/run-job.sh nnmclub-parse http://127.0.0.1:9117/cron/nnmclub/parse 900
+
+# nnmclub-UpdateTasksParse -> /cron/nnmclub/UpdateTasksParse (max_time=60s)
+15 2 * * *  /opt/crabindex/Data/run-job.sh nnmclub-UpdateTasksParse http://127.0.0.1:9117/cron/nnmclub/UpdateTasksParse 60
+
+# nnmclub-ParseAllTask -> /cron/nnmclub/ParseAllTask (max_time=60s)
+# ~7h cycle; once after the morning fast wave (not stacked with 05:xx).
+42 12 * * *  /opt/crabindex/Data/run-job.sh nnmclub-ParseAllTask http://127.0.0.1:9117/cron/nnmclub/ParseAllTask 60
+
+# --- megapeer (~113k) ---
+# megapeer-parse -> /cron/megapeer/parse (max_time=900s)
+8 * * * *  /opt/crabindex/Data/run-job.sh megapeer-parse http://127.0.0.1:9117/cron/megapeer/parse 900
+
+# megapeer-UpdateTasksParse -> /cron/megapeer/UpdateTasksParse (max_time=60s)
+20 2 * * *  /opt/crabindex/Data/run-job.sh megapeer-UpdateTasksParse http://127.0.0.1:9117/cron/megapeer/UpdateTasksParse 60
+
+# megapeer-ParseAllTask -> /cron/megapeer/ParseAllTask (max_time=60s)
+# ~77 pages, reqMinute 5 (~1.3h); three kicks. New round only when pending=0.
+45 5,13,21 * * *  /opt/crabindex/Data/run-job.sh megapeer-ParseAllTask http://127.0.0.1:9117/cron/megapeer/ParseAllTask 60
+
+# --- knaben (~106k; API aggregate) ---
+# knaben-parse -> /cron/knaben/parse (max_time=900s)
+# 12,32,52 * * * *  /opt/crabindex/Data/run-job.sh knaben-parse http://127.0.0.1:9117/cron/knaben/parse 900
+
+# knaben-backfill -> /cron/knaben/backfill (max_time=900s)
+# leaf TV/Movies subcategories, asc→desc within Knaben 10k window; state: Data/temp/knaben_backfill.json
+# 42 * * * *  /opt/crabindex/Data/run-job.sh knaben-backfill "http://127.0.0.1:9117/cron/knaben/backfill?pages=10" 900
+
+# --- torrentby (~58k) ---
+# torrentby-parse -> /cron/torrentby/parse (max_time=900s)
+7,22,37,52 * * * *  /opt/crabindex/Data/run-job.sh torrentby-parse http://127.0.0.1:9117/cron/torrentby/parse 900
+
+# torrentby-UpdateTasksParse -> /cron/torrentby/UpdateTasksParse (max_time=60s)
+25 2 * * *  /opt/crabindex/Data/run-job.sh torrentby-UpdateTasksParse http://127.0.0.1:9117/cron/torrentby/UpdateTasksParse 60
+
+# torrentby-ParseAllTask -> /cron/torrentby/ParseAllTask (max_time=60s)
+# ~197 pages, minutes per cycle; every 6h. New round only when pending=0.
+50 5,11,17,23 * * *  /opt/crabindex/Data/run-job.sh torrentby-ParseAllTask http://127.0.0.1:9117/cron/torrentby/ParseAllTask 60
+
+# --- toloka (~58k) ---
+# toloka-parse -> /cron/toloka/parse (max_time=900s) - ~3s, same cadence as other cheap trio
+14,29,44,59 * * * *  /opt/crabindex/Data/run-job.sh toloka-parse http://127.0.0.1:9117/cron/toloka/parse 900
+
+# toloka-UpdateTasksParse -> /cron/toloka/UpdateTasksParse (max_time=60s)
+30 2 * * *  /opt/crabindex/Data/run-job.sh toloka-UpdateTasksParse http://127.0.0.1:9117/cron/toloka/UpdateTasksParse 60
+
+# toloka-ParseAllTask -> /cron/toloka/ParseAllTask (max_time=60s)
+# ~783 pages, ~1-2h; three kicks with megapeer. New round only when pending=0.
+55 5,13,21 * * *  /opt/crabindex/Data/run-job.sh toloka-ParseAllTask http://127.0.0.1:9117/cron/toloka/ParseAllTask 60
+
+# --- mazepa (~51k) ---
+# mazepa-parse -> /cron/mazepa/parse (max_time=2400s)
+# full forum walk ~27 min; every 2h (hourly was overlapping itself vs curl --max-time 900)
+25 */2 * * *  /opt/crabindex/Data/run-job.sh mazepa-parse http://127.0.0.1:9117/cron/mazepa/parse 2400
+
+# --- lostfilm (~18k) ---
+# lostfilm-parse -> /cron/lostfilm/parse (max_time=900s)
+11,26,41,56 * * * *  /opt/crabindex/Data/run-job.sh lostfilm-parse http://127.0.0.1:9117/cron/lostfilm/parse 900
+
+# --- selezen (~16k) ---
+# selezen-parse -> /cron/selezen/parse (max_time=900s)
+9,24,39,54 * * * *  /opt/crabindex/Data/run-job.sh selezen-parse http://127.0.0.1:9117/cron/selezen/parse 900
+
+# --- animelayer (~6k) ---
+# animelayer-parse -> /cron/animelayer/parse (max_time=900s)
+2,17,32,47 * * * *  /opt/crabindex/Data/run-job.sh animelayer-parse http://127.0.0.1:9117/cron/animelayer/parse 900
+
+# --- rudub (ex-BaibaKoTV; HD 1080/2160 only; login/cookie) ---
+# rudub-parse -> /cron/rudub/parse?limit_page=10 (max_time=1800s) - pages 0..9 × vf 4+5
+# Initial FDB fill: ?limit_page=50 (or parseFrom/parseTo). Cap is 100.
+# minute :40 - free of other hourly page parsers (avoid ultradox 13/43 and rutor 1/16/31/46)
+40 * * * *  /opt/crabindex/Data/run-job.sh rudub-parse "http://127.0.0.1:9117/cron/rudub/parse?limit_page=10" 1800
+
+# --- subsplease (public API; 1080p magnets; Batches via ParseShows) ---
+# subsplease-parse -> /cron/subsplease/parse?pages=2 (max_time=900s)
+35 * * * *  /opt/crabindex/Data/run-job.sh subsplease-parse "http://127.0.0.1:9117/cron/subsplease/parse?pages=2" 900
+# subsplease-ParseShows -> /cron/subsplease/ParseShows (default limit=50; max_time=1800s)
+25 5 * * *  /opt/crabindex/Data/run-job.sh subsplease-ParseShows http://127.0.0.1:9117/cron/subsplease/ParseShows 1800
+
+# --- aniliberty (~5k) ---
+# aniliberty-parse -> /cron/aniliberty/parse (max_time=900s)
+6,21,36,51 * * * *  /opt/crabindex/Data/run-job.sh aniliberty-parse http://127.0.0.1:9117/cron/aniliberty/parse 900
+
+# --- anidub (~4k) ---
+# anidub-parse -> /cron/anidub/parse (max_time=900s)
+4,19,34,49 * * * *  /opt/crabindex/Data/run-job.sh anidub-parse http://127.0.0.1:9117/cron/anidub/parse 900
+
+# --- anistar (alias = live mirror, host = FDB urls) ---
+# anistar-parse -> /cron/anistar/parse?limit_page=3 (max_time=900s)
+40 6 * * *  /opt/crabindex/Data/run-job.sh anistar-parse "http://127.0.0.1:9117/cron/anistar/parse?limit_page=3" 900
+
+# --- leproduction ---
+# leproduction-parse -> /cron/leproduction/parse?limit_page=3 (max_time=900s)
+45 6 * * *  /opt/crabindex/Data/run-job.sh leproduction-parse "http://127.0.0.1:9117/cron/leproduction/parse?limit_page=3" 900
+
+# --- viruseproject ---
+# viruseproject-parse -> /cron/viruseproject/parse?limit_page=3 (max_time=900s)
+50 6 * * *  /opt/crabindex/Data/run-job.sh viruseproject-parse "http://127.0.0.1:9117/cron/viruseproject/parse?limit_page=3" 900
+
+# --- anifilm (login or session cookie) ---
+# anifilm-parse -> /cron/anifilm/parse (max_time=1800s)
+55 6 * * *  /opt/crabindex/Data/run-job.sh anifilm-parse http://127.0.0.1:9117/cron/anifilm/parse 1800
+
+# --- anibelka (anonymous only; Rutor-style task trio) ---
+# minutes 29/59 - every 30 min (parse ~5 min; was 15 min)
+# anibelka-parse -> /cron/anibelka/parse (max_time=900s)
+29,59 * * * *  /opt/crabindex/Data/run-job.sh anibelka-parse http://127.0.0.1:9117/cron/anibelka/parse 900
+
+# anibelka-UpdateTasksParse -> /cron/anibelka/UpdateTasksParse (max_time=60s)
+40 2 * * *  /opt/crabindex/Data/run-job.sh anibelka-UpdateTasksParse http://127.0.0.1:9117/cron/anibelka/UpdateTasksParse 60
+
+# anibelka-ParseAllTask -> /cron/anibelka/ParseAllTask (max_time=60s)
+# ~3.7h cycle; 05:xx and 17:xx. New round only when pending=0.
+48 5,17 * * *  /opt/crabindex/Data/run-job.sh anibelka-ParseAllTask http://127.0.0.1:9117/cron/anibelka/ParseAllTask 60
+
+# anibelka-ParseLatest -> /cron/anibelka/ParseLatest (max_time=900s)
+10 7 * * *  /opt/crabindex/Data/run-job.sh anibelka-ParseLatest http://127.0.0.1:9117/cron/anibelka/ParseLatest 900
+
+# --- korsars (login / bb_data; Rutor-style) ---
+# minutes 15/27/45/57 - avoid kinozal :03,:18,:33,:48
+# korsars-parse -> /cron/korsars/parse (max_time=900s)
+15,27,45,57 * * * *  /opt/crabindex/Data/run-job.sh korsars-parse http://127.0.0.1:9117/cron/korsars/parse 900
+
+# korsars-UpdateTasksParse -> /cron/korsars/UpdateTasksParse (max_time=60s)
+45 2 * * *  /opt/crabindex/Data/run-job.sh korsars-UpdateTasksParse http://127.0.0.1:9117/cron/korsars/UpdateTasksParse 60
+
+# korsars-ParseAllTask -> /cron/korsars/ParseAllTask (max_time=60s)
+# ~3.6h cycle; 05:xx and 17:xx. New round only when pending=0.
+53 5,17 * * *  /opt/crabindex/Data/run-job.sh korsars-ParseAllTask http://127.0.0.1:9117/cron/korsars/ParseAllTask 60
+
+# korsars-ParseLatest -> /cron/korsars/ParseLatest (max_time=900s)
+15 7 * * *  /opt/crabindex/Data/run-job.sh korsars-ParseLatest http://127.0.0.1:9117/cron/korsars/ParseLatest 900
+
+# --- ultradox (search-like Referer; Rutor-style) ---
+# ultradox-parse -> /cron/ultradox/parse (max_time=900s)
+# every 30 min :13,:43 - avoid rutor 1/16/31/46; parse ~5 min
+13,43 * * * *  /opt/crabindex/Data/run-job.sh ultradox-parse http://127.0.0.1:9117/cron/ultradox/parse 900
+
+# ultradox-UpdateTasksParse -> /cron/ultradox/UpdateTasksParse (max_time=60s)
+50 2 * * *  /opt/crabindex/Data/run-job.sh ultradox-UpdateTasksParse http://127.0.0.1:9117/cron/ultradox/UpdateTasksParse 60
+
+# ultradox-ParseAllTask -> /cron/ultradox/ParseAllTask (max_time=60s)
+# ~9h cycle; once with nnmclub after the morning fast wave.
+58 12 * * *  /opt/crabindex/Data/run-job.sh ultradox-ParseAllTask http://127.0.0.1:9117/cron/ultradox/ParseAllTask 60
+
+# ultradox-ParseLatest -> /cron/ultradox/ParseLatest (max_time=900s)
+20 7 * * *  /opt/crabindex/Data/run-job.sh ultradox-ParseLatest http://127.0.0.1:9117/cron/ultradox/ParseLatest 900

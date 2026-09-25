@@ -1,0 +1,154 @@
+@import 'tailwindcss';
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  --bg: #f7f7f8;
+  --surface: #ffffff;
+  --surface-2: #f0f0f2;
+  --surface-3: #e6e6ea;
+  --line: #e2e2e7;
+  --line-strong: #cfcfd6;
+  --fg: #16161a;
+  --muted: #5f5f6b;
+  --faint: #8a8a96;
+  --brand: #e85d24;
+  --brand-fg: #ffffff;
+  --brand-soft: #fdebe3;
+  --ok: #15803d;
+  --warn: #b45309;
+}
+
+.dark {
+  --bg: #0c0c0d;
+  --surface: #151517;
+  --surface-2: #1c1c1f;
+  --surface-3: #26262a;
+  --line: #27272b;
+  --line-strong: #37373d;
+  --fg: #ececf0;
+  --muted: #a1a1ab;
+  --faint: #71717c;
+  --brand: #f27b45;
+  --brand-fg: #141416;
+  --brand-soft: #3a2116;
+  --ok: #4ade80;
+  --warn: #fbbf24;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-fg: var(--fg);
+  --color-muted: var(--muted);
+  --color-faint: var(--faint);
+  --color-brand: var(--brand);
+  --color-brand-fg: var(--brand-fg);
+  --color-brand-soft: var(--brand-soft);
+  --color-ok: var(--ok);
+  --color-warn: var(--warn);
+  --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    scrollbar-gutter: stable;
+  }
+  body {
+    @apply bg-bg font-sans text-fg antialiased;
+    min-height: 100dvh;
+  }
+  :focus-visible {
+    outline: 2px solid var(--brand);
+    outline-offset: 2px;
+  }
+  ::selection {
+    background: color-mix(in srgb, var(--brand) 35%, transparent);
+  }
+  input[type='search']::-webkit-search-cancel-button {
+    -webkit-appearance: none;
+  }
+}
+
+@layer components {
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors select-none disabled:pointer-events-none disabled:opacity-50;
+  }
+  .btn-primary {
+    @apply bg-brand text-brand-fg hover:brightness-110;
+  }
+  .btn-ghost {
+    @apply text-muted hover:bg-surface-2 hover:text-fg;
+  }
+  .btn-outline {
+    @apply border border-line bg-surface text-fg hover:border-line-strong hover:bg-surface-2;
+  }
+  .icon-btn {
+    @apply inline-flex size-9 items-center justify-center rounded-lg text-muted transition-colors hover:bg-surface-2 hover:text-fg;
+  }
+  .card {
+    @apply rounded-2xl border border-line bg-surface;
+  }
+  .chip {
+    @apply inline-flex items-center gap-1.5 rounded-full border border-line bg-surface px-3 py-1.5 text-sm text-fg transition-colors hover:border-line-strong;
+  }
+  .chip[aria-pressed='true'] {
+    @apply border-brand bg-brand-soft text-fg;
+  }
+  .badge {
+    @apply inline-flex items-center rounded-md bg-surface-2 px-1.5 py-0.5 text-xs font-medium whitespace-nowrap text-muted;
+  }
+  .input {
+    @apply w-full rounded-lg border border-line bg-surface px-3 py-2 text-sm text-fg placeholder:text-faint focus:border-brand focus:outline-none;
+  }
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.toast-in {
+  animation: toast-in 0.18s ease-out;
+}
+
+@keyframes sheet-in {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: none;
+  }
+}
+.sheet-in {
+  animation: sheet-in 0.22s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+@keyframes pulse-soft {
+  50% {
+    opacity: 0.5;
+  }
+}
+.skeleton {
+  @apply rounded-md bg-surface-2;
+  animation: pulse-soft 1.4s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

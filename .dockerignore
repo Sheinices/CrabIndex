@@ -1,0 +1,27 @@
+# Build outputs
+target/
+wwwroot/
+web/node_modules
+admin/node_modules
+web/dist
+docs/node_modules
+docs/.docusaurus
+docs/build
+
+# Local runtime state
+Data/fdb
+Data/temp
+Data/log
+Data/tracks
+Data/masterDb*.bz
+init.yaml
+init.conf
+
+# Editor / CI
+.github
+.vscode
+.idea
+**/*.log
+docs/node_modules
+docs/.docusaurus
+docs/build

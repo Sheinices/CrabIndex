@@ -1,0 +1,110 @@
+# Обзор трекеров
+
+<TrackerGrid linkPrefix="/trackers/" />
+
+
+В CrabIndex встроено 25 парсеров трекеров. Каждый парсер складывает раздачи в общую базу FileDB, а все поисковые API ищут уже по ней: к трекерам в момент поиска CrabIndex не обращается. Обход трекеров запускается HTTP-вызовами `/cron/{slug}/...` по расписанию системного cron (см. [Cron](../deployment/cron.md) и [Cron API](../api-reference/cron.md)).
+
+Если у вас нет своих парсеров, базу можно наполнять синхронизацией с `https://sync.crab.rip` или с другим экземпляром CrabIndex (ключ `syncapi`, см. [Синхронизация](../concepts/sync.md) и [Свой сервер синхронизации](../deployment/sync-server.md)). Список `synctrackers` определяет, раздачи каких трекеров принимать при синхронизации.
+
+## Какие трекеры видны в поиске
+
+- Если `synctrackers` не задан, каталог трекеров (`/api/v1.0/trackers`, индексаторы Torznab/Prowlarr) содержит все 25 slug за вычетом `disable_trackers`.
+- Если `synctrackers` задан, каталог строится только из этого списка, тоже за вычетом `disable_trackers`.
+- Поисковая выдача фильтруется так же. Если `synctrackers` задан, в неё попадают только раздачи перечисленных трекеров. Раздачи трекеров из `disable_trackers` не попадают никогда. Sync API тоже не отдаёт раздачи из `disable_trackers`.
+- Slug в этих списках пишите строчными буквами, как в таблице ниже: при фильтрации выдачи регистр учитывается.
+
+:::note[Примечание]
+`disable_trackers` **не останавливает** cron большинства трекеров: их маршруты `/cron/{slug}/*` продолжают работать. Ответ `disabled` возвращают только megapeer, selezen, anibelka, korsars и ultradox. У остальных не вызывайте cron отключённого трекера, то есть уберите его строки из crontab.
+:::
+
+## Сводная таблица
+
+Объёмы примерные, взяты из комментариев `Data/crontab`.
+
+| Трекер | Slug | Хост по умолчанию | Авторизация | Задачи | Объём |
+| --- | --- | --- | --- | --- | --- |
+| [Rutracker](rutracker.md) | `rutracker` | `https://rutracker.org` | нет, но нужен FlareSolverr (Cloudflare) | trio + ParseLatest | ~1,5 млн |
+| [Kinozal](kinozal.md) | `kinozal` | `https://kinozal.guru` | cookie или логин + FlareSolverr | trio + ParseLatest | ~550 тыс. |
+| [Rutor](rutor.md) | `rutor` | `http://rutor.info` | нет | trio + ParseLatest | ~550 тыс. |
+| [NNM-Club](nnmclub.md) | `nnmclub` | `https://nnmclub.to` | нет | trio + ParseLatest | ~145 тыс. |
+| [Megapeer](megapeer.md) | `megapeer` | `http://megapeer.vip` | нет | trio + ParseLatest | ~113 тыс. |
+| [Toloka](toloka.md) | `toloka` | `https://toloka.to` | логин | trio + ParseLatest | ~58 тыс. |
+| [Torrent.by](torrentby.md) | `torrentby` | `https://torrent.by` | нет | trio + ParseLatest | ~58 тыс. |
+| [Anibelka](anibelka.md) | `anibelka` | `https://anibelka.com` | только анонимно | trio + ParseLatest | - |
+| [Korsars](korsars.md) | `korsars` | `https://korsars.pro` | cookie `bb_data` или логин | trio + ParseLatest | - |
+| [Ultradox](ultradox.md) | `ultradox` | `https://ultradox.vip` | нет | trio + ParseLatest | - |
+| [BitRu](bitru.md) | `bitru` | `https://bitru.org` | нет (официальный API) | parse + backfill | ~175 тыс. |
+| [Knaben](knaben.md) | `knaben` | `https://api.knaben.org` | нет (API метапоисковика) | parse + backfill | ~106 тыс. |
+| [SubsPlease](subsplease.md) | `subsplease` | `https://subsplease.org` | нет (публичный API) | parse + ParseShows | - |
+| [Mazepa](mazepa.md) | `mazepa` | `https://mazepa.to` | логин | parse | ~51 тыс. |
+| [LostFilm](lostfilm.md) | `lostfilm` | `https://www.lostfilm.tv` | cookie | parse + ParsePages | ~18 тыс. |
+| [Selezen](selezen.md) | `selezen` | `https://use.selezen.club` | логин или cookie | parse | ~16 тыс. |
+| [AnimeLayer](animelayer.md) | `animelayer` | `https://animelayer.ru` | cookie или логин | parse | ~6 тыс. |
+| [AniLiberty](aniliberty.md) | `aniliberty` | `https://aniliberty.top` | нет (API) | parse | ~5 тыс. |
+| [AniDub](anidub.md) | `anidub` | `https://tr.anidub.com` | нет | parse | ~4 тыс. |
+| [RuDub](rudub.md) | `rudub` | `https://r4.rudub.world` | cookie или логин | parse (`limit_page`) | - |
+| [BaibaKo](baibako.md) | `baibako` | `http://baibako.tv` | cookie или логин | parse | - |
+| [AniStar](anistar.md) | `anistar` | `https://anistar.org` | нет | parse (`limit_page`), раз в сутки | - |
+| [LE-Production](leproduction.md) | `leproduction` | `https://www.le-production.online` | нет | parse (`limit_page`), раз в сутки | - |
+| [ViruseProject](viruseproject.md) | `viruseproject` | `https://viruseproject.tv` | нет | parse (`limit_page`), раз в сутки | - |
+| [AniFilm](anifilm.md) | `anifilm` | `https://anifilm.pro` | cookie или логин | parse, раз в сутки | - |
+
+## Группы трекеров
+
+### Trio: parse, UpdateTasksParse, ParseAllTask
+
+Трекеры rutracker, kinozal, rutor, nnmclub, megapeer, torrentby, toloka, anibelka, korsars и ultradox обходятся тремя задачами:
+
+- **`parse`** - частый (раз в 15-60 минут) обход первых страниц разделов. Отвечает за свежесть базы.
+- **`UpdateTasksParse`** - раз в сутки перестраивает карту страниц `Data/temp/{slug}_taskParse.json` по живому пейджеру раздела. Если раздел сократился, лишние страницы удаляются. Пустой ответ считается сбоем загрузки и карту не обнуляет.
+- **`ParseAllTask`** - фоновый полный обход карты для обновления сидов, пиров и пропущенных раздач. Прогресс цикла хранится в `Data/temp/{slug}_parseAllCycle.json`. Новый круг начинается, только когда в текущем не осталось непройденных страниц. После перезапуска цикл продолжает `/cron/maintenance/ResumeParseAll`. Страница, которая не загрузилась 3 раза подряд, в текущем цикле пропускается.
+
+Дополнительно у этих трекеров есть **`ParseLatest?pages=5`** - синхронный проход по первым страницам карты. В `Data/crontab` он раз в сутки вызывается для anibelka, korsars и ultradox.
+
+Часовой `parse` имеет приоритет: `ParseAllTask` и `ParseLatest` ждут между страницами, пока закончится `parse` того же трекера.
+
+### API-трекеры
+
+BitRu, Knaben, SubsPlease и AniLiberty получают данные через JSON API, а не разбором HTML. У BitRu и Knaben вместо trio есть `backfill`, который постепенно проходит архив и хранит курсор в `Data/temp`. У SubsPlease для пакетов сезонов есть `ParseShows`.
+
+### Только parse
+
+Остальные трекеры обходятся одним маршрутом `parse`, иногда с ограничением числа страниц (`limit_page`, `parseFrom`/`parseTo`). Небольшие аниме-трекеры (anistar, leproduction, viruseproject, anifilm) достаточно запускать раз в сутки.
+
+## Кодировки
+
+Большинство трекеров отдают UTF-8. Страницы в Windows-1251 CrabIndex перекодирует автоматически: kinozal, nnmclub, megapeer, rudub, baibako, anistar.
+
+## Магнет-ссылки
+
+| Откуда берётся магнет | Трекеры |
+| --- | --- |
+| Прямо из листинга или API (быстро) | rutor, torrentby, nnmclub, korsars, aniliberty, subsplease, knaben |
+| Со страницы раздачи (отдельный запрос) | rutracker, kinozal, ultradox, selezen, leproduction |
+| Из скачанного `.torrent` | megapeer, toloka, bitru, mazepa, rudub, baibako, lostfilm, animelayer, anibelka, anifilm, anidub, anistar, viruseproject |
+
+Mazepa и RuDub сохраняют магниты без адресов трекеров, только для DHT.
+
+## Общие настройки трекера
+
+У каждого трекера в `init.yaml` свой блок (`Rutor`, `Kinozal`, `NNMClub`, `TorrentBy`, `SubsPlease` и т. д.; регистр ключей не важен). Все поля необязательны: если поля нет, берётся значение по умолчанию.
+
+| Поле | Тип | По умолчанию | Описание |
+| --- | --- | --- | --- |
+| `host` | string | см. таблицу выше | Канонический адрес. От него строятся ссылки на раздачи в FileDB |
+| `alias` | string | не задан | Зеркало, onion-адрес или Cloudflare Worker, на который уходят запросы. Поддерживается не всеми трекерами, см. их страницы |
+| `useproxy` | bool | `false` | Направлять запросы через `proxy` (см. [Прокси](../configuration/proxy.md)) |
+| `reqMinute` | int | `8` (у Megapeer `5`) | Лимит запросов в минуту. Из него вычисляется пауза между страницами |
+| `log` | bool | `true` | Писать подробный лог в `Data/log/{slug}.log` (вместе с глобальным `logParsers: true`) |
+| `cookie` | string | не задан | Статический cookie сессии |
+| `login.u`, `login.p` | string | не заданы | Логин и пароль для автоматического входа |
+| `topicFetchAttempts` | int | `5` | Только Rutracker: попытки получить страницу темы через FlareSolverr |
+
+Паузу `parseDelay` задать напрямую нельзя: CrabIndex всегда вычисляет её из `reqMinute` как `60 / reqMinute` секунд. Особые значения: `reqMinute ≥ 60` даёт 1000 мс, `0` или меньше даёт 60 000 мс, `-1` даёт 10 мс. Ключ `parseDelay` в `init.yaml` игнорируется, а в ответах Config API показывается вычисленное значение. Некоторые парсеры (BitRu, Mazepa, Megapeer) используют собственные фиксированные паузы, это указано на их страницах.
+
+Подробнее: [Настройка трекеров](../configuration/trackers.md).
+
+## Иконки
+
+Веб-интерфейс берёт иконки трекеров из `/img/ico/{slug}.ico`. Если иконки нет, используется `/img/ico/default.ico`.

@@ -1,0 +1,3413 @@
+{
+ "groups": [
+  {
+   "id": "server",
+   "title": "Сервер",
+   "description": "Прослушивание и ключи доступа",
+   "fields": [
+    {
+     "key": "listenip",
+     "type": "string",
+     "label": "IP прослушивания",
+     "description": "any или конкретный IP",
+     "sensitive": false,
+     "min": null,
+     "max": null,
+     "enumValues": null
+    },
+    {
+     "key": "listenport",
+     "type": "int",
+     "label": "Порт",
+     "description": "1–65535",
+     "sensitive": false,
+     "min": 1,
+     "max": 65535,
+     "enumValues": null
+    },
+    {
+     "key": "apikey",
+     "type": "password",
+     "label": "API ключ",
+     "description": "Пусто — без проверки",
+     "sensitive": true,
+     "min": null,
+     "max": null,
+     "enumValues": null
+    },
+    {
+     "key": "devkey",
+     "type": "password",
+     "label": "Dev ключ",
+     "description": "LAN или ключ для /dev/, /cron/, /jsondb, /api/v1.0/config/* из интернета и через туннель",
+     "sensitive": true,
+     "min": null,
+     "max": null,
+     "enumValues": null
+    },
+    {
+     "key": "web",
+     "type": "bool",
+     "label": "Веб-интерфейс",
+     "description": "Раздавать статику (PWA)",
+     "sensitive": false,
+     "min": null,
+     "max": null,
+     "enumValues": null
+    }
+   ]
+  },
+  {
+   "id": "admin",
+   "title": "Админ-панель",
+   "description": "Вход в панель управления",
+   "fields": [
+    {
+     "key": "admin.enable",
+     "type": "bool",
+     "label": "Включена",
+     "description": null,
+     "sensitive": false,
+     "min": null,
+     "max": null,
+     "enumValues": null
+    },
+    {
+     "key": "admin.path",
+     "type": "string",
+     "label": "Путь",
+     "description": "Один сегмент, например /admin",
+     "sensitive": false,
+     "min": null,
+     "max": null,
+     "enumValues": null
+    },
+    {
+     "key": "admin.token",
+     "type": "password",
+     "label": "Токен входа",
+     "description": "18 символов [A-Za-z0-9]",
+     "sensitive": true,
+     "min": null,
+     "max": null,
+     "enumValues": null
+    },
+    {
+     "key": "admin.sessionHours",
+     "type": "int",
+     "label": "Длительность сессии (ч)",
+     "description": null,
+     "sensitive": false,
+     "min": 1,
+     "max": 720,
+     "enumValues": null
+    }
+   ]
+  },
+  {
+   "id": "api",
+   "title": "API и дубликаты",
+   "description": null,
+   "fields": [
+    {
+     "key": "openstats",
+     "type": "bool",
+     "label": "Открытая статистика",
+     "description": null,
+     "sensitive": false,
+     "min": null,
+     "max": null,
+     "enumValues": null
+    },
+    {
+     "key": "opensync",
+     "type": "bool",
+     "label": "Открытый sync",
+     "description": null,
+     "sensitive": false,
+     "min": null,
+     "max": null,
+     "enumValues": null
+    },
+    {
+     "key": "mergeduplicates",
+     "type": "bool",
+     "label": "Объединять дубликаты",
+     "description": null,
+     "sensitive": false,
+     "min": null,
+     "max": null,
+     "enumValues": null
+    },
+    {
+     "key": "mergenumduplicates",
+     "type": "bool",
+     "label": "Объединять по номеру",
+     "description": "Серии и т.п.",
+     "sensitive": false,
+     "min": null,
+     "max": null,
+     "enumValues": null
+    }
+   ]
+  },
+  {
+   "id": "waf",
+   "title": "WAF",
+   "description": "Фильтрация запросов, лимиты и баны",
+   "fields": [
+    {
+     "key": "waf.enable",
+     "type": "bool",
+     "label": "Включён",
+     "description": null,
+     "sensitive": false,
+     "min": null,
+     "max": null,
+     "enumValues": null
+    },
+    {
+     "key": "waf.logRequests",
+     "type": "bool",
+     "label": "Журнал запросов",
+     "description": "Хранить журнал и статистику в памяти",
+     "sensitive": false,
+     "min": null,
+     "max": null,
+     "enumValues": null
+    },
+    {
+     "key": "waf.historySize",
+     "type": "int",
+     "label": "Запросов в памяти",
+     "description": null,
+     "sensitive": false,
+     "min": 100,
+     "max": 100000,
+     "enumValues": null
+    },
+    {
+     "key": "waf.rateLimit.enable",
+     "type": "bool",
+     "label": "Лимит запросов",
+     "description": null,
+     "sensitive": false,
+     "min": null,
+     "max": null,
+     "enumValues": null
+    },
+    {
+     "key": "waf.rateLimit.perMinute",
+     "type": "int",
+     "label": "Запросов на IP в минуту",
+     "description": null,
+     "sensitive": false,
+     "min": 1,
+     "max": 100000,
+     "enumValues": null
+    },
+    {
+     "key": "waf.rateLimit.banMinutes",
+     "type": "int",
+     "label": "Бан за превышение, мин",
+     "description": null,
+     "sensitive": false,
+     "min": 1,
+     "max": 525600,
+     "enumValues": null
+    },
+    {
+     "key": "waf.trapPaths",
+     "type": "stringList",
+     "label": "Пути-ловушки",
+     "description": "Обращение банит IP на trapBanMinutes",
+     "sensitive": false,
+     "min": null,
+     "max": null,
+     "enumValues": null
+    },
+    {
+     "key": "waf.trapBanMinutes",
+     "type": "int",
+     "label": "Бан за ловушку, мин",
+     "description": null,
+     "sensitive": false,
+     "min": 1,
+     "max": 525600,
+     "enumValues": null
+    },
+    {
+     "key": "waf.blockUserAgents",
+     "type": "stringList",
+     "label": "Блокируемые User-Agent",
+     "description": "Регулярные выражения, без учёта регистра",
+     "sensitive": false,
+     "min": null,
+     "max": null,
+     "enumValues": null
+    },
+    {
+     "key": "waf.whitelistLan",
+     "type": "bool",
+     "label": "LAN без ограничений",
+     "description": "LAN и loopback не ограничиваются и не банятся",
+     "sensitive": false,
+     "min": null,
+     "max": null,
+     "enumValues": null
+    }
+   ]
+  },
+  {
+   "id": "sync",
+   "title": "Синхронизация",
+   "description": null,
+   "fields": [
+    {
+     "key": "syncapi",
+     "type": "string",
+     "label": "Sync API URL",
+     "description": "URL удалённого инстанса",
+     "sensitive": false,
+     "min": null,
+     "max": null,
+     "enumValues": null
+    },
+    {
+     "key": "synctrackers",
+     "type": "stringList",
+     "label": "Sync трекеры",
+     "description": "Трекеры для синхронизации с удалённым инстансом",
+     "sensitive": false,
+     "min": null,
+     "max": null,
+     "enumValues": [
+      "anibelka",
+      "anidub",
+      "anifilm",
+      "aniliberty",
+      "animelayer",
+      "anistar",
+      "baibako",
+      "bitru",
+      "kinozal",
+      "knaben",
+      "korsars",
+      "leproduction",
+      "lostfilm",
+      "mazepa",
+      "megapeer",
+      "nnmclub",
+      "rudub",
+      "rutor",
+      "rutracker",
+      "selezen",
+      "subsplease",
+      "toloka",
+      "torrentby",
+      "ultradox",
+      "viruseproject"
+     ]
+    },
+    {
+     "key": "disable_trackers",
+     "type": "stringList",
+     "label": "Отключённые трекеры",
+     "description": "Трекеры, которые не должны работать на этом инстансе",
+     "sensitive": false,
+     "min": null,
+     "max": null,
+     "enumValues": [
+      "anibelka",
+      "anidub",
+      "anifilm",
+      "aniliberty",
+      "animelayer",
+      "anistar",
+      "baibako",
+      "bitru",
+      "kinozal",
+      "knaben",
+      "korsars",
+      "leproduction",
+      "lostfilm",
+      "mazepa",
+      "megapeer",
+      "nnmclub",
+      "rudub",
+      "rutor",
+      "rutracker",
+      "selezen",
+      "subsplease",
+      "toloka",
+      "torrentby",
+      "ultradox",
+      "viruseproject"
+     ]
+    },
+    {
+     "key": "syncsport",
+     "type": "bool",
+     "label": "Sync sport",
+     "description": null,
+     "sensitive": false,
+     "min": null,
+     "max": null,
+     "enumValues": null
+    },
+    {
+     "key": "syncspidr",
+     "type": "bool",
+     "label": "Sync spidr",
+     "description": null,
+     "sensitive": false,
+     "min": null,
+     "max": null,
+     "enumValues": null
+    },
+    {
+     "key": "timeSync",
+     "type": "int",
+     "label": "Интервал sync (мин)",
+     "description": null,
+     "sensitive": false,
+     "min": 1,
+     "max": null,
+     "enumValues": null
+    },
+    {
+     "key": "timeSyncSpidr",
+     "type": "int",
+     "label": "Интервал sync spidr (мин)",
+     "description": null,
+     "sensitive": false,
+     "min": 1,
+     "max": null,
+     "enumValues": null
+    },
+    {
+     "key": "saveCheckpointEveryNBatches",
+     "type": "int",
+     "label": "Sync checkpoint (батчей)",
+     "description": "При catch-up: сохранять masterDb каждые N батчей; 0 — только по таймеру (5 мин)",
+     "sensitive": false,
+     "min": 0,
+     "max": null,
+     "enumValues": null
+    },
+    {
+     "key": "maxreadfile",
+     "type": "int",
+     "label": "Max read file",
+     "description": "Лимит чтения fdb",
+     "sensitive": false,
+     "min": 1,
+     "max": null,
+     "enumValues": null
+    }
+   ]
+  },
+  {
+   "id": "logging",
+   "title": "Логирование",
+   "description": "Файлы в Data/log/ и уровни консоли (journalctl)",
+   "fields": [
+    {
+     "key": "logFdb",
+     "type": "bool",
+     "label": "Лог FileDB",
+     "description": "Data/log/fdb.*.log, default: true",
+     "sensitive": false,
+     "min": null,
+     "max": null,
+     "enumValues": null
+    },
+    {
+     "key": "logFdbRetentionDays",
+     "type": "int",
+     "label": "Хранение fdb логов (дней)",
+     "description": "0 — все",
+     "sensitive": false,
+     "min": 0,
+     "max": null,
+     "enumValues": null
+    },
+    {
+     "key": "logFdbMaxSizeMb",
+     "type": "int",
+     "label": "Max размер fdb логов (MB)",
+     "description": "0 — без лимита",
+     "sensitive": false,
+     "min": 0,
+     "max": null,
+     "enumValues": null
+    },
+    {
+     "key": "logFdbMaxFiles",
+     "type": "int",
+     "label": "Max файлов fdb логов",
+     "description": "0 — без лимита",
+     "sensitive": false,
+     "min": 0,
+     "max": null,
+     "enumValues": null
+    },
+    {
+     "key": "logParsers",
+     "type": "bool",
+     "label": "Лог парсеров",
+     "description": "Data/log/{tracker}.log, default: true",
+     "sensitive": false,
+     "min": null,
+     "max": null,
+     "enumValues": null
+    },
+    {
+     "key": "logging.defaultLevel",
+     "type": "select",
+     "label": "Уровень консоли",
+     "description": "Минимальный уровень для journalctl",
+     "sensitive": false,
+     "min": null,
+     "max": null,
+     "enumValues": [
+      "Trace",
+      "Debug",
+      "Information",
+      "Warning",
+      "Error",
+      "Critical",
+      "None"
+     ]
+    },
+    {
+     "key": "logging.consoleTimestamp",
+     "type": "bool",
+     "label": "Время в консоли",
+     "description": "Дублировать timestamp в строке сообщения",
+     "sensitive": false,
+     "min": null,
+     "max": null,
+     "enumValues": null
+    },
+    {
+     "key": "logging.tracksConsoleDetail",
+     "type": "bool",
+     "label": "Подробный tracks в консоли",
+     "description": "false — только ошибки и итоги",
+     "sensitive": false,
+     "min": null,
+     "max": null,
+     "enumValues": null
+    },
+    {
+     "key": "logging.cronSkipFastMs",
+     "type": "int",
+     "label": "Cron: быстрые 200 → Debug",
+     "description": "HTTP /cron/ быстрее N ms, 0 — логировать все",
+     "sensitive": false,
+     "min": 0,
+     "max": null,
+     "enumValues": null
+    },
+    {
+     "key": "logging.categories",
+     "type": "json",
+     "label": "Уровни по категориям",
+     "description": "JSON: tracks, sync, sync_spidr, cron, fdb, stats, parsers (None = выкл.)",
+     "sensitive": false,
+     "min": null,
+     "max": null,
+     "enumValues": null
+    }
+   ]
+  },
+  {
+   "id": "tracks",
+   "title": "Tracks (ffprobe)",
+   "description": null,
+   "fields": [
+    {
+     "key": "tracks",
+     "type": "bool",
+     "label": "Включить tracks",
+     "description": "Сбор метаданных через tsuri",
+     "sensitive": false,
+     "min": null,
+     "max": null,
+     "enumValues": null
+    },
+    {
+     "key": "trackslog",
+     "type": "bool",
+     "label": "Лог tracks",
+     "description": "Data/log/tracks.log, default: true",
+     "sensitive": false,
+     "min": null,
+     "max": null,
+     "enumValues": null
+    },
+    {
+     "key": "trackscategory",
+     "type": "string",
+     "label": "Категория tracks",
+     "description": "Уникально для инстанса",
+     "sensitive": false,
+     "min": null,
+     "max": null,
+     "enumValues": null
+    },
+    {
+     "key": "tracksdelay",
+     "type": "int",
+     "label": "Задержка tsuri (мс)",
+     "description": null,
+     "sensitive": false,
+     "min": 0,
+     "max": null,
+     "enumValues": null
+    },
+    {
+     "key": "tracksatempt",
+     "type": "int",
+     "label": "Попыток tracks",
+     "description": null,
+     "sensitive": false,
+     "min": 1,
+     "max": null,
+     "enumValues": null
+    },
+    {
+     "key": "tracksconcurrency",
+     "type": "int",
+     "label": "Параллельных анализов",
+     "description": "Глобальный лимит к tsuri",
+     "sensitive": false,
+     "min": 1,
+     "max": null,
+     "enumValues": null
+    },
+    {
+     "key": "tracksffptimeout",
+     "type": "int",
+     "label": "Таймаут /ffp (сек)",
+     "description": "При sid > 0",
+     "sensitive": false,
+     "min": 1,
+     "max": null,
+     "enumValues": null
+    },
+    {
+     "key": "tracksffptimeoutnosid",
+     "type": "int",
+     "label": "Таймаут /ffp без sid (сек)",
+     "description": "При sid == 0",
+     "sensitive": false,
+     "min": 1,
+     "max": null,
+     "enumValues": null
+    },
+    {
+     "key": "tracksreadtimeout",
+     "type": "int",
+     "label": "Ожидание file_stats (сек)",
+     "description": "WaitTorrentReady",
+     "sensitive": false,
+     "min": 1,
+     "max": null,
+     "enumValues": null
+    },
+    {
+     "key": "trackspeerwaittimeout",
+     "type": "int",
+     "label": "Проверка сидов (сек)",
+     "description": "До вызова /ffp",
+     "sensitive": false,
+     "min": 1,
+     "max": null,
+     "enumValues": null
+    },
+    {
+     "key": "tracksffpretry",
+     "type": "int",
+     "label": "Доп. file id на попытку",
+     "description": "/ffp retry",
+     "sensitive": false,
+     "min": 0,
+     "max": null,
+     "enumValues": null
+    },
+    {
+     "key": "tracksminbufferkb",
+     "type": "int",
+     "label": "Мин. буфер перед /ffp (KB)",
+     "description": null,
+     "sensitive": false,
+     "min": 0,
+     "max": null,
+     "enumValues": null
+    },
+    {
+     "key": "tracksorphansweepmin",
+     "type": "int",
+     "label": "Sweep сирот (мин)",
+     "description": "rem в trackscategory",
+     "sensitive": false,
+     "min": 1,
+     "max": null,
+     "enumValues": null
+    },
+    {
+     "key": "tracksmod",
+     "type": "select",
+     "label": "Режим tracks",
+     "description": "0 — все, 1 — за сутки",
+     "sensitive": false,
+     "min": null,
+     "max": null,
+     "enumValues": [
+      "0",
+      "1"
+     ]
+    },
+    {
+     "key": "tracksinterval.task0",
+     "type": "int",
+     "label": "Tracks task0 (мин)",
+     "description": "Все задачи",
+     "sensitive": false,
+     "min": 1,
+     "max": null,
+     "enumValues": null
+    },
+    {
+     "key": "tracksinterval.task1",
+     "type": "int",
+     "label": "Tracks task1 (мин)",
+     "description": "За сутки",
+     "sensitive": false,
+     "min": 1,
+     "max": null,
+     "enumValues": null
+    },
+    {
+     "key": "tsuri",
+     "type": "stringList",
+     "label": "TSURI",
+     "description": "URL сервисов ffprobe, по одному на строку",
+     "sensitive": false,
+     "min": null,
+     "max": null,
+     "enumValues": null
+    }
+   ]
+  },
+  {
+   "id": "fdb",
+   "title": "FileDB",
+   "description": null,
+   "fields": [
+    {
+     "key": "fdbPathLevels",
+     "type": "int",
+     "label": "Уровни fdb",
+     "description": "1–4",
+     "sensitive": false,
+     "min": 1,
+     "max": 4,
+     "enumValues": null
+    },
+    {
+     "key": "timeStatsUpdate",
+     "type": "int",
+     "label": "Обновление stats (мин)",
+     "description": null,
+     "sensitive": false,
+     "min": 1,
+     "max": null,
+     "enumValues": null
+    }
+   ]
+  },
+  {
+   "id": "evercache",
+   "title": "Evercache",
+   "description": null,
+   "fields": [
+    {
+     "key": "evercache.enable",
+     "type": "bool",
+     "label": "Включить",
+     "description": null,
+     "sensitive": false,
+     "min": null,
+     "max": null,
+     "enumValues": null
+    },
+    {
+     "key": "evercache.validHour",
+     "type": "int",
+     "label": "Valid hour",
+     "description": "0 — бессрочно",
+     "sensitive": false,
+     "min": 0,
+     "max": null,
+     "enumValues": null
+    },
+    {
+     "key": "evercache.maxOpenWriteTask",
+     "type": "int",
+     "label": "Max open write",
+     "description": null,
+     "sensitive": false,
+     "min": 1,
+     "max": null,
+     "enumValues": null
+    },
+    {
+     "key": "evercache.dropCacheTake",
+     "type": "int",
+     "label": "Drop cache take",
+     "description": null,
+     "sensitive": false,
+     "min": 1,
+     "max": null,
+     "enumValues": null
+    }
+   ]
+  },
+  {
+   "id": "search",
+   "title": "Поиск (combined)",
+   "description": "Jackett JSON + Torznab combined search",
+   "fields": [
+    {
+     "key": "search.mergeV1",
+     "type": "select",
+     "label": "Merge v1 (fuzzy)",
+     "description": "auto — только fuzzy; card без v1",
+     "sensitive": false,
+     "min": null,
+     "max": null,
+     "enumValues": [
+      "false",
+      "auto",
+      "true"
+     ]
+    },
+    {
+     "key": "search.maxV1Pairs",
+     "type": "int",
+     "label": "Max v1 pairs",
+     "description": "При mergeV1=auto или true (fuzzy)",
+     "sensitive": false,
+     "min": 1,
+     "max": null,
+     "enumValues": null
+    },
+    {
+     "key": "search.v1Sort",
+     "type": "string",
+     "label": "V1 sort",
+     "description": "sid, pir, size…",
+     "sensitive": false,
+     "min": null,
+     "max": null,
+     "enumValues": null
+    },
+    {
+     "key": "search.stripTrailingYear",
+     "type": "bool",
+     "label": "Strip trailing year",
+     "description": "Fuzzy: запрос без года",
+     "sensitive": false,
+     "min": null,
+     "max": null,
+     "enumValues": null
+    },
+    {
+     "key": "search.stripSeasonEpisode",
+     "type": "bool",
+     "label": "Strip season/episode",
+     "description": "Fuzzy: запрос без SxxExx",
+     "sensitive": false,
+     "min": null,
+     "max": null,
+     "enumValues": null
+    },
+    {
+     "key": "search.skipSeasonEpisodeFilter",
+     "type": "bool",
+     "label": "Skip season/ep filter",
+     "description": "Не фильтровать season/ep на сервере",
+     "sensitive": false,
+     "min": null,
+     "max": null,
+     "enumValues": null
+    },
+    {
+     "key": "search.skipCatFilter",
+     "type": "bool",
+     "label": "Skip cat filter",
+     "description": "Не фильтровать cat/Category[] на сервере",
+     "sensitive": false,
+     "min": null,
+     "max": null,
+     "enumValues": null
+    }
+   ]
+  },
+  {
+   "id": "alloha",
+   "title": "Alloha",
+   "description": "KP/IMDB/TMDB ID → title (API v2)",
+   "fields": [
+    {
+     "key": "alloha.enable",
+     "type": "bool",
+     "label": "Включить",
+     "description": "Резолв tt… / kp… / tmdb… через Alloha",
+     "sensitive": false,
+     "min": null,
+     "max": null,
+     "enumValues": null
+    },
+    {
+     "key": "alloha.baseUrl",
+     "type": "string",
+     "label": "Base URL",
+     "description": "https://apbugall.org",
+     "sensitive": false,
+     "min": null,
+     "max": null,
+     "enumValues": null
+    },
+    {
+     "key": "alloha.token",
+     "type": "password",
+     "label": "Bearer token",
+     "description": "Authorization: Bearer …",
+     "sensitive": true,
+     "min": null,
+     "max": null,
+     "enumValues": null
+    },
+    {
+     "key": "alloha.timeoutSeconds",
+     "type": "int",
+     "label": "Timeout (с)",
+     "description": null,
+     "sensitive": false,
+     "min": 1,
+     "max": null,
+     "enumValues": null
+    },
+    {
+     "key": "alloha.cacheHours",
+     "type": "int",
+     "label": "Cache (ч)",
+     "description": "Memory cache ID → titles",
+     "sensitive": false,
+     "min": 0,
+     "max": null,
+     "enumValues": null
+    },
+    {
+     "key": "alloha.filterByYear",
+     "type": "bool",
+     "label": "Filter by year",
+     "description": "Если клиент не передал year — ±1 от Alloha",
+     "sensitive": false,
+     "min": null,
+     "max": null,
+     "enumValues": null
+    }
+   ]
+  },
+  {
+   "id": "torznab",
+   "title": "Torznab",
+   "description": "Torznab XML (Sonarr/Radarr/Prowlarr)",
+   "fields": [
+    {
+     "key": "torznab.enable",
+     "type": "bool",
+     "label": "Torznab XML",
+     "description": "/torznab/api и Torznab-алиасы",
+     "sensitive": false,
+     "min": null,
+     "max": null,
+     "enumValues": null
+    },
+    {
+     "key": "torznab.enrichTitles",
+     "type": "bool",
+     "label": "Enrich titles",
+     "description": "Озвучки в XML title",
+     "sensitive": false,
+     "min": null,
+     "max": null,
+     "enumValues": null
+    }
+   ]
+  },
+  {
+   "id": "proxy",
+   "title": "Прокси",
+   "description": null,
+   "fields": [
+    {
+     "key": "proxy.pattern",
+     "type": "string",
+     "label": "Pattern",
+     "description": "Regex для proxy",
+     "sensitive": false,
+     "min": null,
+     "max": null,
+     "enumValues": null
+    },
+    {
+     "key": "proxy.useAuth",
+     "type": "bool",
+     "label": "Use auth",
+     "description": null,
+     "sensitive": false,
+     "min": null,
+     "max": null,
+     "enumValues": null
+    },
+    {
+     "key": "proxy.BypassOnLocal",
+     "type": "bool",
+     "label": "Bypass on local",
+     "description": null,
+     "sensitive": false,
+     "min": null,
+     "max": null,
+     "enumValues": null
+    },
+    {
+     "key": "proxy.username",
+     "type": "password",
+     "label": "Username",
+     "description": null,
+     "sensitive": true,
+     "min": null,
+     "max": null,
+     "enumValues": null
+    },
+    {
+     "key": "proxy.password",
+     "type": "password",
+     "label": "Password",
+     "description": null,
+     "sensitive": true,
+     "min": null,
+     "max": null,
+     "enumValues": null
+    },
+    {
+     "key": "proxy.list",
+     "type": "stringList",
+     "label": "Proxy list",
+     "description": "ip:port или socks5://…",
+     "sensitive": false,
+     "min": null,
+     "max": null,
+     "enumValues": null
+    },
+    {
+     "key": "globalproxy",
+     "type": "json",
+     "label": "Global proxy",
+     "description": "JSON-массив ProxySettings",
+     "sensitive": false,
+     "min": null,
+     "max": null,
+     "enumValues": null
+    }
+   ]
+  },
+  {
+   "id": "flaresolverr",
+   "title": "FlareSolverr",
+   "description": "Cloudflare bypass: отдельная сессия Chromium на хост (Rutracker, Kinozal)",
+   "fields": [
+    {
+     "key": "flaresolverr.enable",
+     "type": "bool",
+     "label": "Включить",
+     "description": "Ходить на CF-хосты через браузер",
+     "sensitive": false,
+     "min": null,
+     "max": null,
+     "enumValues": null
+    },
+    {
+     "key": "flaresolverr.url",
+     "type": "string",
+     "label": "URL",
+     "description": "http://127.0.0.1:8191/v1 или http://flaresolverr:8191/v1",
+     "sensitive": false,
+     "min": null,
+     "max": null,
+     "enumValues": null
+    },
+    {
+     "key": "flaresolverr.crawlUrl",
+     "type": "string",
+     "label": "Crawl URL",
+     "description": "Второй FlareSolverr для ParseAll/UpdateTasks. Пусто — тот же url",
+     "sensitive": false,
+     "min": null,
+     "max": null,
+     "enumValues": null
+    },
+    {
+     "key": "flaresolverr.maxTimeoutMs",
+     "type": "int",
+     "label": "Таймаут (мс)",
+     "description": "Первая страница / challenge+retry (~5 мин)",
+     "sensitive": false,
+     "min": 1000,
+     "max": null,
+     "enumValues": null
+    },
+    {
+     "key": "flaresolverr.sessionIdleMinutes",
+     "type": "int",
+     "label": "Idle сессии (мин)",
+     "description": "Закрыть Chromium после простоя (дефолт 120; keep-alive cron чаще)",
+     "sensitive": false,
+     "min": 0,
+     "max": null,
+     "enumValues": null
+    },
+    {
+     "key": "flaresolverr.browserTimeoutRetries",
+     "type": "int",
+     "label": "Retry на timeout",
+     "description": "Same-session retry до recycle (дефолт 1)",
+     "sensitive": false,
+     "min": 0,
+     "max": null,
+     "enumValues": null
+    },
+    {
+     "key": "flaresolverr.recycleAfterTimeouts",
+     "type": "int",
+     "label": "Recycle после N timeout",
+     "description": "Destroy сессии после N подряд browser timeout (дефолт 3)",
+     "sensitive": false,
+     "min": 1,
+     "max": null,
+     "enumValues": null
+    },
+    {
+     "key": "flaresolverr.guardedHours",
+     "type": "int",
+     "label": "Guarded hours",
+     "description": "Сколько помнить CF на хосте",
+     "sensitive": false,
+     "min": 1,
+     "max": null,
+     "enumValues": null
+    },
+    {
+     "key": "flaresolverr.recheckMinutes",
+     "type": "int",
+     "label": "Recheck (мин)",
+     "description": "Как часто пробовать обычный GET",
+     "sensitive": false,
+     "min": 1,
+     "max": null,
+     "enumValues": null
+    }
+   ]
+  },
+  {
+   "id": "cffetch",
+   "title": "cffetch",
+   "description": "Быстрый путь после CF: ghcr.io/jacred-fdb/cffetch на :8192, тот же SOCKS что у FlareSolverr",
+   "fields": [
+    {
+     "key": "cffetch.enable",
+     "type": "bool",
+     "label": "Включить",
+     "description": "После solve ходить без page.goto",
+     "sensitive": false,
+     "min": null,
+     "max": null,
+     "enumValues": null
+    },
+    {
+     "key": "cffetch.url",
+     "type": "string",
+     "label": "URL",
+     "description": "http://127.0.0.1:8192/fetch",
+     "sensitive": false,
+     "min": null,
+     "max": null,
+     "enumValues": null
+    },
+    {
+     "key": "cffetch.impersonate",
+     "type": "string",
+     "label": "Impersonate",
+     "description": "chrome136 — не старше Chromium FlareSolverr",
+     "sensitive": false,
+     "min": null,
+     "max": null,
+     "enumValues": null
+    },
+    {
+     "key": "cffetch.timeoutSeconds",
+     "type": "int",
+     "label": "Таймаут (с)",
+     "description": "Таймаут помощника",
+     "sensitive": false,
+     "min": 5,
+     "max": null,
+     "enumValues": null
+    },
+    {
+     "key": "cffetch.maxConcurrent",
+     "type": "int",
+     "label": "Одновременно",
+     "description": "Без лимита будет 429 трекера",
+     "sensitive": false,
+     "min": 1,
+     "max": null,
+     "enumValues": null
+    },
+    {
+     "key": "cffetch.clearanceMinutes",
+     "type": "int",
+     "label": "Cookie (мин)",
+     "description": "Потом отказ уводит на браузер",
+     "sensitive": false,
+     "min": 0,
+     "max": null,
+     "enumValues": null
+    },
+    {
+     "key": "cffetch.proxy",
+     "type": "string",
+     "label": "SOCKS",
+     "description": "socks5://127.0.0.1:20001 как PROXY_URL у FlareSolverr",
+     "sensitive": false,
+     "min": null,
+     "max": null,
+     "enumValues": null
+    }
+   ]
+  },
+  {
+   "id": "trackers",
+   "title": "Трекеры",
+   "description": "Настройки парсеров (host задаётся по умолчанию)",
+   "trackers": [
+    {
+     "id": "Anibelka",
+     "title": "Anibelka",
+     "description": null,
+     "trackerSlug": "anibelka",
+     "fields": [
+      {
+       "key": "alias",
+       "type": "string",
+       "label": "Alias URL",
+       "description": "Onion/worker URL",
+       "sensitive": false,
+       "min": null,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "useproxy",
+       "type": "bool",
+       "label": "Use proxy",
+       "description": null,
+       "sensitive": false,
+       "min": null,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "reqMinute",
+       "type": "int",
+       "label": "Запросов/мин",
+       "description": "-1 — отключить",
+       "sensitive": false,
+       "min": -1,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "topicFetchAttempts",
+       "type": "int",
+       "label": "Попыток topic GET",
+       "description": "Rutracker: ретраи magnet/details за прогон (дефолт 5)",
+       "sensitive": false,
+       "min": 1,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "log",
+       "type": "bool",
+       "label": "Лог парсера",
+       "description": "Data/log/{tracker}.log, default: true",
+       "sensitive": false,
+       "min": null,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "cookie",
+       "type": "password",
+       "label": "Cookie",
+       "description": "Статический cookie",
+       "sensitive": true,
+       "min": null,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "login.u",
+       "type": "password",
+       "label": "Login",
+       "description": null,
+       "sensitive": true,
+       "min": null,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "login.p",
+       "type": "password",
+       "label": "Password",
+       "description": null,
+       "sensitive": true,
+       "min": null,
+       "max": null,
+       "enumValues": null
+      }
+     ]
+    },
+    {
+     "id": "Anidub",
+     "title": "Anidub",
+     "description": null,
+     "trackerSlug": "anidub",
+     "fields": [
+      {
+       "key": "alias",
+       "type": "string",
+       "label": "Alias URL",
+       "description": "Onion/worker URL",
+       "sensitive": false,
+       "min": null,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "useproxy",
+       "type": "bool",
+       "label": "Use proxy",
+       "description": null,
+       "sensitive": false,
+       "min": null,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "reqMinute",
+       "type": "int",
+       "label": "Запросов/мин",
+       "description": "-1 — отключить",
+       "sensitive": false,
+       "min": -1,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "topicFetchAttempts",
+       "type": "int",
+       "label": "Попыток topic GET",
+       "description": "Rutracker: ретраи magnet/details за прогон (дефолт 5)",
+       "sensitive": false,
+       "min": 1,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "log",
+       "type": "bool",
+       "label": "Лог парсера",
+       "description": "Data/log/{tracker}.log, default: true",
+       "sensitive": false,
+       "min": null,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "cookie",
+       "type": "password",
+       "label": "Cookie",
+       "description": "Статический cookie",
+       "sensitive": true,
+       "min": null,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "login.u",
+       "type": "password",
+       "label": "Login",
+       "description": null,
+       "sensitive": true,
+       "min": null,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "login.p",
+       "type": "password",
+       "label": "Password",
+       "description": null,
+       "sensitive": true,
+       "min": null,
+       "max": null,
+       "enumValues": null
+      }
+     ]
+    },
+    {
+     "id": "Anifilm",
+     "title": "Anifilm",
+     "description": null,
+     "trackerSlug": "anifilm",
+     "fields": [
+      {
+       "key": "alias",
+       "type": "string",
+       "label": "Alias URL",
+       "description": "Onion/worker URL",
+       "sensitive": false,
+       "min": null,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "useproxy",
+       "type": "bool",
+       "label": "Use proxy",
+       "description": null,
+       "sensitive": false,
+       "min": null,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "reqMinute",
+       "type": "int",
+       "label": "Запросов/мин",
+       "description": "-1 — отключить",
+       "sensitive": false,
+       "min": -1,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "topicFetchAttempts",
+       "type": "int",
+       "label": "Попыток topic GET",
+       "description": "Rutracker: ретраи magnet/details за прогон (дефолт 5)",
+       "sensitive": false,
+       "min": 1,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "log",
+       "type": "bool",
+       "label": "Лог парсера",
+       "description": "Data/log/{tracker}.log, default: true",
+       "sensitive": false,
+       "min": null,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "cookie",
+       "type": "password",
+       "label": "Cookie",
+       "description": "Статический cookie",
+       "sensitive": true,
+       "min": null,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "login.u",
+       "type": "password",
+       "label": "Login",
+       "description": null,
+       "sensitive": true,
+       "min": null,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "login.p",
+       "type": "password",
+       "label": "Password",
+       "description": null,
+       "sensitive": true,
+       "min": null,
+       "max": null,
+       "enumValues": null
+      }
+     ]
+    },
+    {
+     "id": "Aniliberty",
+     "title": "Aniliberty",
+     "description": null,
+     "trackerSlug": "aniliberty",
+     "fields": [
+      {
+       "key": "alias",
+       "type": "string",
+       "label": "Alias URL",
+       "description": "Onion/worker URL",
+       "sensitive": false,
+       "min": null,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "useproxy",
+       "type": "bool",
+       "label": "Use proxy",
+       "description": null,
+       "sensitive": false,
+       "min": null,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "reqMinute",
+       "type": "int",
+       "label": "Запросов/мин",
+       "description": "-1 — отключить",
+       "sensitive": false,
+       "min": -1,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "topicFetchAttempts",
+       "type": "int",
+       "label": "Попыток topic GET",
+       "description": "Rutracker: ретраи magnet/details за прогон (дефолт 5)",
+       "sensitive": false,
+       "min": 1,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "log",
+       "type": "bool",
+       "label": "Лог парсера",
+       "description": "Data/log/{tracker}.log, default: true",
+       "sensitive": false,
+       "min": null,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "cookie",
+       "type": "password",
+       "label": "Cookie",
+       "description": "Статический cookie",
+       "sensitive": true,
+       "min": null,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "login.u",
+       "type": "password",
+       "label": "Login",
+       "description": null,
+       "sensitive": true,
+       "min": null,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "login.p",
+       "type": "password",
+       "label": "Password",
+       "description": null,
+       "sensitive": true,
+       "min": null,
+       "max": null,
+       "enumValues": null
+      }
+     ]
+    },
+    {
+     "id": "Animelayer",
+     "title": "Animelayer",
+     "description": null,
+     "trackerSlug": "animelayer",
+     "fields": [
+      {
+       "key": "alias",
+       "type": "string",
+       "label": "Alias URL",
+       "description": "Onion/worker URL",
+       "sensitive": false,
+       "min": null,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "useproxy",
+       "type": "bool",
+       "label": "Use proxy",
+       "description": null,
+       "sensitive": false,
+       "min": null,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "reqMinute",
+       "type": "int",
+       "label": "Запросов/мин",
+       "description": "-1 — отключить",
+       "sensitive": false,
+       "min": -1,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "topicFetchAttempts",
+       "type": "int",
+       "label": "Попыток topic GET",
+       "description": "Rutracker: ретраи magnet/details за прогон (дефолт 5)",
+       "sensitive": false,
+       "min": 1,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "log",
+       "type": "bool",
+       "label": "Лог парсера",
+       "description": "Data/log/{tracker}.log, default: true",
+       "sensitive": false,
+       "min": null,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "cookie",
+       "type": "password",
+       "label": "Cookie",
+       "description": "Статический cookie",
+       "sensitive": true,
+       "min": null,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "login.u",
+       "type": "password",
+       "label": "Login",
+       "description": null,
+       "sensitive": true,
+       "min": null,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "login.p",
+       "type": "password",
+       "label": "Password",
+       "description": null,
+       "sensitive": true,
+       "min": null,
+       "max": null,
+       "enumValues": null
+      }
+     ]
+    },
+    {
+     "id": "Anistar",
+     "title": "Anistar",
+     "description": null,
+     "trackerSlug": "anistar",
+     "fields": [
+      {
+       "key": "alias",
+       "type": "string",
+       "label": "Alias URL",
+       "description": "Onion/worker URL",
+       "sensitive": false,
+       "min": null,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "useproxy",
+       "type": "bool",
+       "label": "Use proxy",
+       "description": null,
+       "sensitive": false,
+       "min": null,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "reqMinute",
+       "type": "int",
+       "label": "Запросов/мин",
+       "description": "-1 — отключить",
+       "sensitive": false,
+       "min": -1,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "topicFetchAttempts",
+       "type": "int",
+       "label": "Попыток topic GET",
+       "description": "Rutracker: ретраи magnet/details за прогон (дефолт 5)",
+       "sensitive": false,
+       "min": 1,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "log",
+       "type": "bool",
+       "label": "Лог парсера",
+       "description": "Data/log/{tracker}.log, default: true",
+       "sensitive": false,
+       "min": null,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "cookie",
+       "type": "password",
+       "label": "Cookie",
+       "description": "Статический cookie",
+       "sensitive": true,
+       "min": null,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "login.u",
+       "type": "password",
+       "label": "Login",
+       "description": null,
+       "sensitive": true,
+       "min": null,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "login.p",
+       "type": "password",
+       "label": "Password",
+       "description": null,
+       "sensitive": true,
+       "min": null,
+       "max": null,
+       "enumValues": null
+      }
+     ]
+    },
+    {
+     "id": "Baibako",
+     "title": "Baibako",
+     "description": null,
+     "trackerSlug": "baibako",
+     "fields": [
+      {
+       "key": "alias",
+       "type": "string",
+       "label": "Alias URL",
+       "description": "Onion/worker URL",
+       "sensitive": false,
+       "min": null,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "useproxy",
+       "type": "bool",
+       "label": "Use proxy",
+       "description": null,
+       "sensitive": false,
+       "min": null,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "reqMinute",
+       "type": "int",
+       "label": "Запросов/мин",
+       "description": "-1 — отключить",
+       "sensitive": false,
+       "min": -1,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "topicFetchAttempts",
+       "type": "int",
+       "label": "Попыток topic GET",
+       "description": "Rutracker: ретраи magnet/details за прогон (дефолт 5)",
+       "sensitive": false,
+       "min": 1,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "log",
+       "type": "bool",
+       "label": "Лог парсера",
+       "description": "Data/log/{tracker}.log, default: true",
+       "sensitive": false,
+       "min": null,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "cookie",
+       "type": "password",
+       "label": "Cookie",
+       "description": "Статический cookie",
+       "sensitive": true,
+       "min": null,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "login.u",
+       "type": "password",
+       "label": "Login",
+       "description": null,
+       "sensitive": true,
+       "min": null,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "login.p",
+       "type": "password",
+       "label": "Password",
+       "description": null,
+       "sensitive": true,
+       "min": null,
+       "max": null,
+       "enumValues": null
+      }
+     ]
+    },
+    {
+     "id": "Bitru",
+     "title": "Bitru",
+     "description": null,
+     "trackerSlug": "bitru",
+     "fields": [
+      {
+       "key": "alias",
+       "type": "string",
+       "label": "Alias URL",
+       "description": "Onion/worker URL",
+       "sensitive": false,
+       "min": null,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "useproxy",
+       "type": "bool",
+       "label": "Use proxy",
+       "description": null,
+       "sensitive": false,
+       "min": null,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "reqMinute",
+       "type": "int",
+       "label": "Запросов/мин",
+       "description": "-1 — отключить",
+       "sensitive": false,
+       "min": -1,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "topicFetchAttempts",
+       "type": "int",
+       "label": "Попыток topic GET",
+       "description": "Rutracker: ретраи magnet/details за прогон (дефолт 5)",
+       "sensitive": false,
+       "min": 1,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "log",
+       "type": "bool",
+       "label": "Лог парсера",
+       "description": "Data/log/{tracker}.log, default: true",
+       "sensitive": false,
+       "min": null,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "cookie",
+       "type": "password",
+       "label": "Cookie",
+       "description": "Статический cookie",
+       "sensitive": true,
+       "min": null,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "login.u",
+       "type": "password",
+       "label": "Login",
+       "description": null,
+       "sensitive": true,
+       "min": null,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "login.p",
+       "type": "password",
+       "label": "Password",
+       "description": null,
+       "sensitive": true,
+       "min": null,
+       "max": null,
+       "enumValues": null
+      }
+     ]
+    },
+    {
+     "id": "Kinozal",
+     "title": "Kinozal",
+     "description": null,
+     "trackerSlug": "kinozal",
+     "fields": [
+      {
+       "key": "alias",
+       "type": "string",
+       "label": "Alias URL",
+       "description": "Onion/worker URL",
+       "sensitive": false,
+       "min": null,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "useproxy",
+       "type": "bool",
+       "label": "Use proxy",
+       "description": null,
+       "sensitive": false,
+       "min": null,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "reqMinute",
+       "type": "int",
+       "label": "Запросов/мин",
+       "description": "-1 — отключить",
+       "sensitive": false,
+       "min": -1,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "topicFetchAttempts",
+       "type": "int",
+       "label": "Попыток topic GET",
+       "description": "Rutracker: ретраи magnet/details за прогон (дефолт 5)",
+       "sensitive": false,
+       "min": 1,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "log",
+       "type": "bool",
+       "label": "Лог парсера",
+       "description": "Data/log/{tracker}.log, default: true",
+       "sensitive": false,
+       "min": null,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "cookie",
+       "type": "password",
+       "label": "Cookie",
+       "description": "Статический cookie",
+       "sensitive": true,
+       "min": null,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "login.u",
+       "type": "password",
+       "label": "Login",
+       "description": null,
+       "sensitive": true,
+       "min": null,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "login.p",
+       "type": "password",
+       "label": "Password",
+       "description": null,
+       "sensitive": true,
+       "min": null,
+       "max": null,
+       "enumValues": null
+      }
+     ]
+    },
+    {
+     "id": "Knaben",
+     "title": "Knaben",
+     "description": null,
+     "trackerSlug": "knaben",
+     "fields": [
+      {
+       "key": "alias",
+       "type": "string",
+       "label": "Alias URL",
+       "description": "Onion/worker URL",
+       "sensitive": false,
+       "min": null,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "useproxy",
+       "type": "bool",
+       "label": "Use proxy",
+       "description": null,
+       "sensitive": false,
+       "min": null,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "reqMinute",
+       "type": "int",
+       "label": "Запросов/мин",
+       "description": "-1 — отключить",
+       "sensitive": false,
+       "min": -1,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "topicFetchAttempts",
+       "type": "int",
+       "label": "Попыток topic GET",
+       "description": "Rutracker: ретраи magnet/details за прогон (дефолт 5)",
+       "sensitive": false,
+       "min": 1,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "log",
+       "type": "bool",
+       "label": "Лог парсера",
+       "description": "Data/log/{tracker}.log, default: true",
+       "sensitive": false,
+       "min": null,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "cookie",
+       "type": "password",
+       "label": "Cookie",
+       "description": "Статический cookie",
+       "sensitive": true,
+       "min": null,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "login.u",
+       "type": "password",
+       "label": "Login",
+       "description": null,
+       "sensitive": true,
+       "min": null,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "login.p",
+       "type": "password",
+       "label": "Password",
+       "description": null,
+       "sensitive": true,
+       "min": null,
+       "max": null,
+       "enumValues": null
+      }
+     ]
+    },
+    {
+     "id": "Korsars",
+     "title": "Korsars",
+     "description": null,
+     "trackerSlug": "korsars",
+     "fields": [
+      {
+       "key": "alias",
+       "type": "string",
+       "label": "Alias URL",
+       "description": "Onion/worker URL",
+       "sensitive": false,
+       "min": null,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "useproxy",
+       "type": "bool",
+       "label": "Use proxy",
+       "description": null,
+       "sensitive": false,
+       "min": null,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "reqMinute",
+       "type": "int",
+       "label": "Запросов/мин",
+       "description": "-1 — отключить",
+       "sensitive": false,
+       "min": -1,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "topicFetchAttempts",
+       "type": "int",
+       "label": "Попыток topic GET",
+       "description": "Rutracker: ретраи magnet/details за прогон (дефолт 5)",
+       "sensitive": false,
+       "min": 1,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "log",
+       "type": "bool",
+       "label": "Лог парсера",
+       "description": "Data/log/{tracker}.log, default: true",
+       "sensitive": false,
+       "min": null,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "cookie",
+       "type": "password",
+       "label": "Cookie",
+       "description": "Статический cookie",
+       "sensitive": true,
+       "min": null,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "login.u",
+       "type": "password",
+       "label": "Login",
+       "description": null,
+       "sensitive": true,
+       "min": null,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "login.p",
+       "type": "password",
+       "label": "Password",
+       "description": null,
+       "sensitive": true,
+       "min": null,
+       "max": null,
+       "enumValues": null
+      }
+     ]
+    },
+    {
+     "id": "Leproduction",
+     "title": "Leproduction",
+     "description": null,
+     "trackerSlug": "leproduction",
+     "fields": [
+      {
+       "key": "alias",
+       "type": "string",
+       "label": "Alias URL",
+       "description": "Onion/worker URL",
+       "sensitive": false,
+       "min": null,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "useproxy",
+       "type": "bool",
+       "label": "Use proxy",
+       "description": null,
+       "sensitive": false,
+       "min": null,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "reqMinute",
+       "type": "int",
+       "label": "Запросов/мин",
+       "description": "-1 — отключить",
+       "sensitive": false,
+       "min": -1,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "topicFetchAttempts",
+       "type": "int",
+       "label": "Попыток topic GET",
+       "description": "Rutracker: ретраи magnet/details за прогон (дефолт 5)",
+       "sensitive": false,
+       "min": 1,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "log",
+       "type": "bool",
+       "label": "Лог парсера",
+       "description": "Data/log/{tracker}.log, default: true",
+       "sensitive": false,
+       "min": null,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "cookie",
+       "type": "password",
+       "label": "Cookie",
+       "description": "Статический cookie",
+       "sensitive": true,
+       "min": null,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "login.u",
+       "type": "password",
+       "label": "Login",
+       "description": null,
+       "sensitive": true,
+       "min": null,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "login.p",
+       "type": "password",
+       "label": "Password",
+       "description": null,
+       "sensitive": true,
+       "min": null,
+       "max": null,
+       "enumValues": null
+      }
+     ]
+    },
+    {
+     "id": "Lostfilm",
+     "title": "Lostfilm",
+     "description": null,
+     "trackerSlug": "lostfilm",
+     "fields": [
+      {
+       "key": "alias",
+       "type": "string",
+       "label": "Alias URL",
+       "description": "Onion/worker URL",
+       "sensitive": false,
+       "min": null,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "useproxy",
+       "type": "bool",
+       "label": "Use proxy",
+       "description": null,
+       "sensitive": false,
+       "min": null,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "reqMinute",
+       "type": "int",
+       "label": "Запросов/мин",
+       "description": "-1 — отключить",
+       "sensitive": false,
+       "min": -1,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "topicFetchAttempts",
+       "type": "int",
+       "label": "Попыток topic GET",
+       "description": "Rutracker: ретраи magnet/details за прогон (дефолт 5)",
+       "sensitive": false,
+       "min": 1,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "log",
+       "type": "bool",
+       "label": "Лог парсера",
+       "description": "Data/log/{tracker}.log, default: true",
+       "sensitive": false,
+       "min": null,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "cookie",
+       "type": "password",
+       "label": "Cookie",
+       "description": "Статический cookie",
+       "sensitive": true,
+       "min": null,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "login.u",
+       "type": "password",
+       "label": "Login",
+       "description": null,
+       "sensitive": true,
+       "min": null,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "login.p",
+       "type": "password",
+       "label": "Password",
+       "description": null,
+       "sensitive": true,
+       "min": null,
+       "max": null,
+       "enumValues": null
+      }
+     ]
+    },
+    {
+     "id": "Mazepa",
+     "title": "Mazepa",
+     "description": null,
+     "trackerSlug": "mazepa",
+     "fields": [
+      {
+       "key": "alias",
+       "type": "string",
+       "label": "Alias URL",
+       "description": "Onion/worker URL",
+       "sensitive": false,
+       "min": null,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "useproxy",
+       "type": "bool",
+       "label": "Use proxy",
+       "description": null,
+       "sensitive": false,
+       "min": null,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "reqMinute",
+       "type": "int",
+       "label": "Запросов/мин",
+       "description": "-1 — отключить",
+       "sensitive": false,
+       "min": -1,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "topicFetchAttempts",
+       "type": "int",
+       "label": "Попыток topic GET",
+       "description": "Rutracker: ретраи magnet/details за прогон (дефолт 5)",
+       "sensitive": false,
+       "min": 1,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "log",
+       "type": "bool",
+       "label": "Лог парсера",
+       "description": "Data/log/{tracker}.log, default: true",
+       "sensitive": false,
+       "min": null,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "cookie",
+       "type": "password",
+       "label": "Cookie",
+       "description": "Статический cookie",
+       "sensitive": true,
+       "min": null,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "login.u",
+       "type": "password",
+       "label": "Login",
+       "description": null,
+       "sensitive": true,
+       "min": null,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "login.p",
+       "type": "password",
+       "label": "Password",
+       "description": null,
+       "sensitive": true,
+       "min": null,
+       "max": null,
+       "enumValues": null
+      }
+     ]
+    },
+    {
+     "id": "Megapeer",
+     "title": "Megapeer",
+     "description": null,
+     "trackerSlug": "megapeer",
+     "fields": [
+      {
+       "key": "alias",
+       "type": "string",
+       "label": "Alias URL",
+       "description": "Onion/worker URL",
+       "sensitive": false,
+       "min": null,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "useproxy",
+       "type": "bool",
+       "label": "Use proxy",
+       "description": null,
+       "sensitive": false,
+       "min": null,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "reqMinute",
+       "type": "int",
+       "label": "Запросов/мин",
+       "description": "-1 — отключить",
+       "sensitive": false,
+       "min": -1,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "topicFetchAttempts",
+       "type": "int",
+       "label": "Попыток topic GET",
+       "description": "Rutracker: ретраи magnet/details за прогон (дефолт 5)",
+       "sensitive": false,
+       "min": 1,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "log",
+       "type": "bool",
+       "label": "Лог парсера",
+       "description": "Data/log/{tracker}.log, default: true",
+       "sensitive": false,
+       "min": null,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "cookie",
+       "type": "password",
+       "label": "Cookie",
+       "description": "Статический cookie",
+       "sensitive": true,
+       "min": null,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "login.u",
+       "type": "password",
+       "label": "Login",
+       "description": null,
+       "sensitive": true,
+       "min": null,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "login.p",
+       "type": "password",
+       "label": "Password",
+       "description": null,
+       "sensitive": true,
+       "min": null,
+       "max": null,
+       "enumValues": null
+      }
+     ]
+    },
+    {
+     "id": "NNMClub",
+     "title": "NNMClub",
+     "description": null,
+     "trackerSlug": "nnmclub",
+     "fields": [
+      {
+       "key": "alias",
+       "type": "string",
+       "label": "Alias URL",
+       "description": "Onion/worker URL",
+       "sensitive": false,
+       "min": null,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "useproxy",
+       "type": "bool",
+       "label": "Use proxy",
+       "description": null,
+       "sensitive": false,
+       "min": null,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "reqMinute",
+       "type": "int",
+       "label": "Запросов/мин",
+       "description": "-1 — отключить",
+       "sensitive": false,
+       "min": -1,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "topicFetchAttempts",
+       "type": "int",
+       "label": "Попыток topic GET",
+       "description": "Rutracker: ретраи magnet/details за прогон (дефолт 5)",
+       "sensitive": false,
+       "min": 1,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "log",
+       "type": "bool",
+       "label": "Лог парсера",
+       "description": "Data/log/{tracker}.log, default: true",
+       "sensitive": false,
+       "min": null,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "cookie",
+       "type": "password",
+       "label": "Cookie",
+       "description": "Статический cookie",
+       "sensitive": true,
+       "min": null,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "login.u",
+       "type": "password",
+       "label": "Login",
+       "description": null,
+       "sensitive": true,
+       "min": null,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "login.p",
+       "type": "password",
+       "label": "Password",
+       "description": null,
+       "sensitive": true,
+       "min": null,
+       "max": null,
+       "enumValues": null
+      }
+     ]
+    },
+    {
+     "id": "Rudub",
+     "title": "Rudub",
+     "description": null,
+     "trackerSlug": "rudub",
+     "fields": [
+      {
+       "key": "alias",
+       "type": "string",
+       "label": "Alias URL",
+       "description": "Onion/worker URL",
+       "sensitive": false,
+       "min": null,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "useproxy",
+       "type": "bool",
+       "label": "Use proxy",
+       "description": null,
+       "sensitive": false,
+       "min": null,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "reqMinute",
+       "type": "int",
+       "label": "Запросов/мин",
+       "description": "-1 — отключить",
+       "sensitive": false,
+       "min": -1,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "topicFetchAttempts",
+       "type": "int",
+       "label": "Попыток topic GET",
+       "description": "Rutracker: ретраи magnet/details за прогон (дефолт 5)",
+       "sensitive": false,
+       "min": 1,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "log",
+       "type": "bool",
+       "label": "Лог парсера",
+       "description": "Data/log/{tracker}.log, default: true",
+       "sensitive": false,
+       "min": null,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "cookie",
+       "type": "password",
+       "label": "Cookie",
+       "description": "Статический cookie",
+       "sensitive": true,
+       "min": null,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "login.u",
+       "type": "password",
+       "label": "Login",
+       "description": null,
+       "sensitive": true,
+       "min": null,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "login.p",
+       "type": "password",
+       "label": "Password",
+       "description": null,
+       "sensitive": true,
+       "min": null,
+       "max": null,
+       "enumValues": null
+      }
+     ]
+    },
+    {
+     "id": "Rutor",
+     "title": "Rutor",
+     "description": null,
+     "trackerSlug": "rutor",
+     "fields": [
+      {
+       "key": "alias",
+       "type": "string",
+       "label": "Alias URL",
+       "description": "Onion/worker URL",
+       "sensitive": false,
+       "min": null,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "useproxy",
+       "type": "bool",
+       "label": "Use proxy",
+       "description": null,
+       "sensitive": false,
+       "min": null,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "reqMinute",
+       "type": "int",
+       "label": "Запросов/мин",
+       "description": "-1 — отключить",
+       "sensitive": false,
+       "min": -1,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "topicFetchAttempts",
+       "type": "int",
+       "label": "Попыток topic GET",
+       "description": "Rutracker: ретраи magnet/details за прогон (дефолт 5)",
+       "sensitive": false,
+       "min": 1,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "log",
+       "type": "bool",
+       "label": "Лог парсера",
+       "description": "Data/log/{tracker}.log, default: true",
+       "sensitive": false,
+       "min": null,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "cookie",
+       "type": "password",
+       "label": "Cookie",
+       "description": "Статический cookie",
+       "sensitive": true,
+       "min": null,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "login.u",
+       "type": "password",
+       "label": "Login",
+       "description": null,
+       "sensitive": true,
+       "min": null,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "login.p",
+       "type": "password",
+       "label": "Password",
+       "description": null,
+       "sensitive": true,
+       "min": null,
+       "max": null,
+       "enumValues": null
+      }
+     ]
+    },
+    {
+     "id": "Rutracker",
+     "title": "Rutracker",
+     "description": null,
+     "trackerSlug": "rutracker",
+     "fields": [
+      {
+       "key": "alias",
+       "type": "string",
+       "label": "Alias URL",
+       "description": "Onion/worker URL",
+       "sensitive": false,
+       "min": null,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "useproxy",
+       "type": "bool",
+       "label": "Use proxy",
+       "description": null,
+       "sensitive": false,
+       "min": null,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "reqMinute",
+       "type": "int",
+       "label": "Запросов/мин",
+       "description": "-1 — отключить",
+       "sensitive": false,
+       "min": -1,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "topicFetchAttempts",
+       "type": "int",
+       "label": "Попыток topic GET",
+       "description": "Rutracker: ретраи magnet/details за прогон (дефолт 5)",
+       "sensitive": false,
+       "min": 1,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "log",
+       "type": "bool",
+       "label": "Лог парсера",
+       "description": "Data/log/{tracker}.log, default: true",
+       "sensitive": false,
+       "min": null,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "cookie",
+       "type": "password",
+       "label": "Cookie",
+       "description": "Статический cookie",
+       "sensitive": true,
+       "min": null,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "login.u",
+       "type": "password",
+       "label": "Login",
+       "description": null,
+       "sensitive": true,
+       "min": null,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "login.p",
+       "type": "password",
+       "label": "Password",
+       "description": null,
+       "sensitive": true,
+       "min": null,
+       "max": null,
+       "enumValues": null
+      }
+     ]
+    },
+    {
+     "id": "Selezen",
+     "title": "Selezen",
+     "description": null,
+     "trackerSlug": "selezen",
+     "fields": [
+      {
+       "key": "alias",
+       "type": "string",
+       "label": "Alias URL",
+       "description": "Onion/worker URL",
+       "sensitive": false,
+       "min": null,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "useproxy",
+       "type": "bool",
+       "label": "Use proxy",
+       "description": null,
+       "sensitive": false,
+       "min": null,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "reqMinute",
+       "type": "int",
+       "label": "Запросов/мин",
+       "description": "-1 — отключить",
+       "sensitive": false,
+       "min": -1,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "topicFetchAttempts",
+       "type": "int",
+       "label": "Попыток topic GET",
+       "description": "Rutracker: ретраи magnet/details за прогон (дефолт 5)",
+       "sensitive": false,
+       "min": 1,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "log",
+       "type": "bool",
+       "label": "Лог парсера",
+       "description": "Data/log/{tracker}.log, default: true",
+       "sensitive": false,
+       "min": null,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "cookie",
+       "type": "password",
+       "label": "Cookie",
+       "description": "Статический cookie",
+       "sensitive": true,
+       "min": null,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "login.u",
+       "type": "password",
+       "label": "Login",
+       "description": null,
+       "sensitive": true,
+       "min": null,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "login.p",
+       "type": "password",
+       "label": "Password",
+       "description": null,
+       "sensitive": true,
+       "min": null,
+       "max": null,
+       "enumValues": null
+      }
+     ]
+    },
+    {
+     "id": "SubsPlease",
+     "title": "SubsPlease",
+     "description": null,
+     "trackerSlug": "subsplease",
+     "fields": [
+      {
+       "key": "alias",
+       "type": "string",
+       "label": "Alias URL",
+       "description": "Onion/worker URL",
+       "sensitive": false,
+       "min": null,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "useproxy",
+       "type": "bool",
+       "label": "Use proxy",
+       "description": null,
+       "sensitive": false,
+       "min": null,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "reqMinute",
+       "type": "int",
+       "label": "Запросов/мин",
+       "description": "-1 — отключить",
+       "sensitive": false,
+       "min": -1,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "topicFetchAttempts",
+       "type": "int",
+       "label": "Попыток topic GET",
+       "description": "Rutracker: ретраи magnet/details за прогон (дефолт 5)",
+       "sensitive": false,
+       "min": 1,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "log",
+       "type": "bool",
+       "label": "Лог парсера",
+       "description": "Data/log/{tracker}.log, default: true",
+       "sensitive": false,
+       "min": null,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "cookie",
+       "type": "password",
+       "label": "Cookie",
+       "description": "Статический cookie",
+       "sensitive": true,
+       "min": null,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "login.u",
+       "type": "password",
+       "label": "Login",
+       "description": null,
+       "sensitive": true,
+       "min": null,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "login.p",
+       "type": "password",
+       "label": "Password",
+       "description": null,
+       "sensitive": true,
+       "min": null,
+       "max": null,
+       "enumValues": null
+      }
+     ]
+    },
+    {
+     "id": "Toloka",
+     "title": "Toloka",
+     "description": null,
+     "trackerSlug": "toloka",
+     "fields": [
+      {
+       "key": "alias",
+       "type": "string",
+       "label": "Alias URL",
+       "description": "Onion/worker URL",
+       "sensitive": false,
+       "min": null,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "useproxy",
+       "type": "bool",
+       "label": "Use proxy",
+       "description": null,
+       "sensitive": false,
+       "min": null,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "reqMinute",
+       "type": "int",
+       "label": "Запросов/мин",
+       "description": "-1 — отключить",
+       "sensitive": false,
+       "min": -1,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "topicFetchAttempts",
+       "type": "int",
+       "label": "Попыток topic GET",
+       "description": "Rutracker: ретраи magnet/details за прогон (дефолт 5)",
+       "sensitive": false,
+       "min": 1,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "log",
+       "type": "bool",
+       "label": "Лог парсера",
+       "description": "Data/log/{tracker}.log, default: true",
+       "sensitive": false,
+       "min": null,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "cookie",
+       "type": "password",
+       "label": "Cookie",
+       "description": "Статический cookie",
+       "sensitive": true,
+       "min": null,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "login.u",
+       "type": "password",
+       "label": "Login",
+       "description": null,
+       "sensitive": true,
+       "min": null,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "login.p",
+       "type": "password",
+       "label": "Password",
+       "description": null,
+       "sensitive": true,
+       "min": null,
+       "max": null,
+       "enumValues": null
+      }
+     ]
+    },
+    {
+     "id": "TorrentBy",
+     "title": "TorrentBy",
+     "description": null,
+     "trackerSlug": "torrentby",
+     "fields": [
+      {
+       "key": "alias",
+       "type": "string",
+       "label": "Alias URL",
+       "description": "Onion/worker URL",
+       "sensitive": false,
+       "min": null,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "useproxy",
+       "type": "bool",
+       "label": "Use proxy",
+       "description": null,
+       "sensitive": false,
+       "min": null,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "reqMinute",
+       "type": "int",
+       "label": "Запросов/мин",
+       "description": "-1 — отключить",
+       "sensitive": false,
+       "min": -1,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "topicFetchAttempts",
+       "type": "int",
+       "label": "Попыток topic GET",
+       "description": "Rutracker: ретраи magnet/details за прогон (дефолт 5)",
+       "sensitive": false,
+       "min": 1,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "log",
+       "type": "bool",
+       "label": "Лог парсера",
+       "description": "Data/log/{tracker}.log, default: true",
+       "sensitive": false,
+       "min": null,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "cookie",
+       "type": "password",
+       "label": "Cookie",
+       "description": "Статический cookie",
+       "sensitive": true,
+       "min": null,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "login.u",
+       "type": "password",
+       "label": "Login",
+       "description": null,
+       "sensitive": true,
+       "min": null,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "login.p",
+       "type": "password",
+       "label": "Password",
+       "description": null,
+       "sensitive": true,
+       "min": null,
+       "max": null,
+       "enumValues": null
+      }
+     ]
+    },
+    {
+     "id": "Ultradox",
+     "title": "Ultradox",
+     "description": null,
+     "trackerSlug": "ultradox",
+     "fields": [
+      {
+       "key": "alias",
+       "type": "string",
+       "label": "Alias URL",
+       "description": "Onion/worker URL",
+       "sensitive": false,
+       "min": null,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "useproxy",
+       "type": "bool",
+       "label": "Use proxy",
+       "description": null,
+       "sensitive": false,
+       "min": null,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "reqMinute",
+       "type": "int",
+       "label": "Запросов/мин",
+       "description": "-1 — отключить",
+       "sensitive": false,
+       "min": -1,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "topicFetchAttempts",
+       "type": "int",
+       "label": "Попыток topic GET",
+       "description": "Rutracker: ретраи magnet/details за прогон (дефолт 5)",
+       "sensitive": false,
+       "min": 1,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "log",
+       "type": "bool",
+       "label": "Лог парсера",
+       "description": "Data/log/{tracker}.log, default: true",
+       "sensitive": false,
+       "min": null,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "cookie",
+       "type": "password",
+       "label": "Cookie",
+       "description": "Статический cookie",
+       "sensitive": true,
+       "min": null,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "login.u",
+       "type": "password",
+       "label": "Login",
+       "description": null,
+       "sensitive": true,
+       "min": null,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "login.p",
+       "type": "password",
+       "label": "Password",
+       "description": null,
+       "sensitive": true,
+       "min": null,
+       "max": null,
+       "enumValues": null
+      }
+     ]
+    },
+    {
+     "id": "Viruseproject",
+     "title": "Viruseproject",
+     "description": null,
+     "trackerSlug": "viruseproject",
+     "fields": [
+      {
+       "key": "alias",
+       "type": "string",
+       "label": "Alias URL",
+       "description": "Onion/worker URL",
+       "sensitive": false,
+       "min": null,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "useproxy",
+       "type": "bool",
+       "label": "Use proxy",
+       "description": null,
+       "sensitive": false,
+       "min": null,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "reqMinute",
+       "type": "int",
+       "label": "Запросов/мин",
+       "description": "-1 — отключить",
+       "sensitive": false,
+       "min": -1,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "topicFetchAttempts",
+       "type": "int",
+       "label": "Попыток topic GET",
+       "description": "Rutracker: ретраи magnet/details за прогон (дефолт 5)",
+       "sensitive": false,
+       "min": 1,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "log",
+       "type": "bool",
+       "label": "Лог парсера",
+       "description": "Data/log/{tracker}.log, default: true",
+       "sensitive": false,
+       "min": null,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "cookie",
+       "type": "password",
+       "label": "Cookie",
+       "description": "Статический cookie",
+       "sensitive": true,
+       "min": null,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "login.u",
+       "type": "password",
+       "label": "Login",
+       "description": null,
+       "sensitive": true,
+       "min": null,
+       "max": null,
+       "enumValues": null
+      },
+      {
+       "key": "login.p",
+       "type": "password",
+       "label": "Password",
+       "description": null,
+       "sensitive": true,
+       "min": null,
+       "max": null,
+       "enumValues": null
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

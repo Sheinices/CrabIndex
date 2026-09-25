@@ -1,0 +1,29 @@
+{
+  "streams": [
+    {
+      "index": 0,
+      "codec_name": "h264",
+      "codec_long_name": "H.264 / AVC",
+      "codec_type": "video",
+      "width": 1920,
+      "height": 1080,
+      "bit_rate": "5000000",
+      "tags": { "language": "und", "title": "Video" }
+    },
+    {
+      "index": 1,
+      "codec_name": "aac",
+      "codec_type": "audio",
+      "sample_rate": "48000",
+      "channels": 2,
+      "channel_layout": "stereo",
+      "bit_rate": "192000",
+      "tags": { "language": "rus", "title": "LostFilm", "BPS": "192000", "DURATION": "01:00:00.000000000" }
+    }
+  ],
+  "format": {
+    "format_name": "matroska,webm",
+    "duration": "3600.0",
+    "size": "1000"
+  }
+}

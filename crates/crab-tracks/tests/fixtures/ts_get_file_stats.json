@@ -1,0 +1,12 @@
+{
+  "title": "Example",
+  "category": "crabindex",
+  "hash": "aabbccddeeff00112233445566778899aabbccdd",
+  "name": "Example.mkv",
+  "stat": 3,
+  "stat_string": "Torrent working",
+  "file_stats": [
+    { "id": 1, "path": "Example.mkv", "length": 123456789 },
+    { "id": 2, "path": "sample.nfo", "length": 100 }
+  ]
+}
