@@ -52,7 +52,7 @@ waf:
 flaresolverr:
   enable: true
   url: http://127.0.0.1:8191/v1
-  crawlUrl: http://127.0.0.1:8193/v1
+  crawlUrl: "" # http://127.0.0.1:8193/v1 when a second FlareSolverr runs
   maxTimeoutMs: 300000
   sessionIdleMinutes: 120
   browserTimeoutRetries: 1
@@ -70,7 +70,7 @@ cffetch:
   timeoutSeconds: 25
   maxConcurrent: 4
   clearanceMinutes: 60
-  proxy: socks5://127.0.0.1:20001
+  proxy: "" # socks5://127.0.0.1:20001 with the WARP container (same as FlareSolverr PROXY_URL)
 
 mergeduplicates: true
 mergenumduplicates: true # Объединять дубликаты по номеру (серии и т.п.)
