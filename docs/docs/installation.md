@@ -109,6 +109,8 @@ sudo dist/install.sh
 | `--bundle ПУТЬ\|URL` | Откуда брать файлы: каталог `make dist` или архив `.tar.gz` / `.tar.xz` (путь или URL, для URL нужен `curl`). По умолчанию - каталог самого скрипта, если в нём есть `crabindex` (так работает `dist/install.sh`), иначе `../dist` относительно скрипта |
 | `--admin-path /x` | Путь админ-панели без вопроса |
 | `--yes`, `-y` | Не задавать вопросов: путь `/admin`, если не указан `--admin-path` |
+| `--flaresolverr` | Поставить FlareSolverr и cffetch в Docker для обхода Cloudflare, с лимитами CPU и памяти. Ресурсоёмко, см. [FlareSolverr и cffetch](configuration/flaresolverr.md) |
+| `--no-flaresolverr` | Не ставить обход Cloudflare и не спрашивать |
 | `--update` | Обновить существующую установку: конфиг и данные сохраняются |
 | `--uninstall` | Удалить службу, crontab, бинарник и `wwwroot/`. Данные и конфиг остаются |
 | `--purge` | Вместе с `--uninstall`: удалить весь каталог установки (базу, конфиг, логи) и пользователя. Спрашивает подтверждение (или `--yes`) |

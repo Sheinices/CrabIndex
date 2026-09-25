@@ -9,6 +9,19 @@
 
 Скачивание через cffetch занимает доли секунды против 0,5-1,2 секунды у браузерного перехода, а FlareSolverr нужен только для получения и обновления cookie.
 
+:::danger[FlareSolverr требователен к ресурсам]
+FlareSolverr запускает настоящий браузер Chrome. Решение одной проверки Cloudflare может занять несколько ядер процессора на десятки секунд, а каждая сессия браузера держит 300-600 МБ памяти. Без ограничений он способен загрузить слабый сервер целиком: сервис перестанет отвечать, а ядро начнёт завершать процессы из-за нехватки памяти.
+
+Ставьте FlareSolverr, только если вам действительно нужно обходить Cloudflare (Rutracker, Kinozal и другие закрытые трекеры), и всегда с лимитами:
+
+- рекомендуемый сервер: от 2 ядер и 4 ГБ памяти;
+- лимит контейнера: `--cpus 1.5 --memory 1536m` (установщик ставит их сам);
+- `--shm-size 512m`: со стандартными 64 МБ `/dev/shm` Chrome зависает при запуске;
+- `DISABLE_MEDIA=true`: браузер не грузит картинки и видео.
+
+Если сервер слабый или на нём работают другие тяжёлые сервисы, лучше не ставить FlareSolverr вовсе. Трекеры без Cloudflare продолжат работать, а базу закрытых трекеров можно получать синхронизацией с другого сервера (`syncapi`).
+:::
+
 ## Как это работает
 
 1. Обычный запрос CrabIndex к трекеру получил `403`/`503` с заголовком `cf-mitigated` или страницу «Just a moment…». Хост помечается как «защищённый».
@@ -27,7 +40,7 @@
 flaresolverr:
   enable: true
   url: http://127.0.0.1:8191/v1
-  crawlUrl: http://127.0.0.1:8193/v1
+  crawlUrl: ""
   maxTimeoutMs: 300000
   sessionIdleMinutes: 120
   browserTimeoutRetries: 1
@@ -42,7 +55,7 @@ cffetch:
   timeoutSeconds: 25
   maxConcurrent: 4
   clearanceMinutes: 60
-  proxy: socks5://127.0.0.1:20001
+  proxy: ""
 ```
 
 ### flaresolverr
@@ -70,6 +83,41 @@ cffetch:
 | `maxConcurrent` | `4` | Параллельных запросов через cffetch; больше - риск `429` от трекера |
 | `clearanceMinutes` | `60` | Через сколько минут считать `cf_clearance` устаревшей |
 | `proxy` | пусто | Прокси для cffetch. **Должен совпадать** с `PROXY_URL` FlareSolverr: `cf_clearance` привязана к IP |
+
+## Установка на сервер
+
+Установщик ставит FlareSolverr и cffetch в Docker сам: при установке он спрашивает, нужен ли обход Cloudflare, либо можно передать флаг:
+
+```bash
+sudo bash install.sh --flaresolverr      # поставить (Docker установится автоматически)
+sudo bash install.sh --no-flaresolverr   # не ставить и не спрашивать
+```
+
+С флагом `--yes` и без `--flaresolverr` обход не ставится, а в `init.yaml` выключаются `flaresolverr.enable` и `cffetch.enable`. Контейнеры слушают только `127.0.0.1` и запускаются с лимитами, которые можно изменить переменными окружения:
+
+| Переменная | По умолчанию |
+| --- | --- |
+| `FLARESOLVERR_CPUS` | `1.5` |
+| `FLARESOLVERR_MEMORY` | `1536m` |
+| `CFFETCH_CPUS` | `0.5` |
+| `CFFETCH_MEMORY` | `256m` |
+
+```bash
+sudo FLARESOLVERR_CPUS=1 FLARESOLVERR_MEMORY=1g bash install.sh --update --flaresolverr
+```
+
+Вручную это те же две команды:
+
+```bash
+docker run -d --name flaresolverr --restart unless-stopped -p 127.0.0.1:8191:8191 \
+  -e LOG_LEVEL=info -e DISABLE_MEDIA=true \
+  --cpus 1.5 --memory 1536m --shm-size 512m ghcr.io/flaresolverr/flaresolverr:latest
+
+docker run -d --name cffetch --restart unless-stopped --network host \
+  --cpus 0.5 --memory 256m ghcr.io/jacred-fdb/cffetch:latest
+```
+
+cffetch внутри контейнера слушает `127.0.0.1:8192`, поэтому ему нужна сеть хоста (`--network host`). `--uninstall` удаляет оба контейнера, если их создал установщик.
 
 ## Docker Compose
 

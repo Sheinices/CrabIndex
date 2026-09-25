@@ -9,7 +9,8 @@
 # password) are written into /opt/crabindex/init.yaml.
 #
 # Usage:
-#   sudo scripts/install.sh [--bundle DIR|FILE|URL | --from-source [DIR]] [--admin-path /x] [--yes]
+#   sudo scripts/install.sh [--bundle DIR|FILE|URL | --from-source [DIR]] [--admin-path /x]
+#                           [--flaresolverr | --no-flaresolverr] [--yes]
 #   sudo scripts/install.sh --update [--bundle ... | --from-source]
 #   sudo scripts/install.sh --uninstall [--purge] [--yes]
 #   sudo scripts/install.sh --check
@@ -45,6 +46,15 @@ RELEASE_TAG=""
 RELEASE_REPO="${CRABINDEX_REPO:-sheinices/crabindex}"
 PKG_MGR=""
 LISTEN_PORT=9117
+# Cloudflare bypass (Docker): "" = ask on a fresh install, 1 = install/recreate, 0 = skip.
+WITH_FLARESOLVERR=""
+FLARESOLVERR_IMAGE="${FLARESOLVERR_IMAGE:-ghcr.io/flaresolverr/flaresolverr:latest}"
+FLARESOLVERR_CPUS="${FLARESOLVERR_CPUS:-1.5}"
+FLARESOLVERR_MEMORY="${FLARESOLVERR_MEMORY:-1536m}"
+CFFETCH_IMAGE="${CFFETCH_IMAGE:-ghcr.io/jacred-fdb/cffetch:latest}"
+CFFETCH_CPUS="${CFFETCH_CPUS:-0.5}"
+CFFETCH_MEMORY="${CFFETCH_MEMORY:-256m}"
+MANAGED_LABEL="crabindex.managed=1"
 
 info() { printf '\033[1;32m==>\033[0m %s\n' "$*"; }
 warn() { printf '\033[1;33mвнимание:\033[0m %s\n' "$*" >&2; }
@@ -80,10 +90,17 @@ usage() {
   --purge             вместе с --uninstall: удалить также данные, конфиг и пользователя
   --check             только проверить систему и показать, чего не хватает
   --no-deps           не устанавливать системные пакеты (только проверить)
+  --flaresolverr      поставить FlareSolverr и cffetch в Docker для обхода Cloudflare
+                      (rutracker, kinozal и др.) с ограничением CPU и памяти
+  --no-flaresolverr   не ставить и не спрашивать
   -h, --help          эта справка
 
 Недостающие пакеты (curl, ca-certificates, tar, xz, gzip, rsync, cron, util-linux/flock,
 iproute2) ставятся автоматически через apt, dnf, yum, zypper, pacman или apk.
+
+FlareSolverr запускает настоящий браузер Chrome и требователен к ресурсам. Лимиты
+контейнеров (переменные окружения): FLARESOLVERR_CPUS=1.5, FLARESOLVERR_MEMORY=1536m,
+CFFETCH_CPUS=0.5, CFFETCH_MEMORY=256m. Рекомендуется от 2 ядер и 4 ГБ памяти.
 EOF
 }
 
@@ -151,6 +168,14 @@ while [[ $# -gt 0 ]]; do
       ;;
     --no-deps)
       SKIP_DEPS=1
+      shift
+      ;;
+    --flaresolverr)
+      WITH_FLARESOLVERR=1
+      shift
+      ;;
+    --no-flaresolverr)
+      WITH_FLARESOLVERR=0
       shift
       ;;
     -h | --help)
@@ -225,12 +250,12 @@ yaml_top_get() {
     }' "$file"
 }
 
-# Value of `admin.<key>` from the block-style `admin:` section.
-yaml_admin_get() {
-  local key="$1" file="$2"
-  awk -v key="$key" '
-    /^[^[:space:]#][^:]*:/ { in_admin = ($0 ~ /^admin:[[:space:]]*(#.*)?$/); next }
-    in_admin && $0 ~ ("^[[:space:]]+" key ":") {
+# Value of `<section>.<key>` from a block-style top-level section.
+yaml_section_get() { # yaml_section_get <section> <key> <file>
+  local section="$1" key="$2" file="$3"
+  awk -v section="$section" -v key="$key" '
+    /^[^[:space:]#][^:]*:/ { in_sec = ($0 ~ ("^" section ":[[:space:]]*(#.*)?$")); next }
+    in_sec && $0 ~ ("^[[:space:]]+" key ":") {
       v = $0
       sub("^[[:space:]]+" key ":", "", v)
       sub(/[[:space:]]+#.*$/, "", v)
@@ -240,6 +265,8 @@ yaml_admin_get() {
       exit
     }' "$file"
 }
+
+yaml_admin_get() { yaml_section_get admin "$1" "$2"; }
 
 # Rewrite a file in place from stdin, keeping owner and mode.
 replace_content() {
@@ -261,24 +288,26 @@ yaml_top_set() { # yaml_top_set <key> <value> <file>
   fi
 }
 
-yaml_admin_set() { # yaml_admin_set <key> <value> <file>
-  local key="$1" value="$2" file="$3"
-  awk -v key="$key" -v val="$value" '
-    function flush() { if (in_admin && !done) { print "  " key ": " val; done = 1 } }
+yaml_section_set() { # yaml_section_set <section> <key> <value> <file>
+  local section="$1" key="$2" value="$3" file="$4"
+  awk -v section="$section" -v key="$key" -v val="$value" '
+    function flush() { if (in_sec && !done) { print "  " key ": " val; done = 1 } }
     /^[^[:space:]#][^:]*:/ {
       flush()
-      in_admin = ($0 ~ /^admin:[[:space:]]*(#.*)?$/)
-      if (in_admin) seen = 1
+      in_sec = ($0 ~ ("^" section ":[[:space:]]*(#.*)?$"))
+      if (in_sec) seen = 1
       print
       next
     }
-    in_admin && !done && $0 ~ ("^[[:space:]]+" key ":") { print "  " key ": " val; done = 1; next }
+    in_sec && !done && $0 ~ ("^[[:space:]]+" key ":") { print "  " key ": " val; done = 1; next }
     { print }
     END {
       flush()
-      if (!seen) { print ""; print "admin:"; print "  " key ": " val }
+      if (!seen) { print ""; print section ":"; print "  " key ": " val }
     }' "$file" | replace_content "$file"
 }
+
+yaml_admin_set() { yaml_section_set admin "$1" "$2" "$3"; }
 
 server_ip() {
   local ip=""
@@ -725,6 +754,127 @@ print_admin_info() {
 }
 
 # ---------------------------------------------------------------------------
+# Cloudflare bypass: FlareSolverr + cffetch in Docker
+# ---------------------------------------------------------------------------
+
+managed_container_exists() { # managed_container_exists <name>
+  command -v docker >/dev/null 2>&1 &&
+    [[ "$(docker ps -a --filter "name=^/$1\$" --filter "label=$MANAGED_LABEL" -q 2>/dev/null)" != "" ]]
+}
+
+# Sets WITH_FLARESOLVERR when not given on the command line.
+decide_flaresolverr() {
+  [[ -n "$WITH_FLARESOLVERR" ]] && return
+  # update / reinstall: keep whatever is there
+  if [[ "$MODE" == "update" ]] || managed_container_exists flaresolverr; then
+    WITH_FLARESOLVERR="keep"
+    return
+  fi
+  if ! can_prompt; then
+    WITH_FLARESOLVERR=0
+    return
+  fi
+  {
+    echo
+    echo "Обход Cloudflare (FlareSolverr + cffetch в Docker)."
+    echo "  Нужен для трекеров за Cloudflare: rutracker, kinozal и других."
+    echo "  FlareSolverr запускает настоящий браузер Chrome и заметно нагружает сервер:"
+    echo "  будет ограничен ${FLARESOLVERR_CPUS} ядра CPU и ${FLARESOLVERR_MEMORY} памяти."
+    echo "  Рекомендуется от 2 ядер и 4 ГБ памяти. Без него закрытые Cloudflare трекеры не парсятся."
+  } >/dev/tty
+  if confirm "Установить FlareSolverr?"; then WITH_FLARESOLVERR=1; else WITH_FLARESOLVERR=0; fi
+}
+
+# Points init.yaml at the local containers (1) or turns the bypass off (0).
+configure_cf_bypass() { # configure_cf_bypass <1|0>
+  local cfg="$INSTALL_DIR/init.yaml"
+  [[ -f "$cfg" && "${CONFIG_IS_JSON:-0}" -eq 0 ]] || return 0
+  if [[ "$1" -eq 1 ]]; then
+    yaml_section_set flaresolverr enable true "$cfg"
+    yaml_section_set flaresolverr url "http://127.0.0.1:8191/v1" "$cfg"
+    yaml_section_set flaresolverr crawlUrl '""' "$cfg"
+    yaml_section_set cffetch enable true "$cfg"
+    yaml_section_set cffetch url "http://127.0.0.1:8192/fetch" "$cfg"
+    yaml_section_set cffetch proxy '""' "$cfg"
+  else
+    yaml_section_set flaresolverr enable false "$cfg"
+    yaml_section_set cffetch enable false "$cfg"
+  fi
+  chown "$SERVICE_USER:$SERVICE_USER" "$cfg"
+  chmod 600 "$cfg"
+}
+
+ensure_docker() {
+  if ! command -v docker >/dev/null 2>&1; then
+    local pkg=""
+    case "$PKG_MGR" in
+      apt-get) pkg="docker.io" ;;
+      dnf) pkg="moby-engine" ;;
+      yum | zypper | pacman | apk) pkg="docker" ;;
+    esac
+    [[ -n "$pkg" ]] || { warn "Docker не найден и не может быть установлен автоматически"; return 1; }
+    pkg_install "$pkg" || { warn "не удалось установить Docker ($pkg)"; return 1; }
+  fi
+  systemctl enable --now docker >/dev/null 2>&1 || true
+  docker info >/dev/null 2>&1 || { warn "Docker установлен, но не запущен (systemctl status docker)"; return 1; }
+}
+
+run_managed_container() { # run_managed_container <name> <docker run args...>
+  local name="$1"
+  shift
+  if docker ps -a --filter "name=^/${name}\$" -q | grep -q .; then
+    if ! managed_container_exists "$name"; then
+      warn "контейнер $name уже есть и создан не установщиком - оставлен как есть"
+      return 0
+    fi
+    docker rm -f "$name" >/dev/null
+  fi
+  docker run -d --name "$name" --restart unless-stopped --label "$MANAGED_LABEL" "$@" >/dev/null ||
+    warn "не удалось запустить контейнер $name (docker logs $name)"
+}
+
+install_flaresolverr() {
+  info "Установка FlareSolverr и cffetch (Docker, лимиты: FlareSolverr ${FLARESOLVERR_CPUS} CPU / ${FLARESOLVERR_MEMORY}, cffetch ${CFFETCH_CPUS} CPU / ${CFFETCH_MEMORY})"
+  if ! ensure_docker; then
+    warn "обход Cloudflare не установлен - трекеры за Cloudflare работать не будут"
+    configure_cf_bypass 0
+    return 0
+  fi
+  # Only on 127.0.0.1: the browser API must never be reachable from outside.
+  # shm-size: Chrome crashes or hangs on start with Docker's default 64 MB /dev/shm.
+  run_managed_container flaresolverr -p 127.0.0.1:8191:8191 \
+    -e LOG_LEVEL=info -e DISABLE_MEDIA=true -e TZ="${TZ:-UTC}" \
+    --cpus "$FLARESOLVERR_CPUS" --memory "$FLARESOLVERR_MEMORY" --shm-size 512m \
+    "$FLARESOLVERR_IMAGE"
+  # cffetch binds 127.0.0.1 inside the container, so it runs on the host network.
+  run_managed_container cffetch --network host \
+    --cpus "$CFFETCH_CPUS" --memory "$CFFETCH_MEMORY" \
+    "$CFFETCH_IMAGE"
+  local i
+  for i in $(seq 1 60); do
+    curl -fsS -m 3 http://127.0.0.1:8191/ >/dev/null 2>&1 && break
+    sleep 2
+  done
+  if curl -fsS -m 3 http://127.0.0.1:8191/ >/dev/null 2>&1; then
+    info "FlareSolverr запущен (127.0.0.1:8191), cffetch - 127.0.0.1:8192"
+  else
+    warn "FlareSolverr не ответил за 2 минуты: docker logs flaresolverr"
+  fi
+  configure_cf_bypass 1
+}
+
+remove_flaresolverr() {
+  command -v docker >/dev/null 2>&1 || return 0
+  local ids
+  ids="$(docker ps -a --filter "label=$MANAGED_LABEL" -q 2>/dev/null)"
+  if [[ -n "$ids" ]]; then
+    # shellcheck disable=SC2086
+    docker rm -f $ids >/dev/null 2>&1 || true
+    info "Контейнеры FlareSolverr и cffetch удалены"
+  fi
+}
+
+# ---------------------------------------------------------------------------
 # install / update / uninstall
 # ---------------------------------------------------------------------------
 
@@ -841,6 +991,11 @@ do_install() {
   fi
   copy_bundle "$src"
   prepare_config
+  decide_flaresolverr
+  case "$WITH_FLARESOLVERR" in
+    1) install_flaresolverr ;;
+    0) [[ "$MODE" == "install" ]] && configure_cf_bypass 0 ;;
+  esac
   write_unit
   install_crontab
   systemctl daemon-reload
@@ -864,6 +1019,7 @@ do_uninstall() {
   if id "$SERVICE_USER" >/dev/null 2>&1 && command -v crontab >/dev/null 2>&1; then
     crontab -u "$SERVICE_USER" -r 2>/dev/null || true
   fi
+  remove_flaresolverr
   if [[ "$PURGE" -eq 1 ]]; then
     rm -rf "$INSTALL_DIR"
     if id "$SERVICE_USER" >/dev/null 2>&1; then
