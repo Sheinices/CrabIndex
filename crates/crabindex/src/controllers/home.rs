@@ -15,9 +15,17 @@ pub fn router() -> Router {
         .route("/opensearch.xml", any(opensearch))
 }
 
+/// With `web: false` the public site is off: its shell routes answer like unknown routes.
+fn web_disabled() -> Option<Response> {
+    (!crate::conf().web).then(|| axum::http::StatusCode::NOT_FOUND.into_response())
+}
+
 /// `wwwroot/index.html` with no-store caching headers (public web UI; settings and jobs
 /// live in the admin panel, see `crate::admin`).
 async fn spa() -> Response {
+    if let Some(r) = web_disabled() {
+        return r;
+    }
     match tokio::fs::read("wwwroot/index.html").await {
         Ok(bytes) => {
             let mut r = bytes.into_response();
@@ -68,6 +76,9 @@ pub fn opensearch_xml(base_url: &str) -> String {
 }
 
 async fn opensearch(req: Request) -> Response {
+    if let Some(r) = web_disabled() {
+        return r;
+    }
     let net = request_network(&req);
     let host = req
         .headers()
