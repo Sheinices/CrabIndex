@@ -850,8 +850,8 @@ install_flaresolverr() {
   run_managed_container cffetch --network host \
     --cpus "$CFFETCH_CPUS" --memory "$CFFETCH_MEMORY" \
     "$CFFETCH_IMAGE"
-  local i
-  for i in $(seq 1 60); do
+  local tries=60
+  while ((tries-- > 0)); do
     curl -fsS -m 3 http://127.0.0.1:8191/ >/dev/null 2>&1 && break
     sleep 2
   done
