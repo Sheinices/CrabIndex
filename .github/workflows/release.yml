@@ -30,15 +30,15 @@ jobs:
     name: Web UI, admin panel, docs
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           ref: ${{ env.TAG }}
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: 22
       - name: Build wwwroot (web → admin → docs)
         run: bash scripts/build-web-ui.sh
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         with:
           name: wwwroot
           path: wwwroot
@@ -58,7 +58,7 @@ jobs:
           - { name: macos-x86_64, os: macos-14, target: x86_64-apple-darwin }
           - { name: windows-x86_64, os: windows-latest, target: x86_64-pc-windows-msvc }
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           ref: ${{ env.TAG }}
           fetch-depth: 0
@@ -85,7 +85,7 @@ jobs:
         shell: bash
         run: cargo build --release --locked -p crabindex --target ${{ matrix.target }}
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v5
         with:
           name: wwwroot
           path: wwwroot
@@ -113,7 +113,7 @@ jobs:
             echo "ASSET=dist/${name}.zip" >> "$GITHUB_ENV"
           fi
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         with:
           name: bundle-${{ matrix.name }}
           path: ${{ env.ASSET }}
@@ -125,7 +125,7 @@ jobs:
     if: always() && needs.build.result != 'cancelled'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v5
         with:
           pattern: bundle-*
           path: assets
@@ -146,10 +146,10 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           ref: ${{ env.TAG }}
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v5
         with:
           pattern: bundle-linux-*
           path: bundles
