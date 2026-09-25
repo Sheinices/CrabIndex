@@ -70,15 +70,31 @@ async fn take_login() -> bool {
         return false;
     }
 
+    let form = [("login_name", u.clone()), ("login_password", p), ("login_not_save", "1".into()), ("login", "submit".into())];
+    // Behind Cloudflare the plain POST gets 403: skip it once the host is known to be guarded.
+    let guarded = url::Url::parse(&host).ok().and_then(|x| x.host_str().map(net::cf::is_guarded)).unwrap_or(false);
+    if guarded || !take_login_direct(&host, &form).await {
+        if let Some(cookie) = take_login_browser(&host, &u, &form).await {
+            common::cache_set(COOKIE_KEY, cookie, Duration::from_secs(24 * 3600));
+            parser_log::write_kv(TRACKER_NAME, "TakeLogin success", &kv(&[("host", host), ("via", "browser".into())]));
+            return true;
+        }
+        return false;
+    }
+    true
+}
+
+/// Plain POST login. `true` = logged in (cookie cached); `false` = blocked (403/503 or network
+/// error, worth retrying in the browser) or rejected.
+async fn take_login_direct(host: &str, form: &[(&str, String); 4]) -> bool {
     let Some(client) = common::login_client(15) else { return false };
-    let form = [("login_name", u), ("login_password", p), ("login_not_save", "1".into()), ("login", "submit".into())];
     let resp = client
-        .post(&host)
+        .post(host)
         .header("User-Agent", SELEZEN_USER_AGENT)
         .header("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
         .header("Referer", format!("{host}/"))
-        .header("Origin", host.clone())
-        .form(&form)
+        .header("Origin", host)
+        .form(form)
         .send()
         .await;
 
@@ -92,7 +108,7 @@ async fn take_login() -> bool {
                 .unwrap_or_default();
             if !util::is_blank(&sess) {
                 common::cache_set(COOKIE_KEY, format!("PHPSESSID={sess}; _ym_isad=2;"), Duration::from_secs(24 * 3600));
-                parser_log::write_kv(TRACKER_NAME, "TakeLogin success", &kv(&[("host", host)]));
+                parser_log::write_kv(TRACKER_NAME, "TakeLogin success", &kv(&[("host", host.to_string())]));
                 return true;
             }
             parser_log::write_kv(
@@ -107,6 +123,32 @@ async fn take_login() -> bool {
         }
     }
     false
+}
+
+/// DLE login form submitted from the FlareSolverr session of the host (passes Cloudflare).
+/// Success = the returned page shows `>{login}<`; the session cookies come from the browser jar.
+async fn take_login_browser(host: &str, login: &str, form: &[(&str, String); 4]) -> Option<String> {
+    let body = url::form_urlencoded::Serializer::new(String::new()).extend_pairs(form.iter().map(|(k, v)| (*k, v.as_str()))).finish();
+    let Some(r) = net::cf::post_form(&format!("{host}/"), &body).await else {
+        parser_log::write_kv(TRACKER_NAME, "TakeLogin failed", &kv(&[("reason", "browser login: FlareSolverr disabled or unavailable".into())]));
+        return None;
+    };
+    let cookie = r
+        .cookies
+        .iter()
+        .filter(|(k, _)| matches!(k.as_str(), "PHPSESSID" | "dle_user_id" | "dle_password" | "dle_newpm"))
+        .map(|(k, v)| format!("{k}={v}; "))
+        .collect::<String>();
+    if r.body.contains(&format!(">{login}<")) && cookie.contains("PHPSESSID=") {
+        return Some(cookie.trim_end().to_string());
+    }
+    let reason = if r.body.contains("Ошибка авторизации") || r.body.contains("login_name") {
+        "browser login: site rejected login/password (login.u is the site nickname)"
+    } else {
+        "browser login: login not found in response"
+    };
+    parser_log::write_kv(TRACKER_NAME, "TakeLogin failed", &kv(&[("reason", reason.into()), ("statusCode", r.status.to_string())]));
+    None
 }
 
 /// Parse list pages `parse_from..=parse_to` (both 0 → page 1 only).
@@ -194,7 +236,8 @@ async fn parse_page(page: i32) -> (i32, i32, i32, i32, i32) {
         return (0, 0, 0, 0, 0);
     }
 
-    let cookie = c.Selezen.cookie.clone().or_else(cookie);
+    // A fresh login beats the pasted cookie (it may be stale or bound to another IP).
+    let cookie = cookie().or_else(|| c.Selezen.cookie.clone().filter(|s| !s.trim().is_empty()));
     let host = c.Selezen.host.trim_end_matches('/').to_string();
     let list_url = if page <= 1 { format!("{host}/relizy-ot-selezen/") } else { format!("{host}/relizy-ot-selezen/page/{page}/") };
     let req = Req::new()
@@ -222,9 +265,10 @@ async fn parse_page(page: i32) -> (i32, i32, i32, i32, i32) {
     };
 
     if !html.contains(&format!(">{}<", c.Selezen.login_u())) {
-        if c.Selezen.cookie.as_deref().unwrap_or("").is_empty() {
-            take_login().await;
-        }
+        // Not logged in (expired session or a pasted cookie that does not work): log in again,
+        // the next run uses the fresh cookie.
+        common::cache_remove(COOKIE_KEY);
+        take_login().await;
         parser_log::write_kv(TRACKER_NAME, "Page parse failed", &kv(&[("page", page.to_string()), ("reason", "login not found in response".into())]));
         return (0, 0, 0, 0, 0);
     }

@@ -35,6 +35,10 @@ pub fn cache_set(key: &str, value: impl Into<String>, ttl: Duration) {
     MEM.insert(key.to_string(), (value.into(), Instant::now() + ttl));
 }
 
+pub fn cache_remove(key: &str) {
+    MEM.remove(key);
+}
+
 // ---------------------------------------------------------------------------
 // Task maps
 // ---------------------------------------------------------------------------

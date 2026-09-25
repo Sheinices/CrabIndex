@@ -365,7 +365,7 @@ dependencies = [
 
 [[package]]
 name = "crab-cloudflare"
-version = "1.0.1"
+version = "1.0.2"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -391,7 +391,7 @@ dependencies = [
 
 [[package]]
 name = "crab-core"
-version = "1.0.1"
+version = "1.0.2"
 dependencies = [
  "anyhow",
  "arc-swap",
@@ -428,7 +428,7 @@ dependencies = [
 
 [[package]]
 name = "crab-ops"
-version = "1.0.1"
+version = "1.0.2"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -457,7 +457,7 @@ dependencies = [
 
 [[package]]
 name = "crab-search"
-version = "1.0.1"
+version = "1.0.2"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -486,7 +486,7 @@ dependencies = [
 
 [[package]]
 name = "crab-trackers-a"
-version = "1.0.1"
+version = "1.0.2"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -512,7 +512,7 @@ dependencies = [
 
 [[package]]
 name = "crab-trackers-b"
-version = "1.0.1"
+version = "1.0.2"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -538,7 +538,7 @@ dependencies = [
 
 [[package]]
 name = "crab-trackers-c"
-version = "1.0.1"
+version = "1.0.2"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -565,7 +565,7 @@ dependencies = [
 
 [[package]]
 name = "crab-trackers-d"
-version = "1.0.1"
+version = "1.0.2"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -592,7 +592,7 @@ dependencies = [
 
 [[package]]
 name = "crab-trackers-e"
-version = "1.0.1"
+version = "1.0.2"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -619,7 +619,7 @@ dependencies = [
 
 [[package]]
 name = "crab-tracks"
-version = "1.0.1"
+version = "1.0.2"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -645,7 +645,7 @@ dependencies = [
 
 [[package]]
 name = "crabindex"
-version = "1.0.1"
+version = "1.0.2"
 dependencies = [
  "anyhow",
  "axum",
