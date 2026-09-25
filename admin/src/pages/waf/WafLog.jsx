@@ -24,6 +24,7 @@ function readFilters(params) {
   return {
     ip: params.get('ip') || '',
     path: params.get('path') || '',
+    origin: params.get('origin') || '',
     status: params.get('status') || '',
     blocked: params.get('blocked') === '1',
     limit: Number(params.get('limit')) || 200,
@@ -33,15 +34,15 @@ function readFilters(params) {
 export function WafLog() {
   const [params, setParams] = useSearchParams()
   const filters = useMemo(() => readFilters(params), [params])
-  const [draft, setDraft] = useState({ ip: filters.ip, path: filters.path })
+  const [draft, setDraft] = useState({ ip: filters.ip, path: filters.path, origin: filters.origin })
   const [paused, setPaused] = useState(false)
   const query = useMemo(() => buildRequestsQuery(filters), [filters])
   const { data, error, loading, reload } = usePolling(() => getWafRequests(query), paused ? 0 : 5000, { enabled: !paused })
 
   // Keep the text inputs in sync when filters change from outside (IP click, links).
   useEffect(() => {
-    setDraft({ ip: filters.ip, path: filters.path })
-  }, [filters.ip, filters.path])
+    setDraft({ ip: filters.ip, path: filters.path, origin: filters.origin })
+  }, [filters.ip, filters.path, filters.origin])
 
   useEffect(() => {
     reload()
@@ -52,6 +53,7 @@ export function WafLog() {
     const p = new URLSearchParams()
     if (next.ip) p.set('ip', next.ip)
     if (next.path) p.set('path', next.path)
+    if (next.origin) p.set('origin', next.origin)
     if (next.status) p.set('status', next.status)
     if (next.blocked) p.set('blocked', '1')
     if (next.limit && next.limit !== 200) p.set('limit', String(next.limit))
@@ -59,7 +61,7 @@ export function WafLog() {
   }
 
   const rows = Array.isArray(data) ? data : Array.isArray(data?.requests) ? data.requests : []
-  const active = filters.ip || filters.path || filters.status || filters.blocked
+  const active = filters.ip || filters.path || filters.origin || filters.status || filters.blocked
 
   return (
     <div className="space-y-4">
@@ -68,7 +70,7 @@ export function WafLog() {
         aria-label="Фильтры журнала"
         onSubmit={(e) => {
           e.preventDefault()
-          update({ ip: draft.ip.trim(), path: draft.path.trim() })
+          update({ ip: draft.ip.trim(), path: draft.path.trim(), origin: draft.origin.trim() })
         }}
       >
         <div className="w-full sm:w-44">
@@ -82,6 +84,19 @@ export function WafLog() {
             Путь (содержит)
           </label>
           <input id="waf-f-path" className="input font-mono" value={draft.path} onChange={(e) => setDraft((d) => ({ ...d, path: e.target.value }))} placeholder="/api/v2.0/indexers" spellCheck={false} />
+        </div>
+        <div className="w-full sm:w-44">
+          <label className="label" htmlFor="waf-f-origin">
+            Домен (Origin)
+          </label>
+          <input
+            id="waf-f-origin"
+            className="input font-mono"
+            value={draft.origin}
+            onChange={(e) => setDraft((d) => ({ ...d, origin: e.target.value }))}
+            placeholder="example.com"
+            spellCheck={false}
+          />
         </div>
         <div className="w-full sm:w-36">
           <label className="label" htmlFor="waf-f-status">
@@ -149,6 +164,7 @@ export function WafLog() {
                 <th>Время</th>
                 <th>IP</th>
                 <th>Запрос</th>
+                <th>Origin</th>
                 <th>Статус</th>
                 <th className="text-right">мс</th>
                 <th>Блокировка</th>
@@ -174,6 +190,20 @@ export function WafLog() {
                   <td className="max-w-md">
                     <span className="mr-1.5 font-mono text-[11px] font-semibold text-muted">{r.method}</span>
                     <span className="font-mono text-xs break-all">{r.path}</span>
+                  </td>
+                  <td className="max-w-48">
+                    {r.origin ? (
+                      <button
+                        type="button"
+                        className="block max-w-full truncate font-mono text-xs text-accent hover:underline"
+                        onClick={() => update({ origin: r.origin })}
+                        title={`Показать запросы с ${r.origin}`}
+                      >
+                        {r.origin}
+                      </button>
+                    ) : (
+                      <span className="text-xs text-muted">-</span>
+                    )}
                   </td>
                   <td>
                     <StatusBadge status={r.status} />

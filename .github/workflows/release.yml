@@ -1,0 +1,189 @@
+# Builds release bundles for every platform and attaches them to the GitHub release.
+#
+# Usage: create a release on GitHub with a tag like v1.0.0 ("Create a new release" → Publish).
+# Assets (stable names, so /releases/latest/download/<name> always works):
+#   crabindex-linux-x86_64.tar.gz   crabindex-linux-arm64.tar.gz
+#   crabindex-macos-arm64.tar.gz    crabindex-macos-x86_64.tar.gz
+#   crabindex-windows-x86_64.zip    SHA256SUMS
+# plus a multi-arch Docker image ghcr.io/<owner>/crabindex:<version> and :latest.
+name: Release
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Existing tag to (re)build, e.g. v1.0.0"
+        required: true
+
+permissions:
+  contents: write
+  packages: write
+
+env:
+  TAG: ${{ github.event.release.tag_name || inputs.tag }}
+  CARGO_TERM_COLOR: always
+
+jobs:
+  web:
+    name: Web UI, admin panel, docs
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TAG }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Build wwwroot (web → admin → docs)
+        run: bash scripts/build-web-ui.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: wwwroot
+          path: wwwroot
+          retention-days: 3
+
+  build:
+    name: Server ${{ matrix.name }}
+    needs: web
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { name: linux-x86_64, os: ubuntu-latest, target: x86_64-unknown-linux-musl }
+          - { name: linux-arm64, os: ubuntu-24.04-arm, target: aarch64-unknown-linux-musl }
+          - { name: macos-arm64, os: macos-14, target: aarch64-apple-darwin }
+          - { name: macos-x86_64, os: macos-14, target: x86_64-apple-darwin }
+          - { name: windows-x86_64, os: windows-latest, target: x86_64-pc-windows-msvc }
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TAG }}
+          fetch-depth: 0
+
+      - name: Version from tag
+        shell: bash
+        run: |
+          echo "CRABINDEX_VERSION=${TAG#v}" >> "$GITHUB_ENV"
+          echo "CRABINDEX_GIT_BRANCH=${TAG}" >> "$GITHUB_ENV"
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: musl toolchain
+        if: contains(matrix.target, 'musl')
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq musl-tools
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: ${{ matrix.target }}
+
+      - name: Build
+        shell: bash
+        run: cargo build --release --locked -p crabindex --target ${{ matrix.target }}
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: wwwroot
+          path: wwwroot
+
+      - name: Package
+        shell: bash
+        run: |
+          set -euo pipefail
+          name="crabindex-${{ matrix.name }}"
+          dir="dist/crabindex-${CRABINDEX_VERSION}-${{ matrix.name }}"
+          mkdir -p "$dir/Data"
+          ext=""
+          [[ "${{ matrix.target }}" == *windows* ]] && ext=".exe"
+          cp "target/${{ matrix.target }}/release/crabindex${ext}" "$dir/"
+          cp -r wwwroot "$dir/wwwroot"
+          cp Data/example.yaml Data/example.conf Data/crontab Data/run-job.sh "$dir/Data/"
+          cp README.md LICENSE "$dir/"
+          if [[ -z "$ext" ]]; then
+            cp scripts/install.sh "$dir/install.sh"
+            chmod 755 "$dir/install.sh" "$dir/crabindex" "$dir/Data/run-job.sh"
+            tar -C dist -czf "dist/${name}.tar.gz" "$(basename "$dir")"
+            echo "ASSET=dist/${name}.tar.gz" >> "$GITHUB_ENV"
+          else
+            (cd dist && 7z a -tzip "${name}.zip" "$(basename "$dir")" >/dev/null)
+            echo "ASSET=dist/${name}.zip" >> "$GITHUB_ENV"
+          fi
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: bundle-${{ matrix.name }}
+          path: ${{ env.ASSET }}
+          retention-days: 3
+
+  publish:
+    name: Attach to release
+    needs: build
+    if: always() && needs.build.result != 'cancelled'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: bundle-*
+          path: assets
+          merge-multiple: true
+      - name: Checksums
+        run: |
+          cd assets
+          ls -la
+          sha256sum crabindex-* > SHA256SUMS
+          cat SHA256SUMS
+      - name: Upload assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload "$TAG" assets/* --clobber --repo "$GITHUB_REPOSITORY"
+
+  docker:
+    name: Docker image
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TAG }}
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: bundle-linux-*
+          path: bundles
+          merge-multiple: true
+      - name: Unpack Linux bundles
+        run: |
+          set -euo pipefail
+          for arch in x86_64:amd64 arm64:arm64; do
+            src="${arch%%:*}"; dst="${arch##*:}"
+            mkdir -p "release/linux-${dst}"
+            tar -xzf "bundles/crabindex-linux-${src}.tar.gz" -C "release/linux-${dst}" --strip-components=1
+          done
+          ls release/*
+      - name: Image name
+        run: |
+          echo "IMAGE=ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/crabindex" >> "$GITHUB_ENV"
+          echo "VERSION=${TAG#v}" >> "$GITHUB_ENV"
+      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ github.token }}
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Dockerfile.release
+          platforms: linux/amd64,linux/arm64
+          push: true
+          build-args: CRABINDEX_VERSION=${{ env.VERSION }}
+          tags: |
+            ${{ env.IMAGE }}:${{ env.VERSION }}
+            ${{ env.IMAGE }}:latest
+          labels: |
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}
+            org.opencontainers.image.version=${{ env.VERSION }}

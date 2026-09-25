@@ -120,6 +120,71 @@ fn rate_limit_bans() {
 }
 
 #[test]
+fn builtin_domains_block_everyone_but_loopback() {
+    let w = temp_waf("builtin");
+    let c = cfg();
+    let now = Utc::now();
+    let ev = |a: &str, d: &str| w.evaluate_request(&c, Some(ip(a)), "/api/v1.0/torrents", "Mozilla", Some(d), Some("crab.example"), now);
+    let b = ev("203.0.113.60", "a.b.ndst.pw").unwrap();
+    assert_eq!((b.reason, b.status, b.banned), (Reason::Domain, StatusCode::FORBIDDEN, false));
+    assert_eq!(ev("203.0.113.60", "notndst.pw"), None);
+    assert_eq!(ev("203.0.113.60", "myds.me").unwrap().reason, Reason::Domain);
+    // whitelisted IP, LAN (whitelistLan) and the admin domain whitelist do not help
+    w.upsert_rule(ListKind::Whitelist, IpNet::parse("203.0.113.61").unwrap(), String::new(), None, now);
+    assert_eq!(ev("203.0.113.61", "lampa.stream").unwrap().reason, Reason::Domain);
+    assert_eq!(ev("192.168.1.5", "x.lampa.stream").unwrap().reason, Reason::Domain);
+    w.lists.write().domain_whitelist.push(store::ListEntry { value: "ndst.pw".into(), comment: String::new(), created: now, expires: None });
+    assert_eq!(ev("203.0.113.62", "ndst.pw").unwrap().reason, Reason::Domain);
+    // loopback always passes; no client address still gets the builtin check
+    for lo in ["127.0.0.1", "::1", "::ffff:127.0.0.1"] {
+        assert_eq!(ev(lo, "ndst.pw"), None, "{lo}");
+    }
+    assert_eq!(w.evaluate_request(&c, None, "/", "", Some("ndst.pw"), None, now).unwrap().reason, Reason::Domain);
+    // no ban is recorded for domain blocks
+    assert!(w.lists.read().bans.is_empty());
+}
+
+#[test]
+fn admin_domain_lists_and_allowlist_only() {
+    let w = temp_waf("domains");
+    let c = cfg();
+    let now = Utc::now();
+    let pub1 = Some(ip("198.51.100.150"));
+    let ev = |c: &WafSettings, d: Option<&str>, ua: &str| w.evaluate_request(c, pub1, "/api", ua, d, Some("crab.example"), now);
+
+    w.upsert_domain(DomainKind::Blacklist, "spam.example".into(), String::new(), None, now);
+    assert_eq!(ev(&c, Some("cdn.spam.example"), "Mozilla").unwrap().reason, Reason::Domain);
+    assert_eq!(ev(&c, Some("antispam.example"), "Mozilla"), None);
+    assert!(w.lists.read().bans.is_empty());
+    // the IP blacklist / bans are checked before the domain lists
+    w.upsert_rule(ListKind::Blacklist, IpNet::parse("198.51.100.150").unwrap(), String::new(), None, now);
+    assert_eq!(ev(&c, Some("spam.example"), "").unwrap().reason, Reason::Blacklist);
+    assert!(w.remove_rule(ListKind::Blacklist, IpNet::parse("198.51.100.150").unwrap()));
+
+    // the domain whitelist skips UA / trap / rate, but never bans or the IP blacklist
+    w.upsert_domain(DomainKind::Whitelist, "friend.example".into(), String::new(), None, now);
+    assert_eq!(ev(&c, Some("app.friend.example"), "sqlmap"), None);
+    assert_eq!(w.evaluate_request(&c, pub1, "/.env", "", Some("friend.example"), None, now), None);
+    assert_eq!(ev(&c, None, "sqlmap").unwrap().reason, Reason::Ua);
+    assert_eq!(ev(&c, Some("friend.example"), "Mozilla").unwrap().reason, Reason::Ban);
+    w.unban(ip("198.51.100.150"));
+
+    // allowlist-only: foreign domains 403, whitelisted / own host / no Origin pass
+    let strict = WafSettings { domainAllowlistOnly: true, ..cfg() };
+    assert_eq!(ev(&strict, Some("other.example"), "Mozilla").unwrap().reason, Reason::Domain);
+    assert_eq!(ev(&strict, Some("friend.example"), "Mozilla"), None);
+    assert_eq!(ev(&strict, Some("crab.example"), "Mozilla"), None);
+    assert_eq!(ev(&strict, Some("sub.crab.example"), "Mozilla").unwrap().reason, Reason::Domain);
+    assert_eq!(ev(&strict, None, "Mozilla"), None);
+    assert_eq!(ev(&c, Some("other.example"), "Mozilla"), None);
+    // expired entries stop matching
+    w.upsert_domain(DomainKind::Blacklist, "temp.example".into(), String::new(), Some(now - Duration::minutes(1)), now - Duration::minutes(5));
+    assert_eq!(ev(&c, Some("temp.example"), "Mozilla"), None);
+    assert!(w.maintain(now));
+    assert!(w.snapshot(now).domain_blacklist.iter().all(|e| e.value != "temp.example"));
+}
+
+#[test]
 fn persistence_round_trip() {
     let w = temp_waf("persist");
     let now = Utc::now();
@@ -417,6 +482,95 @@ async fn admin_api_rules_add_remove_validate_and_protect() {
 }
 
 #[tokio::test]
+async fn pipeline_domain_blocking() {
+    let now = Utc::now();
+    // builtin: Origin host (any subdomain), Referer fallback, Origin wins
+    let r = Req::get("/health", "203.0.113.120").header("origin", "https://App.NDST.pw:443").send().await;
+    assert_eq!(r.status(), StatusCode::FORBIDDEN);
+    assert_eq!(text(r).await, "Forbidden");
+    let r = Req::get("/health", "203.0.113.120").header("referer", "https://lampa.click/x?y=1").send().await;
+    assert_eq!(r.status(), StatusCode::FORBIDDEN);
+    let r = Req::get("/health", "203.0.113.120").header("origin", "https://ok.example").header("referer", "https://ndst.pw/").send().await;
+    assert_eq!(r.status(), StatusCode::OK);
+    let r = Req::get("/health", "203.0.113.120").header("origin", "https://ndst.pw").header("referer", "https://ok.example/").send().await;
+    assert_eq!(r.status(), StatusCode::FORBIDDEN);
+    assert_eq!(Req::get("/health", "203.0.113.120").header("origin", "https://notndst.pw").send().await.status(), StatusCode::OK);
+    assert!(ban_reason("203.0.113.120").is_none());
+    let log = logged("203.0.113.120");
+    assert_eq!(log[1]["blocked"], "domain");
+    assert_eq!(log[1]["origin"], "ndst.pw");
+    assert_eq!(log[2]["origin"], "ok.example");
+    assert!(log.iter().all(|e| e["blocked"].is_null() || e["blocked"] == "domain"));
+
+    // whitelisted IP and LAN still blocked by the builtin list, loopback is not
+    WAF.upsert_rule(ListKind::Whitelist, IpNet::parse("203.0.113.121").unwrap(), String::new(), None, now);
+    assert_eq!(Req::get("/health", "203.0.113.121").header("origin", "https://xabb.ru").send().await.status(), StatusCode::FORBIDDEN);
+    assert_eq!(Req::get("/health", "192.168.1.60").header("origin", "https://xabb.ru").send().await.status(), StatusCode::FORBIDDEN);
+    assert_eq!(Req::get("/health", "127.0.0.1").header("origin", "https://xabb.ru").send().await.status(), StatusCode::OK);
+
+    // admin domain blacklist / whitelist
+    WAF.upsert_domain(DomainKind::Blacklist, "pipe-bad.example".into(), String::new(), None, now);
+    assert_eq!(Req::get("/health", "203.0.113.122").header("origin", "https://x.pipe-bad.example").send().await.status(), StatusCode::FORBIDDEN);
+    assert!(ban_reason("203.0.113.122").is_none());
+    WAF.upsert_domain(DomainKind::Whitelist, "pipe-good.example".into(), String::new(), None, now);
+    let r = Req::get("/.env", "203.0.113.123").header("origin", "https://pipe-good.example").ua("sqlmap").send().await;
+    assert_eq!(r.status(), StatusCode::NOT_FOUND);
+    assert!(ban_reason("203.0.113.123").is_none());
+}
+
+#[tokio::test]
+async fn admin_api_domain_rules() {
+    let me = "203.0.113.93";
+    let post = |body: &str| Req::new(Method::POST, "/admin/api/waf/rules", me).admin().body(body).send();
+    let del = |q: &str| Req::new(Method::DELETE, &format!("/admin/api/waf/rules?{q}"), me).admin().send();
+
+    for (body, needle) in [
+        (r#"{"list":"domainWhitelist","value":"ndst.pw"}"#, "заблокирован встроенным списком и не может быть разрешён"),
+        (r#"{"list":"domainWhitelist","value":"https://a.MYDS.me/x"}"#, "заблокирован встроенным списком и не может быть разрешён"),
+        (r#"{"list":"domainBlacklist","value":"lampa.land"}"#, "уже заблокирован встроенным списком"),
+        (r#"{"list":"domainBlacklist","value":"no_dot"}"#, "некорректный домен"),
+        (r#"{"list":"domainBlacklist","value":"localhost"}"#, "некорректный домен"),
+        (r#"{"list":"domains","value":"a.example"}"#, "domainBlacklist"),
+    ] {
+        let r = post(body).await;
+        assert_eq!(r.status(), StatusCode::BAD_REQUEST, "{body}");
+        let v = json(r).await;
+        assert_eq!(v["ok"], false);
+        assert!(v["error"].as_str().unwrap().contains(needle), "{body}: {v}");
+    }
+    assert_eq!(del("list=domainBlacklist&value=ndst.pw").await.status(), StatusCode::BAD_REQUEST);
+    assert_eq!(del("list=domainWhitelist&value=usph.xyz").await.status(), StatusCode::BAD_REQUEST);
+
+    let r = post(r#"{"list":"domainBlacklist","value":"*.API-Bad.example","comment":"парсер","expiresMinutes":60}"#).await;
+    assert_eq!(json(r).await["ok"], true);
+    assert_eq!(post(r#"{"list":"domainWhitelist","value":"https://api-good.example:8443/app"}"#).await.status(), StatusCode::OK);
+
+    let rules = json(Req::get("/admin/api/waf/rules", me).admin().send().await).await;
+    let builtin: Vec<&str> = rules["builtinDomains"].as_array().unwrap().iter().map(|v| v.as_str().unwrap()).collect();
+    assert_eq!(builtin, domains::BUILTIN_BLOCKED_DOMAINS);
+    let e = rules["domainBlacklist"].as_array().unwrap().iter().find(|e| e["value"] == "api-bad.example").unwrap().clone();
+    assert_eq!(e["comment"], "парсер");
+    assert!(e["expires"].is_string());
+    assert!(rules["domainWhitelist"].as_array().unwrap().iter().any(|e| e["value"] == "api-good.example"));
+    assert!(rules["config"]["domainAllowlistOnly"].is_boolean());
+
+    assert_eq!(Req::get("/health", "203.0.113.124").header("origin", "http://x.api-bad.example").send().await.status(), StatusCode::FORBIDDEN);
+    let r = json(Req::get("/admin/api/waf/requests?origin=API-BAD&blocked=domain", me).admin().send().await).await;
+    let rows = r.as_array().unwrap();
+    assert_eq!(rows.len(), 1);
+    assert_eq!(rows[0]["origin"], "x.api-bad.example");
+    let o = json(Req::get("/admin/api/waf/overview", me).admin().send().await).await;
+    assert!(o["blockedByReason"]["domain"].as_u64().unwrap() >= 1);
+    assert!(o["topOrigins"].as_array().unwrap().iter().any(|t| t["origin"] == "x.api-bad.example" && t["blocked"].as_u64() >= Some(1)));
+
+    assert_eq!(del("list=domainBlacklist&value=api-bad.example").await.status(), StatusCode::OK);
+    assert_eq!(del("list=domainBlacklist&value=api-bad.example").await.status(), StatusCode::NOT_FOUND);
+    assert_eq!(del("list=domainWhitelist&value=%2A.api-good.example").await.status(), StatusCode::OK);
+    assert_eq!(del("list=domainWhitelist&value=bad_value").await.status(), StatusCode::BAD_REQUEST);
+    assert_eq!(Req::get("/health", "203.0.113.124").header("origin", "http://x.api-bad.example").send().await.status(), StatusCode::OK);
+}
+
+#[tokio::test]
 async fn admin_api_ban_and_lift() {
     let me = "203.0.113.91";
     let ban = |body: &str| Req::new(Method::POST, "/admin/api/waf/ban", me).admin().body(body).send();
@@ -461,11 +615,11 @@ async fn admin_api_statistics_endpoints() {
     for k in ["2xx", "3xx", "4xx", "5xx"] {
         assert!(o["statusCodes"][k].is_u64(), "{k}");
     }
-    for k in ["blacklist", "ban", "ua", "trap", "rate"] {
+    for k in ["blacklist", "ban", "ua", "trap", "rate", "domain"] {
         assert!(o["blockedByReason"][k].is_u64(), "{k}");
     }
     assert_eq!(o["timeline"].as_array().unwrap().len(), 60);
-    assert!(o["topIps"].is_array() && o["topPaths"].is_array() && o["since"].is_string());
+    assert!(o["topIps"].is_array() && o["topPaths"].is_array() && o["topOrigins"].is_array() && o["since"].is_string());
     let o = json(Req::get("/admin/api/waf/overview?window=24h", me).admin().send().await).await;
     assert_eq!(o["timeline"].as_array().unwrap().len(), 144);
 

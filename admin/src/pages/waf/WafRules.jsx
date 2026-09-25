@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router'
-import { AlertTriangle, Plus, RefreshCw, RotateCcw, Settings, Trash2, Unlock } from 'lucide-react'
+import { AlertTriangle, Globe, Lock, Plus, RefreshCw, RotateCcw, Settings, Trash2, Unlock } from 'lucide-react'
 import { addWafRule, deleteWafRule, resetWafStats, unbanWafIp } from '../../lib/api.js'
 import { useConfirm } from '../../components/Confirm.jsx'
 import { ErrorBox, Spinner, StatusDot } from '../../components/ui.jsx'
@@ -9,8 +9,10 @@ import { Empty, ReasonBadge, RuleDialog, SETTINGS_WAF, useWafAction } from './sh
 import { useWaf } from './Waf.jsx'
 
 const LISTS = {
-  blacklist: { title: 'Чёрный список', hint: 'Запросы получают 403 Forbidden', add: 'Заблокировать' },
+  blacklist: { title: 'Чёрный список', hint: 'Запросы получают 403 Forbidden', add: 'Заблокировать', danger: true },
   whitelist: { title: 'Белый список', hint: 'Без лимитов, ловушек и банов', add: 'Добавить' },
+  domainBlacklist: { title: 'Чёрный список доменов', hint: 'Origin/Referer домена и поддоменов → 403, без бана', add: 'Заблокировать', danger: true },
+  domainWhitelist: { title: 'Белый список доменов', hint: 'Без лимита, ловушек и фильтра User-Agent', add: 'Разрешить' },
 }
 
 function expiresText(value) {
@@ -20,18 +22,19 @@ function expiresText(value) {
   return left > 0 ? `ещё ${formatDuration(left)}` : 'истекло'
 }
 
-function ListSection({ list, entries, onAdd, onDelete }) {
+function ListSection({ list, entries, onAdd, onDelete, nested = false }) {
   const meta = LISTS[list]
+  const Heading = nested ? 'h3' : 'h2'
   return (
     <section className="card min-w-0 p-5" aria-labelledby={`waf-${list}`}>
       <div className="mb-3 flex flex-wrap items-start justify-between gap-2">
         <div>
-          <h2 id={`waf-${list}`} className="font-semibold">
+          <Heading id={`waf-${list}`} className="font-semibold">
             {meta.title} <span className="text-sm font-normal text-muted">· {entries.length}</span>
-          </h2>
+          </Heading>
           <p className="text-xs text-muted">{meta.hint}</p>
         </div>
-        <button type="button" className={`btn btn-sm ${list === 'blacklist' ? 'btn-danger' : 'btn-primary'}`} onClick={onAdd}>
+        <button type="button" className={`btn btn-sm ${meta.danger ? 'btn-danger' : 'btn-primary'}`} onClick={onAdd}>
           <Plus className="size-4" aria-hidden="true" /> {meta.add}
         </button>
       </div>
@@ -60,6 +63,56 @@ function ListSection({ list, entries, onAdd, onDelete }) {
   )
 }
 
+function BuiltinDomains({ domains }) {
+  return (
+    <section className="card min-w-0 p-5" aria-labelledby="waf-builtin-domains">
+      <div className="mb-3 flex items-start gap-2">
+        <Lock className="mt-0.5 size-4 shrink-0 text-muted" aria-hidden="true" />
+        <div>
+          <h3 id="waf-builtin-domains" className="font-semibold">
+            Встроенные заблокированные домены <span className="text-sm font-normal text-muted">· {domains.length}</span>
+          </h3>
+          <p className="text-xs text-muted">
+            Встроенный список, изменить нельзя: он зашит в программу. Запросы с этих доменов и их поддоменов получают 403 всегда — даже с IP из белого списка и из
+            LAN (кроме localhost).
+          </p>
+        </div>
+      </div>
+      {domains.length ? (
+        <ul className="flex flex-wrap gap-1.5" aria-label="Встроенный список доменов">
+          {domains.map((d) => (
+            <li key={d} className="inline-flex items-center gap-1 rounded bg-surface-2 px-1.5 py-0.5 font-mono text-xs" title="Встроенный список, изменить нельзя">
+              <Lock className="size-3 text-muted" aria-hidden="true" />
+              {d}
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <Empty>Список пуст</Empty>
+      )}
+    </section>
+  )
+}
+
+function AllowlistOnlyState({ value }) {
+  return (
+    <div className="flex flex-wrap items-center gap-3 text-sm">
+      <span className="text-muted">
+        Только разрешённые домены <span className="font-mono text-[11px] opacity-70">waf.domainAllowlistOnly</span>
+      </span>
+      <StatusDot tone={value ? 'warn' : 'muted'} label={value ? 'включено' : 'выключено'} />
+      <span className="text-xs text-muted">
+        {value
+          ? 'Запросы с Origin/Referer не из белого списка доменов и не с этого сервера получают 403.'
+          : 'Запросы с любых доменов, кроме заблокированных, пропускаются.'}
+      </span>
+      <Link to={SETTINGS_WAF} className="btn btn-sm ml-auto">
+        <Settings className="size-4" aria-hidden="true" /> Изменить в настройках
+      </Link>
+    </div>
+  )
+}
+
 const CONFIG_ROWS = [
   ['enable', 'Включён'],
   ['logRequests', 'Журнал запросов'],
@@ -71,6 +124,7 @@ const CONFIG_ROWS = [
   ['trapBanMinutes', 'Бан за ловушку, мин'],
   ['blockUserAgents', 'Блокируемые User-Agent'],
   ['whitelistLan', 'LAN без ограничений'],
+  ['domainAllowlistOnly', 'Только разрешённые домены'],
 ]
 
 function ConfigValue({ value }) {
@@ -100,6 +154,8 @@ export function WafRules() {
   const [adding, setAdding] = useState(null)
   const data = rules.data || {}
   const bans = Array.isArray(data.bans) ? data.bans : []
+  const builtinDomains = Array.isArray(data.builtinDomains) ? data.builtinDomains : []
+  const entries = (list) => (Array.isArray(data[list]) ? data[list] : [])
 
   const remove = async (list, entry) => {
     const ok = await confirm({
@@ -153,12 +209,33 @@ export function WafRules() {
           <ListSection
             key={list}
             list={list}
-            entries={Array.isArray(data[list]) ? data[list] : []}
+            entries={entries(list)}
             onAdd={() => setAdding(list)}
             onDelete={(e) => remove(list, e)}
           />
         ))}
       </div>
+
+      <section aria-labelledby="waf-domains" className="space-y-4">
+        <div>
+          <h2 id="waf-domains" className="flex items-center gap-2 font-semibold">
+            <Globe className="size-4 text-muted" aria-hidden="true" /> Домены
+          </h2>
+          <p className="text-xs text-muted">
+            Домен запроса — хост заголовка Origin, а если его нет — Referer. Правило example.com действует и на все поддомены. Запросы без Origin и Referer по домену не
+            блокируются; за блокировку по домену IP не банится.
+          </p>
+        </div>
+        <div className="card p-4">
+          <AllowlistOnlyState value={!!data.config?.domainAllowlistOnly} />
+        </div>
+        <BuiltinDomains domains={builtinDomains} />
+        <div className="grid gap-6 lg:grid-cols-2">
+          {['domainBlacklist', 'domainWhitelist'].map((list) => (
+            <ListSection key={list} nested list={list} entries={entries(list)} onAdd={() => setAdding(list)} onDelete={(e) => remove(list, e)} />
+          ))}
+        </div>
+      </section>
 
       <section aria-labelledby="waf-bans">
         <div className="mb-3 flex items-center justify-between gap-2">
@@ -248,6 +325,7 @@ export function WafRules() {
         open={!!adding}
         list={adding || 'blacklist'}
         you={you}
+        builtinDomains={builtinDomains}
         onClose={() => setAdding(null)}
         onSubmit={(payload) => run(() => addWafRule(payload), `Добавлено: ${payload.value}`, rules.reload)}
       />

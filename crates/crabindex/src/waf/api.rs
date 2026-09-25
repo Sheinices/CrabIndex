@@ -8,9 +8,10 @@ use chrono::{DateTime, Duration, Utc};
 use serde_json::{json, Value};
 use std::net::IpAddr;
 
+use super::domains::{self, BUILTIN_BLOCKED_DOMAINS};
 use super::net::{loopback_nets, IpNet};
 use super::stats::{RequestFilter, MAX_IPS};
-use super::store::{iso, ListEntry, ListKind};
+use super::store::{iso, DomainKind, ListEntry, ListKind};
 use super::{client_ip, save_in_background, WAF};
 use crate::admin::json_response;
 use crate::config_api::schema::MAX_WAF_HISTORY;
@@ -20,6 +21,31 @@ const DEFAULT_LIMIT: usize = 200;
 /// Longest accepted ban / rule lifetime (10 years).
 const MAX_MINUTES: i64 = 10 * 365 * 24 * 60;
 const MAX_COMMENT: usize = 200;
+const LIST_EXPECTED: &str = "list: blacklist, whitelist, domainBlacklist or domainWhitelist expected";
+
+/// `list` of `waf/rules`: an IP list or an admin domain list.
+enum AnyList {
+    Ip(ListKind),
+    Domain(DomainKind),
+}
+
+fn parse_list(s: &str) -> Option<AnyList> {
+    ListKind::parse(s).map(AnyList::Ip).or_else(|| DomainKind::parse(s).map(AnyList::Domain))
+}
+
+/// A domain rule accepted for `kind`: builtin blocked domains can be neither allowed nor
+/// (redundantly) blocked from the admin API.
+pub fn domain_rule(kind: DomainKind, value: &str) -> Result<String, String> {
+    let d = domains::parse_rule(value)?;
+    if let Some(b) = domains::builtin_blocked(&d) {
+        return Err(match kind {
+            DomainKind::Whitelist if b == d => format!("{d} заблокирован встроенным списком и не может быть разрешён"),
+            DomainKind::Whitelist => format!("{d} (поддомен {b}) заблокирован встроенным списком и не может быть разрешён"),
+            DomainKind::Blacklist => format!("{d} уже заблокирован встроенным списком"),
+        });
+    }
+    Ok(d)
+}
 
 fn query_map(raw: Option<&str>) -> Vec<(String, String)> {
     raw.map(|q| url::form_urlencoded::parse(q.as_bytes()).into_owned().collect()).unwrap_or_default()
@@ -113,6 +139,7 @@ pub async fn handle(req: Request, sub: &str) -> Response {
             let f = RequestFilter {
                 ip: param(&q, "ip").map(|s| s.trim().to_string()),
                 path: param(&q, "path").map(|s| s.trim().to_string()),
+                origin: param(&q, "origin").map(|s| s.trim().to_string()),
                 status: param(&q, "status").map(|s| s.trim().to_string()),
                 blocked: param(&q, "blocked").map(|s| s.trim().to_string()),
                 limit: limit(&q, MAX_WAF_HISTORY as usize),
@@ -128,6 +155,9 @@ pub async fn handle(req: Request, sub: &str) -> Response {
                     "blacklist": f.blacklist.iter().map(entry_json).collect::<Vec<_>>(),
                     "whitelist": f.whitelist.iter().map(entry_json).collect::<Vec<_>>(),
                     "bans": f.bans.iter().map(|b| json!({ "ip": b.ip, "reason": b.reason, "created": iso(&b.created), "expires": iso(&b.expires) })).collect::<Vec<_>>(),
+                    "domainBlacklist": f.domain_blacklist.iter().map(entry_json).collect::<Vec<_>>(),
+                    "domainWhitelist": f.domain_whitelist.iter().map(entry_json).collect::<Vec<_>>(),
+                    "builtinDomains": BUILTIN_BLOCKED_DOMAINS,
                     "config": serde_json::to_value(&c.waf).unwrap_or(Value::Null),
                     "you": client_ip(&req).map(|i| i.to_string()),
                 }),
@@ -148,9 +178,24 @@ pub async fn handle(req: Request, sub: &str) -> Response {
             }
         }
         (Method::DELETE, "rules") => {
-            let Some(kind) = param(&q, "list").and_then(ListKind::parse) else { return bad("list: blacklist or whitelist expected") };
-            let Some(net) = param(&q, "value").and_then(IpNet::parse) else { return bad("value: invalid IP address or CIDR") };
-            if !WAF.remove_rule(kind, net) {
+            let removed = match param(&q, "list").and_then(parse_list) {
+                None => return bad(LIST_EXPECTED),
+                Some(AnyList::Ip(kind)) => {
+                    let Some(net) = param(&q, "value").and_then(IpNet::parse) else { return bad("value: invalid IP address or CIDR") };
+                    WAF.remove_rule(kind, net)
+                }
+                Some(AnyList::Domain(kind)) => {
+                    let d = match domains::parse_rule(param(&q, "value").unwrap_or("")) {
+                        Ok(d) => d,
+                        Err(e) => return bad(e),
+                    };
+                    if BUILTIN_BLOCKED_DOMAINS.contains(&d.as_str()) {
+                        return bad(format!("{d} входит во встроенный список и не может быть удалён"));
+                    }
+                    WAF.remove_domain(kind, &d)
+                }
+            };
+            if !removed {
                 return not_found();
             }
             save_in_background();
@@ -196,7 +241,15 @@ fn expiry(v: &Value, name: &str, now: DateTime<Utc>, required: bool) -> Result<O
 }
 
 pub fn add_rule(v: &Value, you: Option<IpAddr>, now: DateTime<Utc>) -> Result<(), String> {
-    let kind = ListKind::parse(str_field(v, "list")).ok_or("list: blacklist or whitelist expected")?;
+    let kind = match parse_list(str_field(v, "list")).ok_or(LIST_EXPECTED)? {
+        AnyList::Ip(kind) => kind,
+        AnyList::Domain(kind) => {
+            let d = domain_rule(kind, str_field(v, "value"))?;
+            let expires = expiry(v, "expiresMinutes", now, false)?;
+            WAF.upsert_domain(kind, d, clip(str_field(v, "comment"), MAX_COMMENT), expires, now);
+            return Ok(());
+        }
+    };
     let net = IpNet::parse(str_field(v, "value")).ok_or("value: invalid IP address or CIDR")?;
     let expires = expiry(v, "expiresMinutes", now, false)?;
     if kind == ListKind::Blacklist {

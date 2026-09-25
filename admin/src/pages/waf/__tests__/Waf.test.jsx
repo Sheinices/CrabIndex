@@ -13,7 +13,20 @@ const RULES = {
   blacklist: [{ value: '203.0.113.7', comment: 'сканер', created: '2026-09-20T10:00:00Z', expires: null }],
   whitelist: [{ value: '198.51.100.0/24', comment: 'офис', created: '2026-09-20T10:00:00Z', expires: null }],
   bans: [{ ip: '192.0.2.10', reason: 'rate', created: '2026-09-25T10:00:00Z', expires: '2099-01-01T00:00:00Z' }],
-  config: { enable: true, logRequests: true, historySize: 5000, rateLimit: { enable: true, perMinute: 300, banMinutes: 15 }, trapPaths: ['/.env'], trapBanMinutes: 1440, blockUserAgents: [], whitelistLan: true },
+  domainBlacklist: [{ value: 'spam.example', comment: 'парсер', created: '2026-09-20T10:00:00Z', expires: null }],
+  domainWhitelist: [{ value: 'friend.example', comment: '', created: '2026-09-20T10:00:00Z', expires: null }],
+  builtinDomains: ['ndst.pw', 'myds.me', 'lampa.stream'],
+  config: {
+    enable: true,
+    logRequests: true,
+    historySize: 5000,
+    rateLimit: { enable: true, perMinute: 300, banMinutes: 15 },
+    trapPaths: ['/.env'],
+    trapBanMinutes: 1440,
+    blockUserAgents: [],
+    whitelistLan: true,
+    domainAllowlistOnly: true,
+  },
   you: '192.168.1.10',
 }
 
@@ -70,7 +83,7 @@ describe('WAF rules tab', () => {
     expect(await screen.findByText('203.0.113.7')).toBeInTheDocument()
     expect(screen.getByRole('note')).toHaveTextContent('192.168.1.10')
 
-    const section = screen.getByRole('region', { name: /Чёрный список/ })
+    const section = screen.getByRole('region', { name: /^Чёрный список ·/ })
     await userEvent.click(within(section).getByRole('button', { name: /Заблокировать/ }))
     const dialog = await screen.findByRole('dialog')
     const input = within(dialog).getByLabelText('IP-адрес или CIDR')
@@ -123,6 +136,72 @@ describe('WAF rules tab', () => {
     expect(toast.closest('[role="alert"]')).toHaveTextContent('Ошибка WAF')
   })
 
+  it('renders the builtin domain list read-only with the allowlist-only state', async () => {
+    stubFetch()
+    renderAt('/waf/rules')
+    const builtin = await screen.findByRole('region', { name: /Встроенные заблокированные домены/ })
+    expect(builtin).toHaveTextContent('Встроенный список, изменить нельзя')
+    const items = within(within(builtin).getByRole('list', { name: 'Встроенный список доменов' })).getAllByRole('listitem')
+    expect(items.map((li) => li.textContent)).toEqual(['ndst.pw', 'myds.me', 'lampa.stream'])
+    expect(within(builtin).queryAllByRole('button')).toHaveLength(0)
+    expect(screen.queryByRole('button', { name: /Удалить ndst\.pw/ })).not.toBeInTheDocument()
+    expect(screen.getByText('включено')).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /Изменить в настройках/ })).toHaveAttribute('href', '/settings?group=waf')
+  })
+
+  it('validates and adds a domain, refusing builtin conflicts client-side', async () => {
+    const fetch = stubFetch()
+    renderAt('/waf/rules')
+    const section = await screen.findByRole('region', { name: /^Белый список доменов/ })
+    expect(within(section).getByText('friend.example')).toBeInTheDocument()
+    await userEvent.click(within(section).getByRole('button', { name: /Разрешить/ }))
+    const dialog = await screen.findByRole('dialog')
+    const input = within(dialog).getByLabelText('Домен')
+
+    await userEvent.type(input, 'no_dot')
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Добавить' }))
+    expect(within(dialog).getByRole('alert')).toHaveTextContent(/Некорректный домен/)
+
+    await userEvent.clear(input)
+    await userEvent.type(input, 'https://app.ndst.pw/')
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Добавить' }))
+    expect(within(dialog).getByRole('alert')).toHaveTextContent('app.ndst.pw заблокирован встроенным списком и не может быть разрешён')
+    expect(calls(fetch, 'POST', 'waf/rules')).toHaveLength(0)
+
+    await userEvent.clear(input)
+    await userEvent.type(input, '*.My-Lampa.example')
+    await userEvent.type(within(dialog).getByLabelText(/Комментарий/), 'своя')
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Добавить' }))
+    await waitFor(() => expect(calls(fetch, 'POST', 'waf/rules')).toHaveLength(1))
+    expect(JSON.parse(calls(fetch, 'POST', 'waf/rules')[0][1].body)).toEqual({ list: 'domainWhitelist', value: 'my-lampa.example', comment: 'своя' })
+    expect(await screen.findByText('Добавлено: my-lampa.example')).toBeInTheDocument()
+  })
+
+  it('shows a server-side builtin conflict as an error', async () => {
+    stubFetch({ 'POST waf/rules': () => json({ ok: false, error: 'x.lampa.stream заблокирован встроенным списком и не может быть разрешён' }, 400) })
+    renderAt('/waf/rules')
+    const section = await screen.findByRole('region', { name: /^Чёрный список доменов/ })
+    await userEvent.click(within(section).getByRole('button', { name: /Заблокировать/ }))
+    const dialog = await screen.findByRole('dialog')
+    await userEvent.type(within(dialog).getByLabelText('Домен'), 'other.example')
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Заблокировать' }))
+    expect(await screen.findByText('x.lampa.stream заблокирован встроенным списком и не может быть разрешён')).toBeInTheDocument()
+    expect(screen.getByRole('dialog')).toBeInTheDocument()
+  })
+
+  it('deletes a domain blacklist entry after confirmation', async () => {
+    const fetch = stubFetch()
+    renderAt('/waf/rules')
+    await userEvent.click(await screen.findByRole('button', { name: 'Удалить spam.example из списка «Чёрный список доменов»' }))
+    const dialog = await screen.findByRole('dialog', { name: 'Удалить правило?' })
+    expect(calls(fetch, 'DELETE', 'waf/rules')).toHaveLength(0)
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Удалить' }))
+    await waitFor(() => expect(calls(fetch, 'DELETE', 'waf/rules')).toHaveLength(1))
+    const url = new URL(String(calls(fetch, 'DELETE', 'waf/rules')[0][0]), 'http://x')
+    expect(url.searchParams.get('list')).toBe('domainBlacklist')
+    expect(url.searchParams.get('value')).toBe('spam.example')
+  })
+
   it('resets statistics after confirmation', async () => {
     const fetch = stubFetch()
     renderAt('/waf/rules')
@@ -172,5 +251,21 @@ describe('WAF log filters', () => {
     await userEvent.click(screen.getByRole('button', { name: '5.188.62.140' }))
     await waitFor(() => expect(lastQuery(fetch)).toMatchObject({ ip: '5.188.62.140' }))
     expect(screen.getByLabelText('IP')).toHaveValue('5.188.62.140')
+  })
+
+  it('shows the origin column and filters by origin', async () => {
+    const fetch = stubFetch({
+      'GET waf/requests': () =>
+        json([{ time: '2026-09-25T10:00:00Z', ip: '176.59.40.12', method: 'GET', path: '/api/v1.0/torrents', status: 403, ms: 0, ua: 'Lampa', blocked: 'domain', origin: 'app.ndst.pw' }]),
+    })
+    renderAt('/waf/log')
+    expect(await screen.findByText('Домен', { selector: '.badge' })).toBeInTheDocument()
+    expect(within(screen.getByRole('table')).getByRole('columnheader', { name: 'Origin' })).toBeInTheDocument()
+    await userEvent.click(screen.getByRole('button', { name: 'app.ndst.pw' }))
+    await waitFor(() => expect(lastQuery(fetch)).toMatchObject({ origin: 'app.ndst.pw' }))
+    expect(screen.getByLabelText('Домен (Origin)')).toHaveValue('app.ndst.pw')
+    await userEvent.clear(screen.getByLabelText('Домен (Origin)'))
+    await userEvent.type(screen.getByLabelText('Домен (Origin)'), 'LAMPA{Enter}')
+    await waitFor(() => expect(lastQuery(fetch)).toEqual({ origin: 'lampa', limit: '200' }))
   })
 })

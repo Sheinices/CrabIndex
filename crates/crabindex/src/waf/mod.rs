@@ -1,21 +1,28 @@
-//! Web application firewall: IP lists, bans, User-Agent / trap-path filters, per-IP rate
-//! limit and the in-memory request log shown in the admin panel.
+//! Web application firewall: IP and domain lists, bans, User-Agent / trap-path filters,
+//! per-IP rate limit and the in-memory request log shown in the admin panel.
 //!
 //! Evaluated right after the client network is captured (so the real client IP is known),
-//! before the admin panel, static files and routing:
+//! before the admin panel, static files and routing. The request domain is the `Origin`
+//! host, else the `Referer` host (see [`domains`]); requests without both have none.
 //!
-//! 1. loopback → allowed (LAN too with `waf.whitelistLan`);
-//! 2. whitelist → allowed, nothing below applies;
-//! 3. blacklist or active ban → `403 Forbidden`;
-//! 4. `blockUserAgents` match → `403` + ban for `rateLimit.banMinutes` (reason `ua`);
-//! 5. `trapPaths` prefix → `404` + ban for `trapBanMinutes` (reason `trap`);
-//! 6. rate limit exceeded → `429` + `Retry-After` + ban for `rateLimit.banMinutes` (reason `rate`).
+//! 1. loopback → allowed;
+//! 2. domain in the compiled-in [`domains::BUILTIN_BLOCKED_DOMAINS`] → `403` (reason `domain`),
+//!    even for whitelisted IPs and LAN;
+//! 3. LAN with `waf.whitelistLan`, or IP whitelist → allowed, nothing below applies;
+//! 4. IP blacklist or active ban → `403 Forbidden`;
+//! 5. admin domain blacklist, or (`waf.domainAllowlistOnly`) a domain that is neither in the
+//!    admin domain whitelist nor the request's own `Host` → `403` (reason `domain`, no ban);
+//! 6. admin domain whitelist → allowed, the checks below are skipped;
+//! 7. `blockUserAgents` match → `403` + ban for `rateLimit.banMinutes` (reason `ua`);
+//! 8. `trapPaths` prefix → `404` + ban for `trapBanMinutes` (reason `trap`);
+//! 9. rate limit exceeded → `429` + `Retry-After` + ban for `rateLimit.banMinutes` (reason `rate`).
 //!
 //! Every request is recorded (when `waf.logRequests`) with its final status and duration.
 //! The query string is never stored. Lists and bans persist in `Data/waf.json`; statistics
 //! live in memory only.
 
 pub mod api;
+pub mod domains;
 pub mod limiter;
 pub mod net;
 pub mod stats;
@@ -43,7 +50,7 @@ use crate::security::request_network;
 use limiter::RateLimiter;
 use net::{is_loopback, unmap, IpNet};
 use stats::{LogEntry, Reason, Stats};
-use store::{ListKind, Lists};
+use store::{DomainKind, ListKind, Lists};
 
 /// Log category.
 pub const CAT: &str = "waf";
@@ -73,7 +80,16 @@ pub fn init() {
     let l = WAF.lists.read();
     crab_core::log::info(
         CAT,
-        format!("{}: {} blacklist, {} whitelist, {} bans", WAF.path.display(), l.blacklist.len(), l.whitelist.len(), l.bans.len()),
+        format!(
+            "{}: {} blacklist, {} whitelist, {} bans, {} domain blacklist, {} domain whitelist, {} builtin blocked domains",
+            WAF.path.display(),
+            l.blacklist.len(),
+            l.whitelist.len(),
+            l.bans.len(),
+            l.domain_blacklist.len(),
+            l.domain_whitelist.len(),
+            domains::BUILTIN_BLOCKED_DOMAINS.len()
+        ),
     );
 }
 
@@ -232,13 +248,39 @@ impl Waf {
         self.lists.write().ban(ip, reason.as_str(), now + minutes(m), now)
     }
 
-    /// Run the filter chain for one request; `None` = allowed.
+    /// Run the filter chain for a request without a domain; `None` = allowed.
+    #[cfg(test)]
     pub fn evaluate(&self, cfg: &WafSettings, ip: Option<IpAddr>, path: &str, ua: &str, now: DateTime<Utc>) -> Option<Block> {
-        let ip = unmap(ip?);
-        if is_loopback(ip) || (cfg.whitelistLan && is_local_or_private(Some(ip))) {
+        self.evaluate_request(cfg, ip, path, ua, None, None, now)
+    }
+
+    /// Run the filter chain for one request; `None` = allowed. `domain` is the normalised
+    /// `Origin`/`Referer` host, `own_host` the normalised `Host` of the request.
+    #[allow(clippy::too_many_arguments)]
+    pub fn evaluate_request(
+        &self,
+        cfg: &WafSettings,
+        ip: Option<IpAddr>,
+        path: &str,
+        ua: &str,
+        domain: Option<&str>,
+        own_host: Option<&str>,
+        now: DateTime<Utc>,
+    ) -> Option<Block> {
+        let forbidden = |reason| Block { reason, status: StatusCode::FORBIDDEN, retry_after: None, banned: false };
+        let ip = ip.map(unmap);
+        if ip.is_some_and(is_loopback) {
             return None;
         }
-        let forbidden = |reason| Block { reason, status: StatusCode::FORBIDDEN, retry_after: None, banned: false };
+        // Compiled-in list: applies to everyone but loopback, nothing can allow it.
+        if domain.is_some_and(|d| domains::builtin_blocked(d).is_some()) {
+            return Some(forbidden(Reason::Domain));
+        }
+        let ip = ip?;
+        if cfg.whitelistLan && is_local_or_private(Some(ip)) {
+            return None;
+        }
+        let domain_allowed;
         {
             let l = self.lists.read();
             if l.in_list(ListKind::Whitelist, ip, now) {
@@ -250,6 +292,18 @@ impl Waf {
             if l.ban_of(ip, now).is_some() {
                 return Some(forbidden(Reason::Ban));
             }
+            domain_allowed = domain.is_some_and(|d| l.domain_in(DomainKind::Whitelist, d, now));
+            if let Some(d) = domain {
+                if l.domain_in(DomainKind::Blacklist, d, now) {
+                    return Some(forbidden(Reason::Domain));
+                }
+                if cfg.domainAllowlistOnly && !domain_allowed && own_host != Some(d) {
+                    return Some(forbidden(Reason::Domain));
+                }
+            }
+        }
+        if domain_allowed {
+            return None;
         }
         if self.ua_blocked(&cfg.blockUserAgents, ua) {
             let banned = self.auto_ban(ip, Reason::Ua, cfg.rateLimit.banMinutes, now);
@@ -284,6 +338,19 @@ impl Waf {
         self.lists.write().remove(kind, net)
     }
 
+    pub fn upsert_domain(&self, kind: DomainKind, domain: String, comment: String, expires: Option<DateTime<Utc>>, now: DateTime<Utc>) {
+        self.lists.write().upsert_domain(kind, domain, comment, expires, now);
+    }
+
+    pub fn remove_domain(&self, kind: DomainKind, domain: &str) -> bool {
+        self.lists.write().remove_domain(kind, domain)
+    }
+
+    /// Active entries of the admin domain whitelist.
+    pub fn domain_whitelist_len(&self, now: DateTime<Utc>) -> usize {
+        self.lists.read().domain_whitelist.iter().filter(|e| e.expires.map(|x| x > now).unwrap_or(true)).count()
+    }
+
     pub fn ban(&self, ip: IpAddr, reason: &str, expires: DateTime<Utc>, now: DateTime<Utc>) {
         self.lists.write().set_ban(ip, reason, expires, now);
     }
@@ -293,11 +360,14 @@ impl Waf {
         self.lists.write().unban(ip)
     }
 
-    /// `(blacklist, whitelist, bans)` without expired entries.
+    /// All lists and bans without expired entries.
     pub fn snapshot(&self, now: DateTime<Utc>) -> store::WafFile {
         let mut f = self.lists.read().to_file();
-        f.blacklist.retain(|e| e.expires.map(|x| x > now).unwrap_or(true));
-        f.whitelist.retain(|e| e.expires.map(|x| x > now).unwrap_or(true));
+        let active = |e: &store::ListEntry| e.expires.map(|x| x > now).unwrap_or(true);
+        f.blacklist.retain(active);
+        f.whitelist.retain(active);
+        f.domain_blacklist.retain(active);
+        f.domain_whitelist.retain(active);
         f.bans.retain(|b| b.expires > now);
         f
     }
@@ -412,7 +482,17 @@ pub async fn waf_mw(req: Request, next: Next) -> Response {
     let ua = req.headers().get(header::USER_AGENT).and_then(|v| v.to_str().ok()).unwrap_or("");
     let ua = truncate(ua, MAX_UA_LEN).to_string();
 
-    let block = if cfg.enable { WAF.evaluate(cfg, ip, req.uri().path(), &ua, now) } else { None };
+    let h = req.headers();
+    let header_str = |name| h.get(name).and_then(|v: &HeaderValue| v.to_str().ok());
+    let domain = domains::request_domain(header_str(header::ORIGIN), header_str(header::REFERER))
+        .map(|d| truncate(&d, domains::MAX_DOMAIN_LEN).to_string());
+    let own_host = header_str(header::HOST).or_else(|| req.uri().host()).and_then(domains::normalize_host);
+
+    let block = if cfg.enable {
+        WAF.evaluate_request(cfg, ip, req.uri().path(), &ua, domain.as_deref(), own_host.as_deref(), now)
+    } else {
+        None
+    };
     if !cfg.logRequests && block.is_none() {
         return next.run(req).await;
     }
@@ -426,6 +506,7 @@ pub async fn waf_mw(req: Request, next: Next) -> Response {
         ms: 0,
         ua,
         blocked: block.map(|b| b.reason),
+        origin: domain,
     };
     let history = cfg.historySize.clamp(0, crate::config_api::schema::MAX_WAF_HISTORY) as usize;
 

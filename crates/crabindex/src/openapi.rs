@@ -35,10 +35,13 @@ pub fn yaml_to_json(yaml: &str) -> Result<String, String> {
     serde_json::to_string(&v).map_err(|e| e.to_string())
 }
 
-/// API version published in the spec: the crate version, so it always matches the binary.
-pub const API_VERSION: &str = env!("CARGO_PKG_VERSION");
+/// API version published in the spec: the build version (git tag, e.g. `1.0.0`) without the
+/// `+commit` build metadata, so it always matches the running binary.
+pub fn api_version() -> &'static str {
+    crate::version::VERSION.split('+').next().unwrap_or(crate::version::VERSION)
+}
 
-/// Replace `info.version` in the spec text with [`API_VERSION`].
+/// Replace `info.version` in the spec text with [`api_version`].
 pub fn stamp_version(yaml: &str) -> String {
     let mut in_info = false;
     let mut done = false;
@@ -48,7 +51,7 @@ pub fn stamp_version(yaml: &str) -> String {
             in_info = line.trim_end() == "info:";
         }
         if in_info && !done && line.starts_with("  version:") {
-            out.push_str(&format!("  version: {API_VERSION}\n"));
+            out.push_str(&format!("  version: {}\n", api_version()));
             done = true;
             continue;
         }
@@ -153,7 +156,7 @@ mod tests {
     fn spec_version_is_stamped() {
         let y = "openapi: 3.0.3\ninfo:\n  title: T\n  version: 9.9.9\ncomponents:\n  schemas:\n    X:\n      properties:\n        version:\n          type: string\n";
         let out = stamp_version(y);
-        assert!(out.contains(&format!("  version: {API_VERSION}\n")));
+        assert!(out.contains(&format!("  version: {}\n", api_version())));
         assert!(!out.contains("9.9.9"));
         assert!(out.contains("        version:\n"));
     }

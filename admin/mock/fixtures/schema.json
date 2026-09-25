@@ -255,6 +255,16 @@
      "min": null,
      "max": null,
      "enumValues": null
+    },
+    {
+     "key": "waf.domainAllowlistOnly",
+     "type": "bool",
+     "label": "Только разрешённые домены",
+     "description": "Запросы с Origin/Referer не из белого списка доменов и не с этого сервера → 403. Без Origin/Referer - пропускаются",
+     "sensitive": false,
+     "min": null,
+     "max": null,
+     "enumValues": null
     }
    ]
   },

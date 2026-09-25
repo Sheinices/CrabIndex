@@ -1,10 +1,11 @@
-//! Dynamic WAF lists (blacklist, whitelist, bans) and their `Data/waf.json` file.
+//! Dynamic WAF lists (IP and domain blacklist / whitelist, bans) and their `Data/waf.json` file.
 
 use chrono::{DateTime, SecondsFormat, Utc};
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use std::collections::HashMap;
 use std::net::IpAddr;
 
+use super::domains;
 use super::net::{unmap, IpNet};
 
 /// ISO-8601 UTC with second precision (`2026-01-02T03:04:05Z`).
@@ -49,7 +50,7 @@ mod iso_serde {
     }
 }
 
-/// Blacklist / whitelist entry (`value` is an address or CIDR in canonical form).
+/// Blacklist / whitelist entry (`value` is an address or CIDR, or a domain, in canonical form).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct ListEntry {
     pub value: String,
@@ -72,13 +73,17 @@ pub struct BanEntry {
     pub expires: DateTime<Utc>,
 }
 
-/// On-disk document.
+/// On-disk document (every list is optional: older files without the domain lists load).
 #[derive(Clone, Debug, Default, Serialize, Deserialize)]
 #[serde(default)]
 pub struct WafFile {
     pub blacklist: Vec<ListEntry>,
     pub whitelist: Vec<ListEntry>,
     pub bans: Vec<BanEntry>,
+    #[serde(rename = "domainBlacklist")]
+    pub domain_blacklist: Vec<ListEntry>,
+    #[serde(rename = "domainWhitelist")]
+    pub domain_whitelist: Vec<ListEntry>,
 }
 
 #[derive(Clone, Debug)]
@@ -109,12 +114,50 @@ impl ListKind {
     }
 }
 
-/// In-memory lists (parsed networks, bans keyed by address).
+/// Admin domain lists (`waf/rules` `list` values `domainBlacklist` / `domainWhitelist`).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum DomainKind {
+    Blacklist,
+    Whitelist,
+}
+
+impl DomainKind {
+    pub fn parse(s: &str) -> Option<DomainKind> {
+        match s.trim().to_ascii_lowercase().as_str() {
+            "domainblacklist" => Some(DomainKind::Blacklist),
+            "domainwhitelist" => Some(DomainKind::Whitelist),
+            _ => None,
+        }
+    }
+}
+
+fn entry_active(e: &ListEntry, now: DateTime<Utc>) -> bool {
+    e.expires.map(|x| x > now).unwrap_or(true)
+}
+
+/// In-memory lists (parsed networks, bans keyed by address, canonical domain entries).
 #[derive(Debug, Default)]
 pub struct Lists {
     pub blacklist: Vec<Rule>,
     pub whitelist: Vec<Rule>,
     pub bans: HashMap<IpAddr, BanEntry>,
+    pub domain_blacklist: Vec<ListEntry>,
+    pub domain_whitelist: Vec<ListEntry>,
+}
+
+/// Canonical, active, deduplicated domain entries. Builtin blocked domains are never kept in
+/// the whitelist (they cannot be allowed from the file either) and are redundant in the blacklist.
+fn domains_from(entries: Vec<ListEntry>, now: DateTime<Utc>) -> Vec<ListEntry> {
+    let mut out: Vec<ListEntry> = Vec::new();
+    for mut e in entries {
+        let Ok(d) = domains::parse_rule(&e.value) else { continue };
+        if domains::builtin_blocked(&d).is_some() || !entry_active(&e, now) || out.iter().any(|x| x.value == d) {
+            continue;
+        }
+        e.value = d;
+        out.push(e);
+    }
+    out
 }
 
 fn rules_from(entries: Vec<ListEntry>, now: DateTime<Utc>) -> Vec<Rule> {
@@ -141,7 +184,13 @@ impl Lists {
                 bans.insert(ip, b);
             }
         }
-        Lists { blacklist: rules_from(f.blacklist, now), whitelist: rules_from(f.whitelist, now), bans }
+        Lists {
+            blacklist: rules_from(f.blacklist, now),
+            whitelist: rules_from(f.whitelist, now),
+            bans,
+            domain_blacklist: domains_from(f.domain_blacklist, now),
+            domain_whitelist: domains_from(f.domain_whitelist, now),
+        }
     }
 
     pub fn to_file(&self) -> WafFile {
@@ -151,6 +200,8 @@ impl Lists {
             blacklist: self.blacklist.iter().map(|r| r.entry.clone()).collect(),
             whitelist: self.whitelist.iter().map(|r| r.entry.clone()).collect(),
             bans,
+            domain_blacklist: self.domain_blacklist.clone(),
+            domain_whitelist: self.domain_whitelist.clone(),
         }
     }
 
@@ -170,6 +221,42 @@ impl Lists {
 
     pub fn in_list(&self, kind: ListKind, ip: IpAddr, now: DateTime<Utc>) -> bool {
         self.list(kind).iter().any(|r| r.active(now) && r.net.contains(ip))
+    }
+
+    pub fn domains(&self, kind: DomainKind) -> &Vec<ListEntry> {
+        match kind {
+            DomainKind::Blacklist => &self.domain_blacklist,
+            DomainKind::Whitelist => &self.domain_whitelist,
+        }
+    }
+
+    fn domains_mut(&mut self, kind: DomainKind) -> &mut Vec<ListEntry> {
+        match kind {
+            DomainKind::Blacklist => &mut self.domain_blacklist,
+            DomainKind::Whitelist => &mut self.domain_whitelist,
+        }
+    }
+
+    /// `host` (normalised) is covered by an active entry of the admin domain list.
+    pub fn domain_in(&self, kind: DomainKind, host: &str, now: DateTime<Utc>) -> bool {
+        self.domains(kind).iter().any(|e| entry_active(e, now) && domains::domain_matches(host, &e.value))
+    }
+
+    /// Add or replace (same domain) a canonical domain entry.
+    pub fn upsert_domain(&mut self, kind: DomainKind, domain: String, comment: String, expires: Option<DateTime<Utc>>, now: DateTime<Utc>) {
+        let entry = ListEntry { value: domain, comment, created: whole_secs(now), expires: expires.map(whole_secs) };
+        let list = self.domains_mut(kind);
+        match list.iter_mut().find(|e| e.value == entry.value) {
+            Some(e) => *e = entry,
+            None => list.push(entry),
+        }
+    }
+
+    pub fn remove_domain(&mut self, kind: DomainKind, domain: &str) -> bool {
+        let list = self.domains_mut(kind);
+        let before = list.len();
+        list.retain(|e| e.value != domain);
+        list.len() != before
     }
 
     /// Active ban of `ip` (expiry), if any.
@@ -220,16 +307,21 @@ impl Lists {
 
     /// Any entry or ban past its expiry?
     pub fn has_expired(&self, now: DateTime<Utc>) -> bool {
-        self.blacklist.iter().chain(self.whitelist.iter()).any(|r| !r.active(now)) || self.bans.values().any(|b| b.expires <= now)
+        self.blacklist.iter().chain(self.whitelist.iter()).any(|r| !r.active(now))
+            || self.bans.values().any(|b| b.expires <= now)
+            || self.domain_blacklist.iter().chain(self.domain_whitelist.iter()).any(|e| !entry_active(e, now))
     }
 
     /// Drop expired entries and bans; true when anything was removed.
     pub fn prune(&mut self, now: DateTime<Utc>) -> bool {
-        let before = self.blacklist.len() + self.whitelist.len() + self.bans.len();
+        let count = |l: &Lists| l.blacklist.len() + l.whitelist.len() + l.bans.len() + l.domain_blacklist.len() + l.domain_whitelist.len();
+        let before = count(self);
         self.blacklist.retain(|r| r.active(now));
         self.whitelist.retain(|r| r.active(now));
         self.bans.retain(|_, b| b.expires > now);
-        before != self.blacklist.len() + self.whitelist.len() + self.bans.len()
+        self.domain_blacklist.retain(|e| entry_active(e, now));
+        self.domain_whitelist.retain(|e| entry_active(e, now));
+        before != count(self)
     }
 }
 
@@ -292,6 +384,49 @@ mod tests {
         assert!(back.blacklist.is_empty() && back.bans.is_empty());
         let _ = std::fs::remove_file(&path);
         assert!(load(&path).unwrap().blacklist.is_empty());
+    }
+
+    #[test]
+    fn domain_lists_round_trip_and_old_files_load() {
+        let now = Utc::now();
+        let path = std::env::temp_dir().join(format!("crab-waf-store-domains-{}.json", std::process::id()));
+        // a file written before the domain lists existed
+        std::fs::write(&path, r#"{"blacklist":[{"value":"203.0.113.7","created":"2024-01-01T00:00:00Z"}],"whitelist":[],"bans":[]}"#).unwrap();
+        let f = load(&path).unwrap();
+        assert!(f.domain_blacklist.is_empty() && f.domain_whitelist.is_empty());
+        let mut l = Lists::from_file(f, now);
+        assert_eq!(l.blacklist.len(), 1);
+
+        l.upsert_domain(DomainKind::Blacklist, "evil.example".into(), "spam".into(), None, now);
+        l.upsert_domain(DomainKind::Whitelist, "friend.example".into(), String::new(), Some(now + Duration::hours(1)), now);
+        save(&path, &l.to_file()).unwrap();
+        let v: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(&path).unwrap()).unwrap();
+        assert_eq!(v["domainBlacklist"][0]["value"], "evil.example");
+        assert_eq!(v["domainBlacklist"][0]["comment"], "spam");
+        assert!(v["domainWhitelist"][0]["expires"].is_string());
+
+        let back = Lists::from_file(load(&path).unwrap(), now);
+        assert!(back.domain_in(DomainKind::Blacklist, "a.evil.example", now));
+        assert!(!back.domain_in(DomainKind::Blacklist, "notevil.example", now));
+        assert!(back.domain_in(DomainKind::Whitelist, "friend.example", now));
+        assert!(!back.domain_in(DomainKind::Whitelist, "friend.example", now + Duration::hours(2)));
+
+        // hand-edited file: invalid, duplicate and builtin entries are dropped, pasted URLs canonicalised
+        std::fs::write(
+            &path,
+            r#"{"domainWhitelist":[{"value":"ndst.pw","created":"2024-01-01T00:00:00Z"},{"value":"x.myds.me","created":"2024-01-01T00:00:00Z"},{"value":"https://OK.example/x","created":"2024-01-01T00:00:00Z"},{"value":"ok.example","created":"2024-01-01T00:00:00Z"}],
+               "domainBlacklist":[{"value":"no_dot","created":"2024-01-01T00:00:00Z"},{"value":"*.bad.example","created":"2024-01-01T00:00:00Z"}]}"#,
+        )
+        .unwrap();
+        let back = Lists::from_file(load(&path).unwrap(), now);
+        assert_eq!(back.domain_whitelist.iter().map(|e| e.value.as_str()).collect::<Vec<_>>(), ["ok.example"]);
+        assert_eq!(back.domain_blacklist.iter().map(|e| e.value.as_str()).collect::<Vec<_>>(), ["bad.example"]);
+        assert!(back.blacklist.is_empty());
+
+        let mut back = back;
+        assert!(back.remove_domain(DomainKind::Whitelist, "ok.example"));
+        assert!(!back.remove_domain(DomainKind::Whitelist, "ok.example"));
+        let _ = std::fs::remove_file(&path);
     }
 
     #[test]

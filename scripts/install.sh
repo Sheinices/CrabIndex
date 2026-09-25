@@ -13,6 +13,8 @@
 #   sudo scripts/install.sh --update [--bundle ... | --from-source]
 #   sudo scripts/install.sh --uninstall [--purge] [--yes]
 #   sudo scripts/install.sh --check
+#   curl -fsSL https://raw.githubusercontent.com/sheinices/crabindex/main/scripts/install.sh | sudo bash
+#     (no bundle and no sources next to the script → downloads the latest GitHub release)
 #
 # Environment: INSTALL_DIR (default /opt/crabindex), SERVICE_USER (default crabindex).
 set -euo pipefail
@@ -39,6 +41,8 @@ FROM_SOURCE=0
 CARGO_BIN=""
 SOURCE_DIR=""
 SKIP_DEPS=0
+RELEASE_TAG=""
+RELEASE_REPO="${CRABINDEX_REPO:-sheinices/crabindex}"
 PKG_MGR=""
 LISTEN_PORT=9117
 
@@ -67,6 +71,8 @@ usage() {
                       по умолчанию: каталог скрипта (если в нём есть crabindex) или ../dist
   --from-source [DIR] собрать из исходников (по умолчанию - репозиторий, где лежит скрипт);
                       недостающие gcc, pkg-config, git, Rust (rustup) и Node.js ставятся сами
+  --version vX.Y.Z    скачать этот релиз с GitHub (по умолчанию - последний, если нет
+                      ни комплекта, ни исходников рядом со скриптом)
   --admin-path /x     путь админ-панели без вопросов (один сегмент [a-z0-9_-], 2-32 символа)
   --yes, -y           не задавать вопросов (путь /admin, если не указан --admin-path)
   --update            обновить установленную версию (конфиг и данные сохраняются)
@@ -132,6 +138,15 @@ while [[ $# -gt 0 ]]; do
       ;;
     --check)
       MODE="check"
+      shift
+      ;;
+    --version)
+      [[ $# -ge 2 ]] || die "--version: укажите тег, например v1.0.0"
+      RELEASE_TAG="$2"
+      shift 2
+      ;;
+    --version=*)
+      RELEASE_TAG="${1#*=}"
       shift
       ;;
     --no-deps)
@@ -544,8 +559,26 @@ bundle_root_in() { # directory containing the crabindex binary (dir itself or on
   return 1
 }
 
+release_asset_url() { # URL of the release archive for this machine
+  local arch
+  case "$(uname -m)" in
+    x86_64 | amd64) arch="x86_64" ;;
+    aarch64 | arm64) arch="arm64" ;;
+    *) die "нет готовой сборки для архитектуры $(uname -m): используйте --from-source" ;;
+  esac
+  local name="crabindex-linux-${arch}.tar.gz"
+  if [[ -n "$RELEASE_TAG" ]]; then
+    printf 'https://github.com/%s/releases/download/%s/%s' "$RELEASE_REPO" "$RELEASE_TAG" "$name"
+  else
+    printf 'https://github.com/%s/releases/latest/download/%s' "$RELEASE_REPO" "$name"
+  fi
+}
+
 resolve_bundle() { # sets BUNDLE_ROOT (not called in a subshell: WORK_DIR must stay visible)
   local src="$BUNDLE"
+  if [[ -z "$src" && -n "$RELEASE_TAG" ]]; then
+    src="$(release_asset_url)"
+  fi
   if [[ -z "$src" ]]; then
     if [[ -f "$SCRIPT_DIR/crabindex" ]]; then
       src="$SCRIPT_DIR"
@@ -556,7 +589,8 @@ resolve_bundle() { # sets BUNDLE_ROOT (not called in a subshell: WORK_DIR must s
       build_from_source
       src="$BUNDLE"
     else
-      die "не найден комплект для установки: укажите --bundle (каталог make dist или архив) или --from-source"
+      src="$(release_asset_url)"
+      info "Скачивание готовой сборки: $src"
     fi
   fi
   if [[ "$src" =~ ^https?:// ]]; then

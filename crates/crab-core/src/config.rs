@@ -346,6 +346,9 @@ pub struct WafSettings {
     pub blockUserAgents: Vec<String>,
     /// LAN/loopback clients are never rate-limited or banned.
     pub whitelistLan: bool,
+    /// Refuse browser requests whose `Origin`/`Referer` host is neither in the admin domain
+    /// whitelist (`Data/waf.json`) nor the server's own host. Requests without both pass.
+    pub domainAllowlistOnly: bool,
 }
 
 impl Default for WafSettings {
@@ -359,6 +362,7 @@ impl Default for WafSettings {
             trapBanMinutes: 1440,
             blockUserAgents: vec![],
             whitelistLan: true,
+            domainAllowlistOnly: false,
         }
     }
 }
@@ -1202,6 +1206,7 @@ mod tests {
         assert_eq!(j.admin.path, "/admin");
         assert_eq!(j.waf.trapBanMinutes, 1440);
         assert_eq!(j.waf.historySize, 5000);
+        assert!(!c.waf.domainAllowlistOnly && !j.waf.domainAllowlistOnly);
     }
 
     #[test]
@@ -1211,6 +1216,7 @@ mod tests {
         assert_eq!((d.historySize, d.rateLimit.perMinute, d.rateLimit.banMinutes, d.trapBanMinutes), (5000, 300, 15, 1440));
         assert_eq!(d.trapPaths, ["/.env", "/wp-admin", "/wp-login.php", "/.git/", "/phpmyadmin"]);
         assert!(d.blockUserAgents.is_empty());
+        assert!(!d.domainAllowlistOnly);
         let c = parse_config_content("waf:\n  rateLimit:\n    perMinute: \"60\"\n  blockUserAgents: [sqlmap]\n", "yaml").unwrap();
         assert_eq!(c.waf.rateLimit.perMinute, 60);
         assert_eq!(c.waf.rateLimit.banMinutes, 15);

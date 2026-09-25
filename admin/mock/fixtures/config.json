@@ -488,6 +488,7 @@
    "nikto",
    "masscan"
   ],
-  "whitelistLan": true
+  "whitelistLan": true,
+  "domainAllowlistOnly": false
  }
 }

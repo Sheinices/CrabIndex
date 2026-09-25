@@ -2,10 +2,11 @@ name: crabindex
 
 services:
   crabindex:
-    # Prebuilt image, or build locally: `docker compose build` (uses ./Dockerfile)
-    image: crabindex:latest
-    build:
-      context: .
+    # Release image from GitHub Actions (amd64/arm64). To build from source instead,
+    # uncomment `build:` and run `docker compose build` (uses ./Dockerfile).
+    image: ghcr.io/sheinices/crabindex:latest
+    # build:
+    #   context: .
     container_name: crabindex
     restart: unless-stopped
     ports:

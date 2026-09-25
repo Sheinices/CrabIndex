@@ -3,10 +3,32 @@
  * growing while the dev server runs, dynamic lists/bans and all `waf/*`
  * endpoints including the self-protection error.
  */
-import { coversIp, isIpOrCidr } from '../src/lib/waf.js'
+import { coversIp, domainRuleError, isIpOrCidr, normalizeDomain, validateDomainValue } from '../src/lib/waf.js'
 
 const MIN = 60_000
 export const YOU = '192.168.1.10'
+
+/** Mirrors the compiled-in server list (crates/crabindex/src/waf/domains.rs). */
+export const BUILTIN_DOMAINS = [
+  'ndst.pw',
+  'diskstation.me',
+  'krilzov.it',
+  'myds.me',
+  'lampa.stream',
+  'bylampa.online',
+  'abhq.ru',
+  'abmsx.tech',
+  'akter.black',
+  'lampa.click',
+  'lampa.land',
+  'lampa1.ru',
+  'line.pm',
+  'nnmtv.pw',
+  'tvigl.info',
+  'uspeh.sbs',
+  'usph.xyz',
+  'xabb.ru',
+]
 
 const UA = {
   lampa: 'Mozilla/5.0 (Linux; Android 12; SHIELD Android TV) AppleWebKit/537.36 Lampa/2.3.1',
@@ -26,10 +48,13 @@ const TRAPS = ['/.env', '/wp-login.php', '/.git/config', '/phpmyadmin/index.php'
 const CLIENTS = [
   { ip: YOU, ua: UA.chrome, weight: 6, kind: 'admin' },
   { ip: '10.0.0.5', ua: UA.curl, weight: 4, kind: 'cron' },
-  { ip: '198.51.100.23', ua: UA.lampa, weight: 22, kind: 'api' },
+  { ip: '198.51.100.23', ua: UA.lampa, weight: 22, kind: 'api', origin: 'my-lampa.example' },
   { ip: '198.51.100.77', ua: UA.jackett, weight: 14, kind: 'api' },
   { ip: '2001:db8:85a3::8a2e:370:7334', ua: UA.prowlarr, weight: 10, kind: 'api' },
-  { ip: '93.184.216.34', ua: UA.lampa, weight: 9, kind: 'api' },
+  { ip: '93.184.216.34', ua: UA.lampa, weight: 9, kind: 'api', origin: 'lampa.mx' },
+  { ip: '176.59.40.12', ua: UA.lampa, weight: 6, kind: 'domain', origin: 'app.ndst.pw' },
+  { ip: '46.39.230.8', ua: UA.chrome, weight: 3, kind: 'domain', origin: 'lampa.stream' },
+  { ip: '37.145.12.90', ua: UA.chrome, weight: 2, kind: 'domain', origin: 'mirror.spam-tracker.example' },
   { ip: '5.188.62.140', ua: UA.curl, weight: 12, kind: 'flood' },
   { ip: '203.0.113.7', ua: UA.bot, weight: 5, kind: 'blacklisted' },
   { ip: '45.155.205.233', ua: UA.sqlmap, weight: 3, kind: 'ua' },
@@ -54,7 +79,7 @@ function pickClient() {
 
 function makeRequest(time) {
   const c = pickClient()
-  const base = { time: new Date(time).toISOString(), ip: c.ip, method: 'GET', ua: c.ua, ms: Math.round(4 + rnd() * 60), blocked: null }
+  const base = { time: new Date(time).toISOString(), ip: c.ip, method: 'GET', ua: c.ua, ms: Math.round(4 + rnd() * 60), blocked: null, origin: c.origin || null }
   switch (c.kind) {
     case 'admin':
       return { ...base, path: pick(['/admin/api/overview', '/admin/api/waf/overview', '/admin/api/health/background-jobs', '/admin/']), status: 200 }
@@ -74,6 +99,8 @@ function makeRequest(time) {
       return { ...base, path: pick(API), method: pick(['GET', 'POST']), status: 403, blocked: rnd() < 0.3 ? 'ua' : 'ban', ms: 0 }
     case 'trap':
       return rnd() < 0.4 ? { ...base, path: pick(TRAPS), status: 404, blocked: 'trap', ms: 0 } : { ...base, path: pick(TRAPS), status: 403, blocked: 'ban', ms: 0 }
+    case 'domain':
+      return { ...base, path: pick(API), status: 403, blocked: 'domain', ms: 0 }
     case 'banned':
       return { ...base, path: pick(API), status: 403, blocked: 'ban', ms: 0 }
     default:
@@ -103,6 +130,8 @@ const state = {
     { ip: '185.220.101.4', reason: 'trap', created: iso(now0 - 40 * MIN), expires: iso(now0 + 23 * 60 * MIN) },
     { ip: '45.155.205.233', reason: 'ua', created: iso(now0 - 8 * MIN), expires: iso(now0 + 7 * MIN) },
   ],
+  domainBlacklist: [{ value: 'spam-tracker.example', comment: 'чужой парсер', created: iso(now0 - 2 * 86_400_000), expires: null }],
+  domainWhitelist: [{ value: 'my-lampa.example', comment: 'своя Lampa', created: iso(now0 - 5 * 86_400_000), expires: null }],
 }
 
 // Seed: sparse traffic over the last 24 h plus a denser last hour (≈ diurnal).
@@ -136,6 +165,8 @@ function tick(historySize = 5000) {
   state.blacklist = state.blacklist.filter(alive)
   state.whitelist = state.whitelist.filter(alive)
   state.bans = state.bans.filter(alive)
+  state.domainBlacklist = state.domainBlacklist.filter(alive)
+  state.domainWhitelist = state.domainWhitelist.filter(alive)
 }
 
 function matches(list, ip) {
@@ -164,8 +195,9 @@ function overview(win, enabled) {
   const start = Math.floor(from / step) * step + step
   const timeline = Array.from({ length: buckets }, (_, i) => ({ t: iso(start + i * step), requests: 0, blocked: 0 }))
   const statusCodes = { '2xx': 0, '3xx': 0, '4xx': 0, '5xx': 0 }
-  const blockedByReason = { blacklist: 0, ban: 0, ua: 0, trap: 0, rate: 0 }
+  const blockedByReason = { blacklist: 0, ban: 0, ua: 0, trap: 0, rate: 0, domain: 0 }
   const ips = new Map()
+  const origins = new Map()
   const paths = new Map()
   let blocked = 0
   for (const r of rows) {
@@ -188,6 +220,12 @@ function overview(win, enabled) {
     p.requests++
     if (r.status >= 400) p.errors++
     paths.set(r.path, p)
+    if (r.origin) {
+      const o = origins.get(r.origin) || { origin: r.origin, requests: 0, blocked: 0 }
+      o.requests++
+      if (r.blocked) o.blocked++
+      origins.set(r.origin, o)
+    }
   }
   return {
     enabled,
@@ -198,12 +236,14 @@ function overview(win, enabled) {
     timeline,
     topIps: [...ips.values()].sort((a, b) => b.requests - a.requests).slice(0, 10),
     topPaths: [...paths.values()].sort((a, b) => b.requests - a.requests).slice(0, 10),
+    topOrigins: [...origins.values()].sort((a, b) => b.requests - a.requests).slice(0, 20),
   }
 }
 
 function requests(query) {
   const ip = query.get('ip') || ''
   const path = (query.get('path') || '').toLowerCase()
+  const origin = (query.get('origin') || '').trim().toLowerCase()
   const status = (query.get('status') || '').toLowerCase()
   const blocked = query.get('blocked') || ''
   const limit = Math.min(5000, Math.max(1, Number(query.get('limit')) || 200))
@@ -212,6 +252,7 @@ function requests(query) {
     const r = state.log[i]
     if (ip && r.ip !== ip) continue
     if (path && !r.path.toLowerCase().includes(path)) continue
+    if (origin && !(r.origin || '').includes(origin)) continue
     if (status && (/^\dxx$/.test(status) ? statusBucket(r.status) !== status : String(r.status) !== status)) continue
     if (blocked && ['1', 'true', 'yes'].includes(blocked) && !r.blocked) continue
     if (blocked && ['0', 'false', 'no'].includes(blocked) && r.blocked) continue
@@ -265,13 +306,34 @@ export async function handleWaf({ method, path, query, readBody, config }) {
   if (sub === 'requests' && method === 'GET') return [200, requests(query)]
   if (sub === 'ips' && method === 'GET') return [200, ipsList(query)]
   if (sub === 'rules' && method === 'GET') {
-    return [200, { blacklist: state.blacklist, whitelist: state.whitelist, bans: state.bans, config: cfg, you: YOU }]
+    return [
+      200,
+      {
+        blacklist: state.blacklist,
+        whitelist: state.whitelist,
+        bans: state.bans,
+        domainBlacklist: state.domainBlacklist,
+        domainWhitelist: state.domainWhitelist,
+        builtinDomains: BUILTIN_DOMAINS,
+        config: cfg,
+        you: YOU,
+      },
+    ]
   }
   if (sub === 'rules' && method === 'POST') {
     const body = (await readBody()) || {}
     const list = body.list
     const value = String(body.value || '').trim()
-    if (list !== 'blacklist' && list !== 'whitelist') return [400, { ok: false, error: 'list must be blacklist or whitelist' }]
+    if (list === 'domainBlacklist' || list === 'domainWhitelist') {
+      const err = domainRuleError(list, value, BUILTIN_DOMAINS)
+      if (err) return [400, { ok: false, error: err }]
+      const d = normalizeDomain(value)
+      const minutes = Number(body.expiresMinutes)
+      const entry = { value: d, comment: body.comment || '', created: iso(Date.now()), expires: minutes > 0 ? iso(Date.now() + minutes * MIN) : null }
+      state[list] = [...state[list].filter((e) => e.value !== d), entry]
+      return [200, { ok: true }]
+    }
+    if (list !== 'blacklist' && list !== 'whitelist') return [400, { ok: false, error: 'list: blacklist, whitelist, domainBlacklist or domainWhitelist expected' }]
     if (!isIpOrCidr(value)) return [400, { ok: false, error: `invalid IP or CIDR: ${value}` }]
     if (list === 'blacklist') {
       const err = selfError(value)
@@ -284,8 +346,15 @@ export async function handleWaf({ method, path, query, readBody, config }) {
   }
   if (sub === 'rules' && method === 'DELETE') {
     const list = query.get('list')
-    const value = query.get('value')
-    if (list !== 'blacklist' && list !== 'whitelist') return [400, { ok: false, error: 'list must be blacklist or whitelist' }]
+    let value = query.get('value')
+    if (list === 'domainBlacklist' || list === 'domainWhitelist') {
+      const invalid = validateDomainValue(value)
+      if (invalid) return [400, { ok: false, error: invalid }]
+      value = normalizeDomain(value)
+      if (BUILTIN_DOMAINS.includes(value)) return [400, { ok: false, error: `${value} входит во встроенный список и не может быть удалён` }]
+    } else if (list !== 'blacklist' && list !== 'whitelist') {
+      return [400, { ok: false, error: 'list: blacklist, whitelist, domainBlacklist or domainWhitelist expected' }]
+    }
     if (!state[list].some((e) => e.value === value)) return [404, { ok: false, error: `not found: ${value}` }]
     state[list] = state[list].filter((e) => e.value !== value)
     return [200, { ok: true }]

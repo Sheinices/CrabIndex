@@ -163,3 +163,16 @@ cp Data/example.yaml init.yaml
 При первом запуске сервер сгенерирует `admin.token` и `devkey`, допишет их в `init.yaml` и выведет адрес [админ-панели](../admin.md) в лог.
 
 Сервер работает относительно текущего каталога - запускайте его из корня репозитория (или используйте `make run`).
+
+## Релизы
+
+Сборки выпускает GitHub Actions (`.github/workflows/release.yml`) при публикации релиза на GitHub:
+
+1. Создайте релиз с тегом `vX.Y.Z` («Create a new release» → «Publish release»).
+2. Workflow собирает `wwwroot/` (сайт, админ-панель, документация) и сервер под Linux x86_64 и arm64 (musl), macOS arm64 и x86_64, Windows x86_64.
+3. К релизу прикрепляются архивы `crabindex-<платформа>.tar.gz` / `.zip` (имена без версии, поэтому ссылка `/releases/latest/download/<имя>` всегда ведёт на последнюю сборку) и `SHA256SUMS`.
+4. Публикуется Docker-образ `ghcr.io/sheinices/crabindex:<версия>` и `:latest` для amd64 и arm64 (`Dockerfile.release`, из готовых бинарников).
+
+Версия берётся из тега и видна в баннере, `/version`, админ-панели и Swagger. Пересобрать уже существующий тег можно вручную: Actions → Release → «Run workflow» с указанием тега.
+
+На каждый push в `main` и pull request `.github/workflows/ci.yml` запускает тесты Rust, сайта и админ-панели, сборку документации и shellcheck скриптов.

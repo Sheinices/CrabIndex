@@ -3,7 +3,19 @@ import { Link } from 'react-router'
 import { ShieldOff } from 'lucide-react'
 import { Modal } from '../../components/Modal.jsx'
 import { useToast } from '../../components/Toast.jsx'
-import { BAN_PRESETS, IP_STATES, TONE_BADGE, reasonLabel, selfBlockError, statusTone, validateRuleValue, BLOCK_REASONS } from '../../lib/waf.js'
+import {
+  BAN_PRESETS,
+  IP_STATES,
+  TONE_BADGE,
+  reasonLabel,
+  selfBlockError,
+  statusTone,
+  validateRuleValue,
+  BLOCK_REASONS,
+  domainRuleError,
+  isDomainList,
+  normalizeDomain,
+} from '../../lib/waf.js'
 import { formatDate } from '../../lib/format.js'
 
 export const SETTINGS_WAF = '/settings?group=waf'
@@ -83,11 +95,22 @@ export function parseMinutes(v) {
   return Number.isInteger(n) && n > 0 ? n : null
 }
 
+const DIALOG_TEXT = {
+  blacklist: { title: 'Добавить в чёрный список', description: 'Запросы с адреса будут получать 403.' },
+  whitelist: { title: 'Добавить в белый список', description: 'Адрес не будет ограничиваться и баниться.' },
+  domainBlacklist: { title: 'Заблокировать домен', description: 'Запросы с Origin/Referer этого домена и его поддоменов будут получать 403.' },
+  domainWhitelist: {
+    title: 'Разрешить домен',
+    description: 'Запросы с этого домена и его поддоменов не проверяются лимитом, ловушками и фильтром User-Agent.',
+  },
+}
+
 /**
- * Add-to-list form (blacklist / whitelist). `onSubmit({list, value, comment,
- * expiresMinutes})` must resolve to true on success (closes the dialog).
+ * Add-to-list form (IP or domain blacklist / whitelist). `onSubmit({list, value,
+ * comment, expiresMinutes})` must resolve to true on success (closes the dialog).
+ * `builtinDomains` is used to reject builtin conflicts before the request.
  */
-export function RuleDialog({ open, onClose, list, initialValue = '', you, onSubmit, lockValue = false }) {
+export function RuleDialog({ open, onClose, list, initialValue = '', you, onSubmit, lockValue = false, builtinDomains = [] }) {
   const ids = useId()
   const [value, setValue] = useState(initialValue)
   const [comment, setComment] = useState('')
@@ -106,11 +129,13 @@ export function RuleDialog({ open, onClose, list, initialValue = '', you, onSubm
     }
   }, [open, initialValue])
 
-  const black = list === 'blacklist'
+  const domain = isDomainList(list)
+  const black = list === 'blacklist' || list === 'domainBlacklist'
+  const text = DIALOG_TEXT[list] || DIALOG_TEXT.blacklist
   const submit = async (e) => {
     e.preventDefault()
-    const v = value.trim()
-    const err = validateRuleValue(v) || (black ? selfBlockError(v, you) : null)
+    const v = domain ? normalizeDomain(value) : value.trim()
+    const err = domain ? domainRuleError(list, value, builtinDomains) : validateRuleValue(v) || (black ? selfBlockError(v, you) : null)
     if (err) return setError(err)
     let expiresMinutes
     if (expiry === 'custom') {
@@ -131,14 +156,14 @@ export function RuleDialog({ open, onClose, list, initialValue = '', you, onSubm
     <Modal
       open={open}
       onClose={onClose}
-      title={black ? 'Добавить в чёрный список' : 'Добавить в белый список'}
-      description={black ? 'Запросы с адреса будут получать 403.' : 'Адрес не будет ограничиваться и баниться.'}
+      title={text.title}
+      description={text.description}
       size="sm"
     >
       <form id={`${ids}-form`} onSubmit={submit} className="space-y-4" noValidate>
         <div>
           <label className="label" htmlFor={`${ids}-v`}>
-            IP-адрес или CIDR
+            {domain ? 'Домен' : 'IP-адрес или CIDR'}
           </label>
           <input
             id={`${ids}-v`}
@@ -146,7 +171,7 @@ export function RuleDialog({ open, onClose, list, initialValue = '', you, onSubm
             value={value}
             readOnly={lockValue}
             onChange={(e) => setValue(e.target.value)}
-            placeholder="203.0.113.7 или 198.51.100.0/24"
+            placeholder={domain ? 'example.com' : '203.0.113.7 или 198.51.100.0/24'}
             aria-invalid={!!error}
             aria-describedby={error ? `${ids}-err` : undefined}
             data-autofocus={lockValue ? undefined : true}
@@ -182,6 +207,7 @@ export function RuleDialog({ open, onClose, list, initialValue = '', you, onSubm
             </div>
           ) : null}
         </div>
+        {domain ? <p className="text-xs text-muted">Поддомены входят автоматически. Можно вставить адрес целиком: схема, порт, путь и «*.» отбрасываются.</p> : null}
         {error ? (
           <p id={`${ids}-err`} role="alert" className="text-sm text-danger">
             {error}

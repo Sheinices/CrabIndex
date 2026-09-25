@@ -230,7 +230,7 @@ pub fn get() -> Value {
             field("admin.token", "password", "Токен входа", Some("[A-Za-z0-9], 12-64 символа; генерируется при первом запуске"), secret()),
             field("admin.sessionHours", "int", "Сессия (ч)", Some("Время жизни сессии после входа"), F { min: Some(1), max: Some(8760), ..F::default() }),
         ]),
-        group("waf", "WAF", Some("Фильтр запросов: whitelist → blacklist/баны → User-Agent → ловушки → rate limit. Списки и баны - в разделе WAF (Data/waf.json)"), vec![
+        group("waf", "WAF", Some("Фильтр запросов: встроенные домены → whitelist → blacklist/баны → домены → User-Agent → ловушки → rate limit. Списки и баны - в разделе WAF (Data/waf.json)"), vec![
             fd("waf.enable", "bool", "Включить", Some("false - запросы не блокируются (статистика ведётся при logRequests)")),
             fd("waf.logRequests", "bool", "Журнал запросов", Some("Журнал и статистика в памяти, сбрасываются при перезапуске")),
             field("waf.historySize", "int", "Размер журнала", Some("Последних запросов в памяти"), F { min: Some(0), max: Some(MAX_WAF_HISTORY), ..F::default() }),
@@ -241,6 +241,7 @@ pub fn get() -> Value {
             fd("waf.trapPaths", "stringList", "Ловушки", Some("Префиксы путей (без учёта регистра): 404 и бан, например /.env, /wp-admin")),
             field("waf.trapBanMinutes", "int", "Бан за ловушку (мин)", None, min(1)),
             fd("waf.blockUserAgents", "stringList", "Блок User-Agent", Some("Regex без учёта регистра, по одному на строку: sqlmap, nikto, masscan")),
+            fd("waf.domainAllowlistOnly", "bool", "Только разрешённые домены", Some("Запросы с Origin/Referer не из белого списка доменов и не с этого сервера → 403. Без Origin/Referer - пропускаются")),
         ]),
         tracker_groups(),
     ];
@@ -275,6 +276,9 @@ fn validate_waf(w: &crab_core::config::WafSettings, errors: &mut Vec<String>, wa
         if !p.trim().is_empty() && !p.trim().starts_with('/') {
             warnings.push(format!("waf.trapPaths: «{p}» должен начинаться с /"));
         }
+    }
+    if w.domainAllowlistOnly && crate::waf::WAF.domain_whitelist_len(chrono::Utc::now()) == 0 {
+        warnings.push("waf.domainAllowlistOnly: белый список доменов пуст - браузерные запросы с других сайтов получат 403 (WAF → Правила → Домены)".into());
     }
 }
 

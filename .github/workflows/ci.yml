@@ -1,0 +1,47 @@
+# Tests on every push and pull request: Rust workspace, web UI, admin panel, docs build.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  rust:
+    name: Rust tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo test --workspace --locked
+
+  frontend:
+    name: Web UI, admin panel, docs
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Web UI
+        working-directory: web
+        run: npm ci && npm run lint && npm test && npm run build
+      - name: Admin panel
+        working-directory: admin
+        run: npm ci && npm run lint && npm test && npm run build
+      - name: Docs
+        working-directory: docs
+        run: npm ci && npm run build
+
+  installer:
+    name: Installer lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: shellcheck -S warning scripts/install.sh scripts/build-web-ui.sh Data/run-job.sh entrypoint.sh

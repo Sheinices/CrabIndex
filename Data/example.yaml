@@ -18,9 +18,12 @@ admin:
   sessionHours: 12 # время жизни сессии после входа
 
 # WAF: фильтр запросов до роутинга (реальный IP клиента; X-Forwarded-For доверяется только от loopback-прокси).
-# Порядок: loopback (и LAN при whitelistLan) → whitelist → blacklist/бан (403) → User-Agent (403 + бан)
-# → trapPaths (404 + бан) → rateLimit (429 + Retry-After + бан).
-# Списки blacklist/whitelist и баны хранятся не здесь, а в Data/waf.json (управляются из админ-панели).
+# Порядок: loopback → встроенные заблокированные домены (403, для всех, кроме loopback)
+# → LAN при whitelistLan / whitelist → blacklist/бан (403) → чёрный список доменов / domainAllowlistOnly (403)
+# → белый список доменов (пропуск проверок ниже) → User-Agent (403 + бан) → trapPaths (404 + бан)
+# → rateLimit (429 + Retry-After + бан). Домен запроса - хост Origin, иначе Referer.
+# Списки IP и доменов и баны хранятся не здесь, а в Data/waf.json (управляются из админ-панели).
+# Встроенный список заблокированных доменов зашит в программу и не настраивается.
 waf:
   enable: true
   logRequests: true # журнал запросов и статистика в памяти (сбрасываются при перезапуске)
@@ -38,6 +41,7 @@ waf:
   trapBanMinutes: 1440
   blockUserAgents: [] # regex без учёта регистра, например ["sqlmap", "nikto", "masscan"]
   whitelistLan: true # LAN/loopback никогда не ограничиваются и не банятся
+  domainAllowlistOnly: false # true - запросы с Origin/Referer не из белого списка доменов и не с этого сервера → 403
 
 # Cloudflare bypass via FlareSolverr (required for Rutracker when no Worker alias).
 # Host-run / host-network FS: 127.0.0.1. CrabIndex on compose bridge + FS host network:

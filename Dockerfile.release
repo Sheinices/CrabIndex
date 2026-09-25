@@ -1,0 +1,49 @@
+# syntax=docker/dockerfile:1
+# Runtime image built from prebuilt release binaries (see .github/workflows/release.yml).
+# Expects ./release/linux-<arch>/ (unpacked crabindex-linux-*.tar.gz) in the build context.
+# For a from-source image use ./Dockerfile instead.
+ARG DEBIAN_VERSION=bookworm
+FROM debian:${DEBIAN_VERSION}-slim
+
+ARG TARGETARCH
+ARG CRABINDEX_VERSION=dev
+
+LABEL org.opencontainers.image.title="CrabIndex" \
+      org.opencontainers.image.description="CrabIndex - torrent tracker aggregator & file database" \
+      org.opencontainers.image.licenses="MIT" \
+      org.opencontainers.image.version="${CRABINDEX_VERSION}"
+
+RUN set -eux; \
+    apt-get update; \
+    apt-get install -y --no-install-recommends ca-certificates curl dumb-init tzdata; \
+    rm -rf /var/lib/apt/lists/*; \
+    groupadd -g 1000 crabindex; \
+    useradd -u 1000 -g crabindex -d /app -s /usr/sbin/nologin -M crabindex; \
+    mkdir -p /app/Data/fdb /app/Data/temp /app/Data/log /app/Data/tracks /app/config /app/defaults; \
+    chown -R crabindex:crabindex /app; \
+    chmod -R 750 /app
+
+WORKDIR /app
+
+COPY --chown=crabindex:crabindex --chmod=755 release/linux-${TARGETARCH}/crabindex /app/crabindex
+COPY --chown=crabindex:crabindex release/linux-${TARGETARCH}/wwwroot /app/wwwroot
+COPY --chown=crabindex:crabindex Data/ /app/Data/
+COPY --chown=crabindex:crabindex Data/example.yaml /app/defaults/init.yaml
+COPY --chown=crabindex:crabindex Data/example.conf /app/defaults/init.conf
+COPY --chown=crabindex:crabindex --chmod=550 entrypoint.sh /entrypoint.sh
+
+ENV CRABINDEX_VERSION="${CRABINDEX_VERSION}" \
+    TZ=UTC \
+    UMASK=0027
+
+USER crabindex:crabindex
+
+VOLUME ["/app/Data", "/app/config"]
+
+EXPOSE 9117/tcp
+
+HEALTHCHECK --interval=30s --timeout=15s --start-period=45s --retries=3 --start-interval=5s \
+    CMD curl -f -s --max-time 10 http://127.0.0.1:9117/health || exit 1
+
+ENTRYPOINT ["dumb-init", "--", "/entrypoint.sh"]
+CMD ["./crabindex"]

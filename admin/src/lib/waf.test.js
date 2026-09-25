@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { buildRequestsQuery, coversIp, isIpOrCidr, selfBlockError, validateRuleValue } from './waf.js'
+import { buildRequestsQuery, builtinDomainOf, coversIp, domainMatches, domainRuleError, isIpOrCidr, normalizeDomain, selfBlockError, validateDomainValue, validateRuleValue } from './waf.js'
 
 describe('IP / CIDR validation', () => {
   it.each(['203.0.113.7', '0.0.0.0', '255.255.255.255', '198.51.100.0/24', '10.0.0.0/8', '1.2.3.4/32', '::1', '2001:db8::/32', 'fe80::1', '2001:0db8:85a3:0000:0000:8a2e:0370:7334', '::ffff:192.0.2.1', '::/0', '2001:db8::/128'])(
@@ -45,5 +45,50 @@ describe('buildRequestsQuery', () => {
     })
     expect(buildRequestsQuery({ status: '404' }).status).toBe('404')
     expect(buildRequestsQuery({ status: 'bogus' }).status).toBeUndefined()
+  })
+})
+
+describe('domain rules', () => {
+  const BUILTIN = ['ndst.pw', 'myds.me', 'lampa.stream']
+
+  it.each([
+    ['Example.COM', 'example.com'],
+    ['*.example.com', 'example.com'],
+    ['https://Sub.Example.com:8443/path?q=1#x', 'sub.example.com'],
+    ['example.com.', 'example.com'],
+    ['//cdn.example.com/x', 'cdn.example.com'],
+    ['пример.рф', 'пример.рф'],
+  ])('normalises %s', (input, out) => expect(normalizeDomain(input)).toBe(out))
+
+  it.each(['example.com', 'a-b.example.co.uk', '*.example.com', 'https://example.com/x', 'пример.рф', 'xn--e1afmkfd.xn--p1ai'])('accepts %s', (v) =>
+    expect(validateDomainValue(v)).toBeNull(),
+  )
+
+  it.each(['localhost', 'ex_ample.com', '-a.com', 'a-.com', 'a..com', '*.', `${'a'.repeat(250)}.com`, `${'a'.repeat(64)}.com`])('rejects %s', (v) =>
+    expect(validateDomainValue(v)).toMatch(/Некорректный домен/),
+  )
+
+  it('needs a value without spaces', () => {
+    expect(validateDomainValue(' ')).toMatch(/Укажите домен/)
+    expect(validateDomainValue('a.com b.com')).toMatch(/пробел/)
+  })
+
+  it('matches on a label boundary', () => {
+    expect(domainMatches('a.b.ndst.pw', 'ndst.pw')).toBe(true)
+    expect(domainMatches('ndst.pw', 'ndst.pw')).toBe(true)
+    expect(domainMatches('notndst.pw', 'ndst.pw')).toBe(false)
+    expect(builtinDomainOf('app.myds.me', BUILTIN)).toBe('myds.me')
+    expect(builtinDomainOf('mylampa.stream', BUILTIN)).toBeNull()
+  })
+
+  it('refuses builtin conflicts', () => {
+    expect(domainRuleError('domainWhitelist', 'https://app.NDST.pw', BUILTIN)).toBe('app.ndst.pw заблокирован встроенным списком и не может быть разрешён')
+    expect(domainRuleError('domainBlacklist', 'myds.me', BUILTIN)).toMatch(/уже заблокирован встроенным списком/)
+    expect(domainRuleError('domainWhitelist', 'friend.example', BUILTIN)).toBeNull()
+    expect(domainRuleError('domainBlacklist', 'nodot', BUILTIN)).toMatch(/Некорректный/)
+  })
+
+  it('adds the origin filter to the requests query', () => {
+    expect(buildRequestsQuery({ origin: ' NDST.pw ' })).toEqual({ origin: 'ndst.pw', limit: 200 })
   })
 })

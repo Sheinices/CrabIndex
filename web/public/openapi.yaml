@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: CrabIndex API
-  version: 0.1.0 # replaced at runtime with the crabindex crate version
+  version: 1.0.0 # replaced at runtime with the crabindex build version
   description: |
     Torrent aggregator API: Jackett-compatible search, native torrent search, Torznab XML,
     statistics and sync protocol.

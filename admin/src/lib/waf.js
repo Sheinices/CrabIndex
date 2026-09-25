@@ -1,4 +1,4 @@
-/** Pure WAF helpers: IP/CIDR validation, query builders, labels. */
+/** Pure WAF helpers: IP/CIDR and domain validation, query builders, labels. */
 
 export function isIPv4(s) {
   const parts = String(s).split('.')
@@ -94,11 +94,71 @@ export function selfBlockError(value, you) {
   return null
 }
 
+// --- domains -----------------------------------------------------------------
+
+export const DOMAIN_LISTS = ['domainBlacklist', 'domainWhitelist']
+
+export const isDomainList = (list) => DOMAIN_LISTS.includes(list)
+
+/**
+ * Canonical form of a pasted domain, mirroring the server: lowercase, scheme,
+ * userinfo, port, path and trailing dot stripped, leading `*.` removed.
+ */
+export function normalizeDomain(value) {
+  let s = String(value ?? '').trim()
+  const scheme = s.indexOf('://')
+  if (scheme !== -1) s = s.slice(scheme + 3)
+  else if (s.startsWith('//')) s = s.slice(2)
+  s = s.split(/[/?#\\]/)[0]
+  if (s.includes('@')) s = s.slice(s.lastIndexOf('@') + 1)
+  s = s.split(':')[0].trim().replace(/\.+$/, '').toLowerCase()
+  while (s.startsWith('*.')) s = s.slice(2)
+  return s.replace(/^\.+/, '')
+}
+
+const DOMAIN_LABEL = /^[\p{L}\p{N}](?:[\p{L}\p{N}-]*[\p{L}\p{N}])?$/u
+
+/** Russian validation message for a domain rule, or null when valid. */
+export function validateDomainValue(value) {
+  const raw = String(value ?? '').trim()
+  if (!raw) return 'Укажите домен'
+  if (/\s/.test(raw)) return 'Без пробелов: один домен'
+  const d = normalizeDomain(raw)
+  if (!d || !d.includes('.') || [...d].length > 253 || !d.split('.').every((l) => [...l].length <= 63 && DOMAIN_LABEL.test(l))) {
+    return 'Некорректный домен: буквы, цифры, дефисы и точки, минимум одна точка (пример: example.com)'
+  }
+  return null
+}
+
+/** `host` is `rule` or its subdomain (label boundary). */
+export function domainMatches(host, rule) {
+  const h = String(host ?? '').toLowerCase()
+  const r = String(rule ?? '').toLowerCase()
+  return !!r && (h === r || h.endsWith(`.${r}`))
+}
+
+/** Builtin entry covering `domain`, or null. */
+export function builtinDomainOf(domain, builtins = []) {
+  return builtins.find((b) => domainMatches(domain, b)) || null
+}
+
+/** Client-side check of a domain rule (format + builtin conflicts), or null. */
+export function domainRuleError(list, value, builtins = []) {
+  const invalid = validateDomainValue(value)
+  if (invalid) return invalid
+  const d = normalizeDomain(value)
+  const b = builtinDomainOf(d, builtins)
+  if (!b) return null
+  if (list === 'domainWhitelist') return `${d} заблокирован встроенным списком и не может быть разрешён`
+  return `${d} уже заблокирован встроенным списком`
+}
+
 /** Query object for `waf/requests` built from the log filters (blanks dropped). */
-export function buildRequestsQuery({ ip = '', path = '', status = '', blocked = false, limit = 200 } = {}) {
+export function buildRequestsQuery({ ip = '', path = '', origin = '', status = '', blocked = false, limit = 200 } = {}) {
   const q = {}
   if (ip.trim()) q.ip = ip.trim()
   if (path.trim()) q.path = path.trim()
+  if (origin.trim()) q.origin = origin.trim().toLowerCase()
   const st = String(status).trim().toLowerCase()
   if (/^[1-5]xx$/.test(st) || /^\d{3}$/.test(st)) q.status = st
   if (blocked) q.blocked = 'true'
@@ -112,6 +172,7 @@ export const BLOCK_REASONS = {
   ua: { label: 'User-Agent', tone: 'warn' },
   trap: { label: 'Ловушка', tone: 'warn' },
   rate: { label: 'Лимит запросов', tone: 'warn' },
+  domain: { label: 'Домен', tone: 'danger' },
   manual: { label: 'Вручную', tone: 'danger' },
 }
 

@@ -236,6 +236,41 @@ export function WafOverview() {
               </div>
             </section>
           </div>
+
+          <section aria-labelledby="waf-top-origins">
+            <h2 id="waf-top-origins" className="mb-3 font-semibold">
+              Топ доменов (Origin)
+            </h2>
+            <div className="table-wrap">
+              <table className="table">
+                <thead>
+                  <tr>
+                    <th>Домен</th>
+                    <th className="text-right">Запросов</th>
+                    <th className="text-right">Блок.</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {(o.topOrigins || []).map((r) => (
+                    <tr key={r.origin}>
+                      <td className="max-w-xs">
+                        <Link
+                          to={`/waf/log?origin=${encodeURIComponent(r.origin)}`}
+                          className="block truncate font-mono text-xs text-accent hover:underline"
+                          title={r.origin}
+                        >
+                          {r.origin}
+                        </Link>
+                      </td>
+                      <td className="text-right tabular-nums">{formatNumber(r.requests)}</td>
+                      <td className={`text-right tabular-nums ${r.blocked ? 'text-danger' : 'text-muted'}`}>{formatNumber(r.blocked)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              {!o.topOrigins?.length ? <Empty>Нет запросов с Origin/Referer</Empty> : null}
+            </div>
+          </section>
         </>
       )}
     </div>

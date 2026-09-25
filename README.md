@@ -77,6 +77,7 @@ cp Data/example.yaml init.yaml   # отредактируйте под себя
 `crabindex`, unit и crontab, спрашивает путь админ-панели и генерирует токен и `devkey`:
 
 ```bash
+curl -fsSL https://raw.githubusercontent.com/sheinices/crabindex/main/scripts/install.sh | sudo bash   # готовый релиз
 sudo scripts/install.sh                      # из клона репозитория: проверит пакеты, соберёт и установит
 sudo scripts/install.sh --check              # только проверить систему
 make dist && sudo dist/install.sh            # или: sudo scripts/install.sh --bundle crabindex.tar.gz
@@ -199,3 +200,14 @@ docker run -d --name crabindex -p 9117:9117 \
 ## Лицензия
 
 MIT License. См. файл [LICENSE](LICENSE).
+
+## Релизы
+
+Сборки под все платформы делает GitHub Actions (`.github/workflows/release.yml`). Чтобы выпустить версию, создайте релиз на GitHub с тегом вида `v1.0.0` («Create a new release» → «Publish release»). Через несколько минут к релизу прикрепятся:
+
+- `crabindex-linux-x86_64.tar.gz`, `crabindex-linux-arm64.tar.gz` - статические сборки (musl) с установщиком;
+- `crabindex-macos-arm64.tar.gz`, `crabindex-macos-x86_64.tar.gz`, `crabindex-windows-x86_64.zip`;
+- `SHA256SUMS`;
+- Docker-образ `ghcr.io/sheinices/crabindex:<версия>` и `:latest` (amd64 + arm64).
+
+Версия в сборке, `/version` и Swagger берётся из тега.

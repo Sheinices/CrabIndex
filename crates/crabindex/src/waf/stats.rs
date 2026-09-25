@@ -1,4 +1,4 @@
-//! In-memory request statistics: ring buffer log, per-IP / per-path aggregates and a
+//! In-memory request statistics: ring buffer log, per-IP / per-path / per-origin aggregates and a
 //! per-minute timeline covering the last 24 hours. All structures are bounded.
 
 use chrono::{DateTime, TimeZone, Utc};
@@ -14,6 +14,8 @@ use super::store::iso;
 pub const MAX_IPS: usize = 10_000;
 /// Tracked paths (least recently seen are evicted beyond this).
 pub const MAX_PATHS: usize = 5_000;
+/// Tracked request origins (least recently seen are evicted beyond this).
+pub const MAX_ORIGINS: usize = 5_000;
 /// Eviction runs once the map exceeds the cap by this many entries.
 const EVICT_SLACK: usize = 500;
 /// Timeline length in minutes (24 h).
@@ -27,10 +29,13 @@ pub enum Reason {
     Ua,
     Trap,
     Rate,
+    Domain,
 }
 
+const REASONS: usize = 6;
+
 impl Reason {
-    pub const ALL: [Reason; 5] = [Reason::Blacklist, Reason::Ban, Reason::Ua, Reason::Trap, Reason::Rate];
+    pub const ALL: [Reason; REASONS] = [Reason::Blacklist, Reason::Ban, Reason::Ua, Reason::Trap, Reason::Rate, Reason::Domain];
 
     pub fn as_str(self) -> &'static str {
         match self {
@@ -39,6 +44,7 @@ impl Reason {
             Reason::Ua => "ua",
             Reason::Trap => "trap",
             Reason::Rate => "rate",
+            Reason::Domain => "domain",
         }
     }
 
@@ -62,6 +68,8 @@ pub struct LogEntry {
     pub ms: u64,
     pub ua: String,
     pub blocked: Option<Reason>,
+    /// Normalised `Origin` (else `Referer`) host.
+    pub origin: Option<String>,
 }
 
 impl LogEntry {
@@ -75,6 +83,7 @@ impl LogEntry {
             "ms": self.ms,
             "ua": self.ua,
             "blocked": self.blocked.map(Reason::as_str),
+            "origin": self.origin,
         })
     }
 }
@@ -97,6 +106,13 @@ struct PathAgg {
     last_seen: DateTime<Utc>,
 }
 
+#[derive(Clone, Debug)]
+struct OriginAgg {
+    requests: u64,
+    blocked: u64,
+    last_seen: DateTime<Utc>,
+}
+
 #[derive(Clone, Copy, Default)]
 struct Slot {
     minute: i64,
@@ -104,7 +120,7 @@ struct Slot {
     blocked: u64,
     /// 2xx, 3xx, 4xx, 5xx
     status: [u64; 4],
-    reasons: [u64; 5],
+    reasons: [u64; REASONS],
 }
 
 /// Filters of `GET waf/requests`.
@@ -112,6 +128,8 @@ struct Slot {
 pub struct RequestFilter {
     pub ip: Option<String>,
     pub path: Option<String>,
+    /// Substring of the recorded origin host.
+    pub origin: Option<String>,
     /// Exact code or class (`4xx`).
     pub status: Option<String>,
     /// `true`/`false` or a reason name.
@@ -132,6 +150,11 @@ impl RequestFilter {
         }
         if let Some(p) = self.path.as_deref().filter(|s| !s.is_empty()) {
             if !e.path.to_ascii_lowercase().contains(&p.to_ascii_lowercase()) {
+                return false;
+            }
+        }
+        if let Some(o) = self.origin.as_deref().map(str::trim).filter(|s| !s.is_empty()) {
+            if !e.origin.as_deref().map(|h| h.contains(&o.to_lowercase())).unwrap_or(false) {
                 return false;
             }
         }
@@ -165,6 +188,7 @@ pub struct Stats {
     log: Mutex<VecDeque<LogEntry>>,
     ips: DashMap<String, IpAgg>,
     paths: DashMap<String, PathAgg>,
+    origins: DashMap<String, OriginAgg>,
     timeline: Mutex<Vec<Slot>>,
     evicting: AtomicBool,
 }
@@ -176,6 +200,7 @@ impl Default for Stats {
             log: Mutex::new(VecDeque::new()),
             ips: DashMap::new(),
             paths: DashMap::new(),
+            origins: DashMap::new(),
             timeline: Mutex::new(vec![Slot::default(); TIMELINE_MINUTES as usize]),
             evicting: AtomicBool::new(false),
         }
@@ -210,6 +235,7 @@ impl Stats {
         self.log.lock().clear();
         self.ips.clear();
         self.paths.clear();
+        self.origins.clear();
         self.timeline.lock().iter_mut().for_each(|s| *s = Slot::default());
         *self.since.lock() = Utc::now();
     }
@@ -258,7 +284,13 @@ impl Stats {
             p.errors += error as u64;
             p.last_seen = p.last_seen.max(e.time);
         }
-        if self.ips.len() > MAX_IPS + EVICT_SLACK || self.paths.len() > MAX_PATHS + EVICT_SLACK {
+        if let Some(o) = &e.origin {
+            let mut a = self.origins.entry(o.clone()).or_insert_with(|| OriginAgg { requests: 0, blocked: 0, last_seen: e.time });
+            a.requests += 1;
+            a.blocked += blocked as u64;
+            a.last_seen = a.last_seen.max(e.time);
+        }
+        if self.ips.len() > MAX_IPS + EVICT_SLACK || self.paths.len() > MAX_PATHS + EVICT_SLACK || self.origins.len() > MAX_ORIGINS + EVICT_SLACK {
             self.evict();
         }
         let mut log = self.log.lock();
@@ -293,6 +325,14 @@ impl Stats {
                 self.paths.remove(&k);
             }
         }
+        if self.origins.len() > MAX_ORIGINS {
+            let mut v: Vec<(DateTime<Utc>, String)> = self.origins.iter().map(|r| (r.value().last_seen, r.key().clone())).collect();
+            v.sort();
+            let excess = v.len().saturating_sub(MAX_ORIGINS);
+            for (_, k) in v.into_iter().take(excess) {
+                self.origins.remove(&k);
+            }
+        }
         self.evicting.store(false, Ordering::Release);
     }
 
@@ -317,7 +357,7 @@ impl Stats {
         let mut requests = 0u64;
         let mut blocked = 0u64;
         let mut status = [0u64; 4];
-        let mut reasons = [0u64; 5];
+        let mut reasons = [0u64; REASONS];
         let buckets = ((window_minutes + step - 1) / step) as usize;
         let bucket0 = (now_min.div_euclid(step) - buckets as i64 + 1) * step;
         let mut timeline: Vec<(i64, u64, u64)> = (0..buckets).map(|i| (bucket0 + i as i64 * step, 0, 0)).collect();
@@ -334,7 +374,7 @@ impl Stats {
                     for i in 0..4 {
                         status[i] += s.status[i];
                     }
-                    for i in 0..5 {
+                    for i in 0..REASONS {
                         reasons[i] += s.reasons[i];
                     }
                 }
@@ -354,6 +394,9 @@ impl Stats {
         let mut top_paths: Vec<(String, PathAgg)> = self.paths.iter().filter(|r| r.value().last_seen >= start).map(|r| (r.key().clone(), r.value().clone())).collect();
         top_paths.sort_by(|a, b| b.1.requests.cmp(&a.1.requests).then_with(|| a.0.cmp(&b.0)));
         top_paths.truncate(TOP_N);
+        let mut top_origins: Vec<(String, OriginAgg)> = self.origins.iter().filter(|r| r.value().last_seen >= start).map(|r| (r.key().clone(), r.value().clone())).collect();
+        top_origins.sort_by(|a, b| b.1.requests.cmp(&a.1.requests).then_with(|| a.0.cmp(&b.0)));
+        top_origins.truncate(TOP_N);
 
         let span = (now - since.max(start)).num_milliseconds().max(1000) as f64 / 1000.0;
         let span = span.min(window_minutes as f64 * 60.0);
@@ -370,6 +413,7 @@ impl Stats {
             "timeline": timeline.iter().map(|(m, r, b)| json!({ "t": minute_iso(*m), "requests": r, "blocked": b })).collect::<Vec<_>>(),
             "topIps": top_ips.iter().map(|(ip, a)| json!({ "ip": ip, "requests": a.requests, "blocked": a.blocked, "lastSeen": iso(&a.last_seen) })).collect::<Vec<_>>(),
             "topPaths": top_paths.iter().map(|(p, a)| json!({ "path": p, "requests": a.requests, "errors": a.errors })).collect::<Vec<_>>(),
+            "topOrigins": top_origins.iter().map(|(o, a)| json!({ "origin": o, "requests": a.requests, "blocked": a.blocked })).collect::<Vec<_>>(),
         })
     }
 
@@ -384,7 +428,7 @@ mod tests {
     use super::*;
 
     fn entry(t: DateTime<Utc>, ip: &str, path: &str, status: u16, blocked: Option<Reason>) -> LogEntry {
-        LogEntry { time: t, ip: ip.into(), method: "GET".into(), path: path.into(), status, ms: 1, ua: "ua".into(), blocked }
+        LogEntry { time: t, ip: ip.into(), method: "GET".into(), path: path.into(), status, ms: 1, ua: "ua".into(), blocked, origin: None }
     }
 
     #[test]
@@ -404,6 +448,7 @@ mod tests {
             s.requests(&RequestFilter {
                 ip: ip.map(Into::into),
                 path: path.map(Into::into),
+                origin: None,
                 status: status.map(Into::into),
                 blocked: blocked.map(Into::into),
                 limit: 100,
@@ -419,6 +464,30 @@ mod tests {
         assert_eq!(f(None, None, None, Some("false")), 4);
         assert_eq!(f(None, None, None, Some("rate")), 0);
         assert_eq!(s.requests(&RequestFilter { limit: 2, ..Default::default() }).len(), 2);
+    }
+
+    #[test]
+    fn origins_filter_and_top() {
+        let s = Stats::default();
+        let now = Utc::now();
+        let with = |host: Option<&str>, blocked| LogEntry { origin: host.map(Into::into), ..entry(now, "192.0.2.5", "/api", 200, blocked) };
+        s.record(with(Some("app.ndst.pw"), Some(Reason::Domain)), 100);
+        s.record(with(Some("app.ndst.pw"), Some(Reason::Domain)), 100);
+        s.record(with(Some("lampa.mx"), None), 100);
+        s.record(with(None, None), 100);
+        let f = |o: &str, b: Option<&str>| s.requests(&RequestFilter { origin: Some(o.into()), blocked: b.map(Into::into), limit: 100, ..Default::default() });
+        assert_eq!(f("NDST", None).len(), 2);
+        assert_eq!(f("", None).len(), 4);
+        assert_eq!(f("lampa", Some("domain")).len(), 0);
+        assert_eq!(f("ndst", Some("domain"))[0]["origin"], "app.ndst.pw");
+        assert!(s.requests(&RequestFilter { limit: 1, ..Default::default() })[0]["origin"].is_null());
+        let o = s.overview(60, now);
+        assert_eq!(o["blockedByReason"]["domain"], 2);
+        assert_eq!(o["topOrigins"][0]["origin"], "app.ndst.pw");
+        assert_eq!(o["topOrigins"][0]["requests"], 2);
+        assert_eq!(o["topOrigins"][0]["blocked"], 2);
+        assert_eq!(o["topOrigins"][1]["blocked"], 0);
+        assert_eq!(o["topOrigins"].as_array().unwrap().len(), 2);
     }
 
     #[test]
