@@ -147,9 +147,31 @@ async fn fetch_page(url: &str, ct: &CancellationToken) -> Option<RootIn> {
     net::get_json::<RootIn>(url, &req).await
 }
 
-async fn remote_conf_flag(syncapi: &str, flag: &str) -> bool {
-    let v = net::get_json::<serde_json::Value>(&format!("{syncapi}/sync/conf"), &Req::new()).await;
-    v.and_then(|v| v.get(flag).and_then(|x| x.as_bool())).unwrap_or(false)
+/// `Some(flag)` from the remote `/sync/conf`, `None` when the host did not answer (down,
+/// restarting, 5xx, network) - that is not the same as an old host without the flag.
+async fn remote_conf_flag(syncapi: &str, flag: &str) -> Option<bool> {
+    let v = net::get_json::<serde_json::Value>(&format!("{syncapi}/sync/conf"), &Req::new()).await?;
+    Some(v.get(flag).and_then(|x| x.as_bool()).unwrap_or(false))
+}
+
+/// Retry delay after a failed cycle: 1, 2, 5, 10 minutes, never longer than `timeSync`.
+pub fn retry_delay(failures: u32, time_sync_minutes: u64) -> Duration {
+    let minutes = match failures {
+        0 | 1 => 1,
+        2 => 2,
+        3 => 5,
+        _ => 10,
+    };
+    Duration::from_secs(60 * minutes.min(time_sync_minutes.max(1)))
+}
+
+/// How a torrents cycle ended.
+#[derive(Debug, PartialEq, Eq)]
+pub enum CycleEnd {
+    /// Reached the end of the remote feed (or nothing to do).
+    Done,
+    /// The sync host did not answer / the feed broke off: retry soon, not after `timeSync`.
+    Unavailable,
 }
 
 /// Persistent position of the torrents worker.
@@ -173,16 +195,21 @@ fn save_torrents_checkpoint(st: &SyncState) {
     log::info(cat::SYNC, "saved state (lastsync.txt)");
 }
 
-async fn torrents_cycle(c: &AppOptions, syncapi: &str, st: &mut SyncState, ct: &CancellationToken) -> anyhow::Result<()> {
+async fn torrents_cycle(c: &AppOptions, syncapi: &str, st: &mut SyncState, ct: &CancellationToken) -> anyhow::Result<CycleEnd> {
     let cycle_start = Instant::now();
     let mut cycle_total = 0usize;
+    let mut end = CycleEnd::Done;
     log::info(cat::SYNC, format!("start / {}", now_str()));
 
     if st.lastsync == -1 && std::path::Path::new(LAST_SYNC_PATH).exists() {
         st.lastsync = read_checkpoint(LAST_SYNC_PATH)?;
     }
 
-    if !remote_conf_flag(syncapi, "fbd").await {
+    let fbd = remote_conf_flag(syncapi, "fbd").await;
+    if fbd.is_none() {
+        log::warn(cat::SYNC, format!("{syncapi} is not answering (/sync/conf) - will retry in a few minutes"));
+        end = CycleEnd::Unavailable;
+    } else if fbd == Some(false) {
         log::warn(cat::SYNC, "remote /sync/conf missing fbd - upgrade syncapi host");
     } else {
         if st.starsync == -1 && std::path::Path::new(STAR_SYNC_PATH).exists() {
@@ -219,6 +246,8 @@ async fn torrents_cycle(c: &AppOptions, syncapi: &str, st: &mut SyncState, ct: &
                     }
                     continue;
                 }
+                log::warn(cat::SYNC, format!("{syncapi}: feed request failed twice - will retry in a few minutes"));
+                end = CycleEnd::Unavailable;
                 break;
             };
 
@@ -272,7 +301,7 @@ async fn torrents_cycle(c: &AppOptions, syncapi: &str, st: &mut SyncState, ct: &
         cat::SYNC,
         format!("end / {} (cycle added {cycle_total} torrents in {})", now_str(), format_elapsed(cycle_start.elapsed())),
     );
-    Ok(())
+    Ok(end)
 }
 
 /// Torrents-mode worker loop.
@@ -281,6 +310,7 @@ pub async fn torrents(ct: CancellationToken) {
         return;
     }
     let mut st = SyncState::default();
+    let mut failures: u32 = 0;
     while !ct.is_cancelled() {
         let c = conf();
         let syncapi = c.syncapi.clone().unwrap_or_default();
@@ -291,16 +321,30 @@ pub async fn torrents(ct: CancellationToken) {
             continue;
         }
 
-        if let Err(e) = torrents_cycle(&c, &syncapi, &mut st, &ct).await {
-            if e.downcast_ref::<Cancelled>().is_some() || ct.is_cancelled() {
+        let end = match torrents_cycle(&c, &syncapi, &mut st, &ct).await {
+            Ok(end) => end,
+            Err(e) => {
+                if e.downcast_ref::<Cancelled>().is_some() || ct.is_cancelled() {
+                    return;
+                }
+                if st.lastsync > 0 {
+                    save_master().await;
+                    write_checkpoint(LAST_SYNC_PATH, st.lastsync);
+                }
+                log::error(cat::SYNC, format!("error / {} / {e}", now_str()));
+                CycleEnd::Unavailable
+            }
+        };
+        if end == CycleEnd::Unavailable {
+            failures += 1;
+            let delay = retry_delay(failures, conf().timeSync.max(20) as u64);
+            log::info(cat::SYNC, format!("next attempt in {} min (failure {failures})", delay.as_secs() / 60));
+            if !sleep_ct(delay, &ct).await {
                 return;
             }
-            if st.lastsync > 0 {
-                save_master().await;
-                write_checkpoint(LAST_SYNC_PATH, st.lastsync);
-            }
-            log::error(cat::SYNC, format!("error / {} / {e}", now_str()));
+            continue;
         }
+        failures = 0;
 
         let jitter = rand::thread_rng().gen_range(60..300u64);
         if !sleep_ct(Duration::from_secs(jitter), &ct).await {
@@ -315,7 +359,7 @@ pub async fn torrents(ct: CancellationToken) {
 
 async fn spidr_cycle(syncapi: &str, c: &AppOptions, ct: &CancellationToken) -> anyhow::Result<()> {
     let mut lastsync_spidr: i64 = -1;
-    if !remote_conf_flag(syncapi, "spidr").await {
+    if remote_conf_flag(syncapi, "spidr").await != Some(true) {
         return Ok(());
     }
     let cycle_start = Instant::now();
@@ -407,6 +451,14 @@ pub async fn run_worker(ct: CancellationToken) {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn retry_delay_backs_off_and_caps() {
+        let m = |f, t| retry_delay(f, t).as_secs() / 60;
+        assert_eq!((m(1, 120), m(2, 120), m(3, 120), m(4, 120), m(9, 120)), (1, 2, 5, 10, 10));
+        assert_eq!(m(4, 5), 5, "never longer than timeSync");
+        assert_eq!(m(1, 0), 1);
+    }
 
     #[test]
     fn elapsed_format() {
