@@ -162,7 +162,7 @@ server {
 
 ```bash
 curl https://sync.crab.rip/sync/conf
-# {"fbd":true,"spidr":true,"version":2}
+# {"fbd":true,"spidr":true,"version":2,"count":3620842}
 
 curl -s "https://sync.crab.rip/sync/fdb/torrents?time=-1" | head -c 300
 # {"nextread":true,"countread":…,"take":2000,"collections":[…

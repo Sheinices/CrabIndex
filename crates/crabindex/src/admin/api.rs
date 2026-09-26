@@ -76,6 +76,10 @@ pub fn overview(c: &AppOptions) -> Value {
         .collect();
     let fmt_sync = |path: &str| checkpoint_iso(read_checkpoint(path));
     let syncapi = c.syncapi.clone().filter(|s| !s.trim().is_empty());
+    let remote_torrents = {
+        let n = crab_ops::sync::cron::REMOTE_TORRENTS.load(std::sync::atomic::Ordering::Relaxed);
+        (n >= 0).then_some(n)
+    };
     let info = config::get_config_source_info();
     json!({
         "version": version::VERSION,
@@ -94,6 +98,8 @@ pub fn overview(c: &AppOptions) -> Value {
             "syncapi": syncapi,
             "lastsync": fmt_sync(crab_ops::sync::cron::LAST_SYNC_PATH),
             "starsync": fmt_sync(crab_ops::sync::cron::STAR_SYNC_PATH),
+            "torrents": crab_core::index::current_len(),
+            "remoteTorrents": remote_torrents,
         },
         "config": { "path": info.path, "format": info.format },
     })

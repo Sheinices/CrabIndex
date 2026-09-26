@@ -83,7 +83,9 @@ pub fn spawn_workers(shutdown: CancellationToken) {
 }
 
 async fn sync_conf() -> axum::Json<serde_json::Value> {
-    axum::Json(json!({ "fbd": true, "spidr": true, "version": 2 }))
+    // `count` lets a client show how full its copy is versus this host (admin progress only).
+    let count = crab_core::index::current_len().unwrap_or(0);
+    axum::Json(json!({ "fbd": true, "spidr": true, "version": 2, "count": count }))
 }
 
 #[derive(Serialize)]

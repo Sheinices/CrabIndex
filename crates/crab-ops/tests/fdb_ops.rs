@@ -72,7 +72,7 @@ async fn fdb_operations_end_to_end() {
 
     // ---- sync API ----
     let conf = get_json("/sync/conf").await;
-    assert_eq!(serde_json::to_string(&conf).unwrap(), r#"{"fbd":true,"spidr":true,"version":2}"#);
+    assert_eq!(serde_json::to_string(&conf).unwrap(), r#"{"fbd":true,"spidr":true,"version":2,"count":0}"#);
 
     let empty = get_json("/sync/fdb/torrents?time=0").await;
     assert_eq!(serde_json::to_string(&empty).unwrap(), r#"{"nextread":false,"collections":[]}"#);

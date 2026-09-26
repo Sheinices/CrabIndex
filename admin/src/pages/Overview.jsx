@@ -151,6 +151,12 @@ export function OverviewPage() {
   const o = data || {};
   const enabled = (o.trackers || []).filter((t) => t.enabled !== false).length;
   const sync = o.sync || {};
+  const syncLocal = sync.torrents;
+  const syncRemote = sync.remoteTorrents;
+  const syncPct =
+    Number.isFinite(syncRemote) && syncRemote > 0 && Number.isFinite(syncLocal)
+      ? Math.min(100, Math.round((syncLocal / syncRemote) * 100))
+      : null;
 
   return (
     <>
@@ -245,6 +251,23 @@ export function OverviewPage() {
                     <dt className="text-muted">Последняя</dt>
                     <dd>{formatRelative(sync.lastsync)}</dd>
                   </div>
+                  {syncPct !== null && (
+                    <div>
+                      <div className="flex justify-between gap-3">
+                        <dt className="text-muted">Наполнение</dt>
+                        <dd>
+                          {formatNumber(syncLocal)} / {formatNumber(syncRemote)}{" "}
+                          <span className="text-muted">({syncPct}%)</span>
+                        </dd>
+                      </div>
+                      <div className="mt-1 h-1.5 overflow-hidden rounded bg-border">
+                        <div
+                          className="h-full rounded bg-accent transition-[width]"
+                          style={{ width: `${syncPct}%` }}
+                        />
+                      </div>
+                    </div>
+                  )}
                   <div className="flex justify-between gap-3">
                     <dt className="text-muted">Трекеры</dt>
                     <dd>

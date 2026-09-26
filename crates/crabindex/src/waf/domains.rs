@@ -28,6 +28,9 @@ pub const BUILTIN_BLOCKED_DOMAINS: &[&str] = &[
     "xabb.ru",
     // FreeDNS shared zone: only this site and its subdomains, never all of mooo.com
     "lampaua.mooo.com",
+    // shared zones: only these sites and their subdomains
+    "siaivo.isroot.in",
+    "beta.l-vid.online",
 ];
 
 /// Longest domain name.
@@ -111,7 +114,7 @@ mod tests {
 
     #[test]
     fn builtin_list_is_lowercase_and_valid() {
-        assert_eq!(BUILTIN_BLOCKED_DOMAINS.len(), 19);
+        assert_eq!(BUILTIN_BLOCKED_DOMAINS.len(), 21);
         for d in BUILTIN_BLOCKED_DOMAINS {
             assert_eq!(parse_rule(d).as_deref(), Ok(*d));
         }

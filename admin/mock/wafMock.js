@@ -29,6 +29,8 @@ export const BUILTIN_DOMAINS = [
   'usph.xyz',
   'xabb.ru',
   'lampaua.mooo.com',
+  'siaivo.isroot.in',
+  'beta.l-vid.online',
 ]
 
 const UA = {

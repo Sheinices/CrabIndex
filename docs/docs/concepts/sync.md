@@ -55,7 +55,7 @@ Sync-воркер работает в два потока.
 
 | Эндпоинт | Назначение |
 | --- | --- |
-| `GET /sync/conf` | Возможности протокола: `{"fbd": true, "spidr": true, "version": 2}` |
+| `GET /sync/conf` | Возможности протокола: `{"fbd": true, "spidr": true, "version": 2, "count": <раздач>}` |
 | `GET /sync/fdb/torrents?time=…&start=…&spidr=…` | Страница изменений после метки `time` |
 | `GET /sync/fdb?key=…` | Отладка: до 20 бакетов, ключ которых содержит подстроку |
 

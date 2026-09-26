@@ -20,6 +20,7 @@ use crab_core::{conf, time, util};
 use indexmap::IndexMap;
 use rand::Rng;
 use serde::Deserialize;
+use std::sync::atomic::{AtomicI64, Ordering};
 use std::time::{Duration, Instant};
 use tokio_util::sync::CancellationToken;
 
@@ -28,6 +29,10 @@ use crate::sleep_ct;
 const TIME_FORMAT: &str = "%Y-%m-%d %H:%M:%S";
 pub const LAST_SYNC_PATH: &str = "Data/temp/lastsync.txt";
 pub const STAR_SYNC_PATH: &str = "Data/temp/starsync.txt";
+
+/// Torrent count reported by the sync host's `/sync/conf` (`-1` = not known yet).
+/// Used only for the admin fill-progress display, never for sync logic.
+pub static REMOTE_TORRENTS: AtomicI64 = AtomicI64::new(-1);
 
 /// Incoming page (lenient: missing/null collections are distinguishable from empty).
 #[derive(Deserialize, Default, Debug)]
@@ -150,8 +155,13 @@ async fn fetch_page(url: &str, ct: &CancellationToken) -> Option<RootIn> {
 /// `Some(flag)` from the remote `/sync/conf`, `None` when the host did not answer (down,
 /// restarting, 5xx, network) - that is not the same as an old host without the flag.
 async fn remote_conf_flag(syncapi: &str, flag: &str) -> Option<bool> {
-    let v = net::get_json::<serde_json::Value>(&format!("{syncapi}/sync/conf"), &Req::new()).await?;
+    let v = remote_conf(syncapi).await?;
     Some(v.get(flag).and_then(|x| x.as_bool()).unwrap_or(false))
+}
+
+/// The whole remote `/sync/conf` JSON, or `None` when the host did not answer.
+async fn remote_conf(syncapi: &str) -> Option<serde_json::Value> {
+    net::get_json::<serde_json::Value>(&format!("{syncapi}/sync/conf"), &Req::new()).await
 }
 
 /// Retry delay after a failed cycle: 1, 2, 5, 10 minutes, never longer than `timeSync`.
@@ -205,7 +215,14 @@ async fn torrents_cycle(c: &AppOptions, syncapi: &str, st: &mut SyncState, ct: &
         st.lastsync = read_checkpoint(LAST_SYNC_PATH)?;
     }
 
-    let fbd = remote_conf_flag(syncapi, "fbd").await;
+    let conf_json = remote_conf(syncapi).await;
+    if let Some(v) = &conf_json {
+        // Best-effort: record the host total so the admin can show fill progress.
+        if let Some(n) = v.get("count").and_then(|x| x.as_i64()) {
+            REMOTE_TORRENTS.store(n, Ordering::Relaxed);
+        }
+    }
+    let fbd = conf_json.as_ref().map(|v| v.get("fbd").and_then(|x| x.as_bool()).unwrap_or(false));
     if fbd.is_none() {
         log::warn(cat::SYNC, format!("{syncapi} is not answering (/sync/conf) - will retry in a few minutes"));
         end = CycleEnd::Unavailable;

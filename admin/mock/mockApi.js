@@ -145,7 +145,7 @@ function overview() {
       enabled: !disabled.has(slug),
       parseAll: pa.get(slug) ? { running: pa.get(slug).running, pending: pa.get(slug).pending, mapCount: pa.get(slug).mapCount } : null,
     })),
-    sync: { enabled: !!config.syncapi, syncapi: config.syncapi, lastsync: null, starsync: null },
+    sync: { enabled: !!config.syncapi, syncapi: config.syncapi, lastsync: null, starsync: null, torrents: 3_342_561, remoteTorrents: 3_620_842 },
     config: { path: 'init.yaml', format: 'yaml' },
   }
 }
