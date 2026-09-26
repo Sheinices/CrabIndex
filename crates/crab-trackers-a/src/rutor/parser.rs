@@ -2,13 +2,18 @@
 
 use crab_core::conf;
 use crab_core::models::{TaskParse, TorrentDetails};
-use crab_core::parsing::tparse;
+use crab_core::parsing::{has_season_marker, tparse};
 use crab_core::rx;
 
 use super::categories::{RutorTitleKind, MAP};
 use crate::common::{g, match_row_nbsp as m, name_before_brackets, nb, parse_int, year};
 
 const TRACKER_NAME: &str = "rutor";
+const SERIAL_TYPES: &[&str] = &["serial"];
+
+fn is_movie_only(types: &[&str]) -> bool {
+    types.len() == 1 && types[0] == "movie"
+}
 
 const LAST_BROWSE_RE: &str = r#"<a href="/browse/([0-9]+)/[0-9]+/[0-9]+/[0-9]+"><b>[0-9]+&nbsp;-&nbsp;[0-9]+</b></a></p>"#;
 
@@ -72,7 +77,22 @@ pub fn parse_torrents_from_page(html: &str, cat: &str) -> Vec<TorrentDetails> {
         }
 
         let url = format!("{}/{}", conf().Rutor.host, url);
-        let (mut name, originalname, relased) = parse_title_names(meta.title_kind, &title);
+
+        // The movie categories (1, 5 and especially 17 "Иностранные релизы" with UKR dubs) also
+        // list series. A season marker in the title is decisive: type the row as a serial and
+        // parse the names with the serial patterns - the movie patterns would keep an "[S01]"
+        // tail in `originalname`, and a `movie` row is invisible to serial card searches.
+        let (types, title_kind) = if is_movie_only(meta.types) && has_season_marker(&title) {
+            let kind = match meta.title_kind {
+                RutorTitleKind::RuMovie => RutorTitleKind::RuSerial,
+                _ => RutorTitleKind::ForeignSerial,
+            };
+            (SERIAL_TYPES, kind)
+        } else {
+            (meta.types, meta.title_kind)
+        };
+
+        let (mut name, originalname, relased) = parse_title_names(title_kind, &title);
         if !nb(&name) {
             name = name_before_brackets(&title);
         }
@@ -80,7 +100,7 @@ pub fn parse_torrents_from_page(html: &str, cat: &str) -> Vec<TorrentDetails> {
             continue;
         }
 
-        let mut t = TorrentDetails::new(TRACKER_NAME, meta.types, url, title);
+        let mut t = TorrentDetails::new(TRACKER_NAME, types, url, title);
         t.sid = parse_int(&sid);
         t.pir = parse_int(&pir);
         t.sizeName = size_name;

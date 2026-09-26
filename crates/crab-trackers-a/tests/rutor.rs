@@ -85,7 +85,13 @@ fn fixtures_yield_typed_torrents() {
         assert!(torrents.len() >= min, "expected >={min} torrents for cat {cat}, got {}", torrents.len());
         for t in &torrents {
             assert_eq!(t.trackerName, "rutor");
-            assert_eq!(types(t), MAP[cat].types);
+            // Movie categories retype rows with a season marker (cat 17 mixes films and series).
+            let expected: &[&str] = if MAP[cat].types == ["movie"] && crab_core::parsing::has_season_marker(&t.title) {
+                &["serial"]
+            } else {
+                MAP[cat].types
+            };
+            assert_eq!(types(t), expected, "{}", t.title);
             assert!(!t.name.trim().is_empty());
             assert!(!t.title.trim().is_empty());
             assert!(t.url.starts_with(&host));
@@ -195,6 +201,34 @@ fn foreign_serial_parses_name_orig_year() {
     assert_eq!(t.name, "Дом Дракона");
     assert_eq!(t.originalname, "House of the Dragon");
     assert_eq!(t.relased, 2026);
+}
+
+#[test]
+fn movie_categories_retype_series_by_season_marker() {
+    // Cat 17 "Иностранные релизы" mixes UKR-dubbed films and series; only the title tells.
+    let t = single("Ведьмак / Відьмак / The Witcher [S01] (2019) WEBRip 1080p | P | UKR", "17");
+    assert_eq!(types(&t), ["serial"]);
+    assert_eq!(t.name, "Ведьмак");
+    assert_eq!(t.originalname, "The Witcher");
+    assert_eq!(t.relased, 2019);
+
+    let t = single("Игра в кальмара / Гра в кальмара / Ojingeo geim / Squid Game [S01] (2021) WEB-DL 1080p | UKR", "17");
+    assert_eq!(types(&t), ["serial"]);
+    assert_eq!(t.name, "Игра в кальмара");
+    assert_eq!(t.originalname, "Squid Game");
+    assert_eq!(t.relased, 2021);
+
+    // Russian movie category with a season marker: serial, parsed with the RU serial pattern.
+    let t = single("Слово пацана. Кровь на асфальте [01x01-08 из 08] (2023) WEB-DL 1080p", "5");
+    assert_eq!(types(&t), ["serial"]);
+    assert_eq!(t.name, "Слово пацана. Кровь на асфальте");
+    assert_eq!(t.relased, 2023);
+
+    // A film stays a film: only bracketed markers count, not the word in a name.
+    let t = single("Сезон охоты / Open Season (2006) BDRip 1080p | UKR", "17");
+    assert_eq!(types(&t), ["movie"]);
+    assert_eq!(t.name, "Сезон охоты");
+    assert_eq!(t.originalname, "Open Season");
 }
 
 #[test]

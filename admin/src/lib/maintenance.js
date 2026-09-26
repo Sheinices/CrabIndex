@@ -40,6 +40,11 @@ export const MIGRATIONS = [
   { path: 'dev/fixkinozaldomainduplicates', label: 'kinozal: дубли доменов', description: 'Сводит записи со старых доменов к текущему host.' },
   { path: 'dev/fixultradoxdomainduplicates', label: 'ultradox: дубли доменов', description: 'Сводит записи со старых доменов к текущему host.' },
   {
+    path: 'dev/fixrutorserialtypes',
+    label: 'rutor: сериалы в категориях фильмов',
+    description: 'Раздачи с маркером сезона ([S01], [01x01]) из категорий фильмов (в т.ч. 17 «Иностранные релизы» UKR) переводит в serial, пересобирает названия и сезоны.',
+  },
+  {
     path: 'dev/removebucket',
     label: 'Удалить/перенести бакет',
     description: 'Удаляет бакет или переносит его записи под новый ключ name:originalname.',

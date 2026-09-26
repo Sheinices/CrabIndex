@@ -13,7 +13,7 @@ use crate::maintenance::migration_target;
 /// Walk every bucket, patch rows of `tracker` with `patch` (returns true when changed),
 /// migrate moved rows. `save_if(bucket_changed, migrated_total)` decides whether the shard
 /// is marked dirty. Returns (processed, migrated); `patch` does its own counting.
-fn walk<P, S>(tracker: &str, mut patch: P, save_if: S) -> (i64, i64)
+pub(super) fn walk<P, S>(tracker: &str, mut patch: P, save_if: S) -> (i64, i64)
 where
     P: FnMut(&mut TorrentDetails) -> bool,
     S: Fn(bool, i64) -> bool,

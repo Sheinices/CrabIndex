@@ -8,6 +8,62 @@ fn trim_end_chars(s: &str, chars: &[char]) -> String {
     s.trim_end_matches(|c| chars.contains(&c)).to_string()
 }
 
+pub mod rutor {
+    use super::*;
+
+    /// Serial title patterns of the rutor parser (4-, 3- and 2-part foreign titles), then the
+    /// Russian one. Returns (name, originalname, year); empty strings / 0 when nothing matched.
+    pub fn parse_serial_title(title: &str) -> (String, String, i32) {
+        const FOREIGN: [&str; 3] = [
+            r"^([^/]+) / [^/]+ / [^/]+ / ([^/\[]+) \[[^\]]+\] +\(([0-9]{4})(\)|-)",
+            r"^([^/]+) / [^/]+ / ([^/\[]+) \[[^\]]+\] +\(([0-9]{4})(\)|-)",
+            r"^([^/]+) / ([^/\[]+) \[[^\]]+\] +\(([0-9]{4})(\)|-)",
+        ];
+        const RU: &str = r"^([^/]+) \[[^\]]+\] \(([0-9]{4})(\)|-)";
+
+        for pat in FOREIGN {
+            if let Some(g) = groups(title, pat, &[1, 2, 3]) {
+                if g.iter().all(|s| !s.is_empty()) {
+                    return (g[0].clone(), g[1].clone(), g[2].parse().unwrap_or(0));
+                }
+            }
+        }
+        if let Some(g) = groups(title, RU, &[1, 2]) {
+            if !g[0].is_empty() {
+                return (g[0].clone(), String::new(), g[1].parse().unwrap_or(0));
+            }
+        }
+        (String::new(), String::new(), 0)
+    }
+
+    fn groups(title: &str, pat: &str, idx: &[usize]) -> Option<Vec<String>> {
+        let c = rx::captures(title, pat)?;
+        Some(idx.iter().map(|&i| c.get(i).map(|m| m.as_str().trim().to_string()).unwrap_or_default()).collect())
+    }
+
+    #[cfg(test)]
+    mod tests {
+        use super::parse_serial_title;
+
+        #[test]
+        fn parses_foreign_and_russian_serial_titles() {
+            assert_eq!(
+                parse_serial_title("Ведьмак / Відьмак / The Witcher [S01] (2019) WEBRip 1080p | P | UKR"),
+                ("Ведьмак".into(), "The Witcher".into(), 2019)
+            );
+            assert_eq!(
+                parse_serial_title("Игра в кальмара / Гра в кальмара / Ojingeo geim / Squid Game [S01] (2021) WEB-DL"),
+                ("Игра в кальмара".into(), "Squid Game".into(), 2021)
+            );
+            assert_eq!(
+                parse_serial_title("Слово пацана. Кровь на асфальте [01x01-08 из 08] (2023) WEB-DL 1080p"),
+                ("Слово пацана. Кровь на асфальте".into(), String::new(), 2023)
+            );
+            assert_eq!(parse_serial_title("Опасное небо / Top Gunner (2020) WEB-DL"), (String::new(), String::new(), 0));
+        }
+    }
+}
+
 pub mod knaben {
     use super::*;
 
