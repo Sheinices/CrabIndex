@@ -1,11 +1,13 @@
 import { useEffect, useId, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { X } from 'lucide-react'
+import { useT } from '../lang/index.jsx'
 
 const FOCUSABLE = 'a[href], button:not([disabled]), textarea, input:not([disabled]), select, [tabindex]:not([tabindex="-1"])'
 
 /** Accessible modal dialog (or right-side drawer with `variant="drawer"`). */
 export function Modal({ open, onClose, title, description, children, footer, size = 'md', variant = 'dialog' }) {
+  const t = useT()
   const titleId = useId()
   const descId = useId()
   const panelRef = useRef(null)
@@ -77,7 +79,7 @@ export function Modal({ open, onClose, title, description, children, footer, siz
               </p>
             ) : null}
           </div>
-          <button type="button" className="btn btn-ghost btn-sm -mr-2" onClick={() => onCloseRef.current?.()} aria-label="Закрыть">
+          <button type="button" className="btn btn-ghost btn-sm -mr-2" onClick={() => onCloseRef.current?.()} aria-label={t('close')}>
             <X className="size-4" aria-hidden="true" />
           </button>
         </div>

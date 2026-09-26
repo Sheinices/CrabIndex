@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useMemo, useRef, useState } from 'react'
 import { CheckCircle2, AlertTriangle, Info, X } from 'lucide-react'
+import { useT } from '../lang/index.jsx'
 
 const ToastContext = createContext(null)
 
@@ -7,6 +8,7 @@ const ICONS = { success: CheckCircle2, error: AlertTriangle, info: Info }
 const TONES = { success: 'text-ok', error: 'text-danger', info: 'text-accent' }
 
 export function ToastProvider({ children }) {
+  const t = useT()
   const [items, setItems] = useState([])
   const seq = useRef(0)
 
@@ -38,22 +40,22 @@ export function ToastProvider({ children }) {
       <div
         className="pointer-events-none fixed inset-x-0 bottom-0 z-50 flex flex-col items-center gap-2 p-4 sm:items-end"
         role="region"
-        aria-label="Уведомления"
+        aria-label={t('notifications')}
       >
-        {items.map((t) => {
-          const Icon = ICONS[t.kind] || Info
+        {items.map((item) => {
+          const Icon = ICONS[item.kind] || Info
           return (
             <div
-              key={t.id}
-              role={t.kind === 'error' ? 'alert' : 'status'}
+              key={item.id}
+              role={item.kind === 'error' ? 'alert' : 'status'}
               className="pointer-events-auto flex w-full max-w-sm items-start gap-3 rounded-xl border border-border bg-surface p-3 shadow-lg"
             >
-              <Icon className={`mt-0.5 size-5 shrink-0 ${TONES[t.kind]}`} aria-hidden="true" />
+              <Icon className={`mt-0.5 size-5 shrink-0 ${TONES[item.kind]}`} aria-hidden="true" />
               <div className="min-w-0 flex-1">
-                <p className="text-sm font-medium">{t.title}</p>
-                {t.detail ? <p className="mt-1 line-clamp-4 text-xs break-words whitespace-pre-wrap text-muted">{t.detail}</p> : null}
+                <p className="text-sm font-medium">{item.title}</p>
+                {item.detail ? <p className="mt-1 line-clamp-4 text-xs break-words whitespace-pre-wrap text-muted">{item.detail}</p> : null}
               </div>
-              <button type="button" className="btn-ghost btn btn-sm -m-1 p-1" onClick={() => dismiss(t.id)} aria-label="Закрыть">
+              <button type="button" className="btn-ghost btn btn-sm -m-1 p-1" onClick={() => dismiss(item.id)} aria-label={t('close')}>
                 <X className="size-4" aria-hidden="true" />
               </button>
             </div>

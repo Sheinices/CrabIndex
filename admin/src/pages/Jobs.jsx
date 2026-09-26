@@ -18,8 +18,10 @@ import {
 import { JobList } from "./Overview.jsx";
 import { parseAllProgress } from "./Trackers.jsx";
 import { formatNumber } from "../lib/format.js";
+import { useT } from "../lang/index.jsx";
 
 export function JobsPage() {
+  const t = useT();
   const [live, setLive] = useState(true);
   const jobs = usePolling(() => getBackgroundJobs(), 5000, { enabled: live });
   const pa = usePolling(() => getParseAllStatus(), 5000, { enabled: live });
@@ -33,7 +35,7 @@ export function JobsPage() {
 
   const resume = async () => {
     setBusy(true);
-    await run("Возобновить ParseAll", () => resumeParseAll());
+    await run(t("jobs_resume_parseall"), () => resumeParseAll());
     setBusy(false);
     reload();
   };
@@ -43,18 +45,18 @@ export function JobsPage() {
   return (
     <>
       <PageHeader
-        title="Задачи"
-        description="Фоновые задачи парсеров и состояние циклов ParseAll"
+        title={t("nav_jobs")}
+        description={t("jobs_desc")}
         actions={
           <>
             <Toggle
               id="jobs-live"
               checked={live}
               onChange={setLive}
-              label="Автообновление"
+              label={t("auto_refresh")}
             />
             <button type="button" className="btn btn-sm" onClick={reload}>
-              <RefreshCw className="size-4" aria-hidden="true" /> Обновить
+              <RefreshCw className="size-4" aria-hidden="true" /> {t("refresh")}
             </button>
             <button
               type="button"
@@ -67,7 +69,7 @@ export function JobsPage() {
               ) : (
                 <PlayCircle className="size-4" aria-hidden="true" />
               )}
-              Возобновить ParseAll
+              {t("jobs_resume_parseall")}
             </button>
           </>
         }
@@ -76,10 +78,10 @@ export function JobsPage() {
       <div className="grid gap-6 lg:grid-cols-2">
         <section className="card p-5" aria-labelledby="jobs-active">
           <h2 id="jobs-active" className="mb-4 font-semibold">
-            Активные задачи
+            {t("jobs_active")}
           </h2>
           {jobs.loading && !jobs.data ? (
-            <Spinner label="Загрузка…" />
+            <Spinner label={t("loading")} />
           ) : (
             <JobList jobs={jobs.data?.jobs} />
           )}
@@ -89,16 +91,12 @@ export function JobsPage() {
             ParseAll
           </h2>
           {pa.loading && !pa.data ? (
-            <Spinner label="Загрузка…" />
+            <Spinner label={t("loading")} />
           ) : list.length ? (
             <>
               {list.every((p) => !p.mapCount) ? (
                 <p className="mb-4 rounded-lg border border-border bg-surface-2 px-3 py-2 text-xs text-muted">
-                  Карт задач пока нет, поэтому везде нули. Их составляет
-                  UpdateTasksParse раз в сутки ночью (с 02:05 до 03:20 по UTC),
-                  после этого утром начинаются обходы ParseAll. Если не хотите
-                  ждать, запустите UpdateTasksParse у нужного трекера на
-                  странице «Трекеры».
+                  {t("jobs_pa_no_maps")}
                 </p>
               ) : null}
               <ul className="space-y-4">
@@ -121,10 +119,10 @@ export function JobsPage() {
                         </span>
                         <span className="text-xs text-muted tabular-nums">
                           {p.running
-                            ? "идёт"
+                            ? t("job_running")
                             : p.pending > 0
-                              ? "приостановлен"
-                              : "нет цикла"}{" "}
+                              ? t("job_paused")
+                              : t("job_no_cycle")}{" "}
                           · {formatNumber(p.pending)} /{" "}
                           {formatNumber(p.mapCount)}
                         </span>
@@ -139,7 +137,7 @@ export function JobsPage() {
               </ul>
             </>
           ) : (
-            <p className="text-sm text-muted">Нет данных</p>
+            <p className="text-sm text-muted">{t("no_data")}</p>
           )}
         </section>
       </div>

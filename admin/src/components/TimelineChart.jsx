@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { formatNumber } from '../lib/format.js'
+import { useT } from '../lang/index.jsx'
 
 const PAD = { top: 12, right: 12, bottom: 26, left: 44 }
 
@@ -36,7 +37,9 @@ function defaultTime(t) {
  * Dependency-free SVG line/area chart for a time series.
  * `series`: `[{ key, label, color: 'text-chart-1', area?: boolean }]`.
  */
-export function TimelineChart({ data, series, height = 220, formatX = defaultTime, label = 'График' }) {
+export function TimelineChart({ data, series, height = 220, formatX = defaultTime, label }) {
+  const t = useT()
+  const chartLabel = label ?? t('chart')
   const wrapRef = useRef(null)
   const [width, setWidth] = useState(720)
   const [hover, setHover] = useState(null)
@@ -94,7 +97,7 @@ export function TimelineChart({ data, series, height = 220, formatX = defaultTim
           </span>
         ))}
         <button type="button" className="ml-auto text-accent hover:underline" onClick={() => setShowTable((v) => !v)}>
-          {showTable ? 'График' : 'Таблица'}
+          {showTable ? t('chart') : t('chart_table')}
         </button>
       </div>
       {showTable ? (
@@ -102,7 +105,7 @@ export function TimelineChart({ data, series, height = 220, formatX = defaultTim
           <table className="table">
             <thead>
               <tr>
-                <th>Время</th>
+                <th>{t('chart_time')}</th>
                 {series.map((s) => (
                   <th key={s.key} className="text-right">
                     {s.label}
@@ -128,7 +131,7 @@ export function TimelineChart({ data, series, height = 220, formatX = defaultTim
         <div ref={wrapRef} className="relative w-full">
           <svg
             role="img"
-            aria-label={`${label}: ${series.map((s) => `${s.label} ${formatNumber(totals[s.key])}`).join(', ')}`}
+            aria-label={`${chartLabel}: ${series.map((s) => `${s.label} ${formatNumber(totals[s.key])}`).join(', ')}`}
             width="100%"
             height={height}
             viewBox={`0 0 ${width} ${height}`}
@@ -188,7 +191,7 @@ export function TimelineChart({ data, series, height = 220, formatX = defaultTim
             ) : null}
             {!rows.length ? (
               <text x={width / 2} y={height / 2} textAnchor="middle" className="fill-muted text-xs">
-                Нет данных
+                {t('chart_no_data')}
               </text>
             ) : null}
           </svg>

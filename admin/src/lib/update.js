@@ -15,6 +15,21 @@ export function stageLabel(stage) {
   return STAGES[stage] || stage || STAGES.idle
 }
 
+// i18n keys for each stage (see lang/*.js). `stageLabel` above stays for pure callers/tests;
+// the UI uses `t(stageKey(stage))` so stage names follow the selected language.
+export const STAGE_KEYS = {
+  idle: 'stage_idle',
+  downloading: 'stage_downloading',
+  verifying: 'stage_verifying',
+  installing: 'stage_installing',
+  restarting: 'stage_restarting',
+  error: 'error',
+}
+
+export function stageKey(stage) {
+  return STAGE_KEYS[stage] || STAGE_KEYS.idle
+}
+
 export function isBusy(state) {
   return BUSY_STAGES.has(state?.stage)
 }

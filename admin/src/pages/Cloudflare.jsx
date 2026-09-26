@@ -8,6 +8,7 @@ import { useConfirm } from '../components/Confirm.jsx'
 import { useToast } from '../components/Toast.jsx'
 import { ErrorBox, PageHeader, Spinner, StatusDot, Toggle } from '../components/ui.jsx'
 import { formatDate, formatNumber, formatRelative } from '../lib/format.js'
+import { useT } from '../lang/index.jsx'
 
 const TONE_DOT = { bad: 'danger', warn: 'warn', ok: 'ok', idle: 'muted' }
 const ADVICE_STYLE = {
@@ -45,6 +46,7 @@ function Advice({ items }) {
 }
 
 export function CloudflarePage() {
+  const t = useT()
   const [live, setLive] = useState(true)
   const st = usePolling(() => getCloudflareStatus(), 10000, { enabled: live })
   const confirm = useConfirm()
@@ -57,7 +59,7 @@ export function CloudflarePage() {
       const r = await fn()
       toast.success(done(r))
     } catch (e) {
-      if (e?.status !== 401) toast.error('Ошибка', e?.message || String(e))
+      if (e?.status !== 401) toast.error(t('error'), e?.message || String(e))
     } finally {
       setBusy('')
       st.reload()
@@ -66,90 +68,91 @@ export function CloudflarePage() {
 
   const closeAll = async () => {
     const ok = await confirm({
-      title: 'Закрыть все сессии браузера?',
-      message: 'Chrome во FlareSolverr освободит память. Следующий запрос к трекеру за Cloudflare заново пройдёт проверку (10-60 секунд). Сессии, занятые запросом, останутся.',
-      confirmLabel: 'Закрыть',
+      title: t('cf_close_all_title'),
+      message: t('cf_close_all_msg'),
+      confirmLabel: t('close'),
     })
-    if (ok) await act('close', () => closeBrowserSessions(), (r) => `Закрыто сессий: ${r.closed}${r.busy ? `, заняты: ${r.busy}` : ''}`)
+    if (ok)
+      await act('close', () => closeBrowserSessions(), (r) => t('cf_closed_sessions', { closed: r.closed }) + (r.busy ? t('cf_busy_suffix', { busy: r.busy }) : ''))
   }
 
-  const closeHost = (host) => act(`close:${host}`, () => closeBrowserSessions(host), (r) => `${host}: закрыто ${r.closed}${r.busy ? `, занята запросом` : ''}`)
+  const closeHost = (host) =>
+    act(`close:${host}`, () => closeBrowserSessions(host), (r) => t('cf_host_closed', { host, closed: r.closed }) + (r.busy ? t('cf_host_busy_suffix') : ''))
 
   const togglePause = async () => {
     const pausing = !st.data?.paused
     if (pausing) {
       const ok = await confirm({
-        title: 'Приостановить FlareSolverr?',
-        message:
-          'CrabIndex перестанет обращаться к браузеру и закроет все его сессии. Трекеры за Cloudflare не будут парситься, пока вы не включите его снова или не перезапустите службу. Настройки не меняются.',
-        confirmLabel: 'Приостановить',
+        title: t('cf_pause_title'),
+        message: t('cf_pause_msg'),
+        confirmLabel: t('cf_pause'),
         danger: true,
       })
       if (!ok) return
     }
-    await act('pause', () => pauseCloudflare(pausing), (r) => (r.paused ? `FlareSolverr приостановлен, закрыто сессий: ${r.closed}` : 'FlareSolverr снова работает'))
+    await act('pause', () => pauseCloudflare(pausing), (r) => (r.paused ? t('cf_paused_toast', { closed: r.closed }) : t('cf_resumed_toast')))
   }
 
   const resetStats = async () => {
-    const ok = await confirm({ title: 'Сбросить статистику?', message: 'Счётчики и журнал ошибок обнулятся. Сессии браузера не затрагиваются.', confirmLabel: 'Сбросить' })
-    if (ok) await act('reset', () => resetCloudflareStats(), () => 'Статистика сброшена')
+    const ok = await confirm({ title: t('cf_reset_title'), message: t('cf_reset_msg'), confirmLabel: t('cf_reset_ok') })
+    if (ok) await act('reset', () => resetCloudflareStats(), () => t('cf_reset_done'))
   }
 
   const d = st.data
   const hosts = d?.stats?.hosts || []
-  const t = totals(hosts)
+  const tot = totals(hosts)
   const errors = d?.stats?.recentErrors || []
   const sessions = d?.sessions || []
   const aliveSessions = sessions.filter((s) => s.alive).length
-  const mode = !d ? '…' : !d.enabled ? 'выключен' : d.paused ? 'приостановлен' : 'работает'
+  const mode = !d ? '…' : !d.enabled ? t('cf_mode_off') : d.paused ? t('cf_mode_paused') : t('cf_mode_running')
   const modeTone = !d ? 'muted' : !d.enabled ? 'muted' : d.paused ? 'warn' : 'ok'
 
   return (
     <>
       <PageHeader
         title="FlareSolverr"
-        description="Обход Cloudflare: состояние браузера, ошибки по трекерам и управление"
+        description={t('cf_desc')}
         actions={
           <>
-            <Toggle id="cf-live" checked={live} onChange={setLive} label="Автообновление" />
+            <Toggle id="cf-live" checked={live} onChange={setLive} label={t('auto_refresh')} />
             <button type="button" className="btn btn-sm" onClick={st.reload}>
-              <RefreshCw className="size-4" aria-hidden="true" /> Обновить
+              <RefreshCw className="size-4" aria-hidden="true" /> {t('refresh')}
             </button>
             <button type="button" className="btn btn-sm" onClick={closeAll} disabled={!!busy || !d?.enabled}>
               {busy === 'close' ? <Spinner /> : <XCircle className="size-4" aria-hidden="true" />}
-              Закрыть сессии
+              {t('cf_close_sessions')}
             </button>
             <button type="button" className={`btn btn-sm ${d?.paused ? 'btn-primary' : 'btn-danger'}`} onClick={togglePause} disabled={!!busy || !d?.enabled}>
               {busy === 'pause' ? <Spinner /> : d?.paused ? <Play className="size-4" aria-hidden="true" /> : <Pause className="size-4" aria-hidden="true" />}
-              {d?.paused ? 'Включить' : 'Приостановить'}
+              {d?.paused ? t('cf_resume') : t('cf_pause')}
             </button>
           </>
         }
       />
       <ErrorBox error={st.error} onRetry={st.reload} />
       {st.loading && !d ? (
-        <Spinner label="Загрузка…" />
+        <Spinner label={t('loading')} />
       ) : d ? (
         <>
           <div className="mb-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
             <Stat
               label="FlareSolverr"
               tone={!d.enabled ? 'muted' : d.solver?.reachable ? 'ok' : 'danger'}
-              value={!d.enabled ? 'выключен в настройках' : d.solver?.reachable ? `v${d.solver.version || '?'}` : 'не отвечает'}
-              sub={d.solver?.reachable ? `сессий в браузере: ${(d.solver.sessions || []).length}` : d.solver?.error || d.settings?.url}
+              value={!d.enabled ? t('cf_solver_off') : d.solver?.reachable ? `v${d.solver.version || '?'}` : t('cf_solver_unreachable')}
+              sub={d.solver?.reachable ? t('cf_solver_sessions', { n: (d.solver.sessions || []).length }) : d.solver?.error || d.settings?.url}
             />
-            <Stat label="Режим" tone={modeTone} value={mode} sub={`активных сессий: ${aliveSessions}`} />
+            <Stat label={t('cf_mode')} tone={modeTone} value={mode} sub={t('cf_active_sessions', { n: aliveSessions })} />
             <Stat
-              label="Запросы через браузер"
-              tone={t.browserFailed ? (t.tabCrashed ? 'danger' : 'warn') : 'muted'}
-              value={`${formatNumber(t.browserOk)} / ${formatNumber(t.browserRequests)}`}
-              sub={`ошибок: ${formatNumber(t.browserFailed)}${t.tabCrashed ? `, из них падений вкладки: ${formatNumber(t.tabCrashed)}` : ''}`}
+              label={t('cf_browser_requests')}
+              tone={tot.browserFailed ? (tot.tabCrashed ? 'danger' : 'warn') : 'muted'}
+              value={`${formatNumber(tot.browserOk)} / ${formatNumber(tot.browserRequests)}`}
+              sub={t('cf_errors_count', { n: formatNumber(tot.browserFailed) }) + (tot.tabCrashed ? t('cf_tab_crashed_suffix', { n: formatNumber(tot.tabCrashed) }) : '')}
             />
             <Stat
-              label="Быстрый путь (cffetch)"
+              label={t('cf_fastpath')}
               tone={d.cffetch?.enabled ? 'ok' : 'muted'}
-              value={d.cffetch?.enabled ? `${formatNumber(t.fastOk)} ок` : 'выключен'}
-              sub={d.cffetch?.enabled ? `не сработал: ${formatNumber(t.fastFailed)} · с cookie: ${(d.cffetch.hosts || []).filter((h) => h.clearanceAt).length} сайт(ов)` : null}
+              value={d.cffetch?.enabled ? t('cf_fast_ok', { n: formatNumber(tot.fastOk) }) : t('cf_off')}
+              sub={d.cffetch?.enabled ? t('cf_fast_sub', { failed: formatNumber(tot.fastFailed), sites: (d.cffetch.hosts || []).filter((h) => h.clearanceAt).length }) : null}
             />
           </div>
 
@@ -158,23 +161,23 @@ export function CloudflarePage() {
           <section className="card mb-6 p-5" aria-labelledby="cf-hosts">
             <div className="mb-4 flex flex-wrap items-baseline justify-between gap-2">
               <h2 id="cf-hosts" className="font-semibold">
-                Трекеры за Cloudflare
+                {t('cf_hosts_title')}
               </h2>
-              <span className="text-xs text-muted">с {formatDate(d.stats?.since)}</span>
+              <span className="text-xs text-muted">{t('cf_since', { date: formatDate(d.stats?.since) })}</span>
             </div>
             {hosts.length ? (
               <div className="table-wrap">
                 <table className="table">
                   <thead>
                     <tr>
-                      <th>Сайт</th>
-                      <th className="text-right">Браузер</th>
-                      <th className="text-right">Ошибки</th>
-                      <th>Причины</th>
-                      <th className="text-right">Среднее, с</th>
-                      <th className="text-right">Сессий</th>
-                      <th className="text-right">cffetch</th>
-                      <th>Последняя ошибка</th>
+                      <th>{t('cf_col_site')}</th>
+                      <th className="text-right">{t('cf_col_browser')}</th>
+                      <th className="text-right">{t('cf_col_errors')}</th>
+                      <th>{t('cf_col_causes')}</th>
+                      <th className="text-right">{t('cf_col_avg')}</th>
+                      <th className="text-right">{t('cf_col_sessions')}</th>
+                      <th className="text-right">{t('cf_col_cffetch')}</th>
+                      <th>{t('cf_col_last_error')}</th>
                       <th />
                     </tr>
                   </thead>
@@ -205,7 +208,7 @@ export function CloudflarePage() {
                           </td>
                           <td>
                             <div className="flex flex-wrap gap-1">
-                              {causes.length ? causes.map(([k, n]) => <span key={k} className="badge">{`${kindLabel(k)}: ${n}`}</span>) : <span className="text-xs text-muted">нет</span>}
+                              {causes.length ? causes.map(([k, n]) => <span key={k} className="badge">{`${kindLabel(k)}: ${n}`}</span>) : <span className="text-xs text-muted">{t('cf_none')}</span>}
                             </div>
                           </td>
                           <td className="text-right tabular-nums">{avgSeconds(h) ?? '-'}</td>
@@ -225,7 +228,7 @@ export function CloudflarePage() {
                             )}
                           </td>
                           <td className="text-right">
-                            <button type="button" className="btn btn-sm btn-ghost" onClick={() => closeHost(h.host)} disabled={!!busy} aria-label={`Закрыть сессию ${h.host}`} title="Закрыть сессию браузера этого сайта">
+                            <button type="button" className="btn btn-sm btn-ghost" onClick={() => closeHost(h.host)} disabled={!!busy} aria-label={t('cf_close_session_host', { host: h.host })} title={t('cf_close_session_title')}>
                               {busy === `close:${h.host}` ? <Spinner /> : <XCircle className="size-4" aria-hidden="true" />}
                             </button>
                           </td>
@@ -236,14 +239,14 @@ export function CloudflarePage() {
                 </table>
               </div>
             ) : (
-              <p className="text-sm text-muted">Пока ни одного запроса через браузер.</p>
+              <p className="text-sm text-muted">{t('cf_no_browser_requests')}</p>
             )}
           </section>
 
           <div className="mb-6 grid gap-6 lg:grid-cols-2">
             <section className="card p-5" aria-labelledby="cf-errors">
               <h2 id="cf-errors" className="mb-4 font-semibold">
-                Последние ошибки
+                {t('cf_recent_errors')}
               </h2>
               {errors.length ? (
                 <ul className="max-h-96 space-y-2 overflow-y-auto text-sm">
@@ -259,13 +262,13 @@ export function CloudflarePage() {
                   ))}
                 </ul>
               ) : (
-                <p className="text-sm text-muted">Ошибок нет.</p>
+                <p className="text-sm text-muted">{t('cf_no_errors')}</p>
               )}
             </section>
 
             <section className="card p-5" aria-labelledby="cf-sessions">
               <h2 id="cf-sessions" className="mb-4 font-semibold">
-                Сессии браузера
+                {t('cf_sessions_title')}
               </h2>
               {sessions.length ? (
                 <ul className="space-y-2 text-sm">
@@ -276,44 +279,44 @@ export function CloudflarePage() {
                         <span className="font-medium">{s.host}</span>
                       </span>
                       <span className="text-xs text-muted">
-                        {s.busy ? 'выполняет запрос' : s.alive ? 'открыта' : 'закрыта'}
+                        {s.busy ? t('cf_session_busy') : s.alive ? t('cf_session_open') : t('cf_session_closed')}
                         {s.lastUse ? ` · ${formatRelative(s.lastUse)}` : ''}
-                        {s.consecutiveTimeouts ? ` · таймаутов подряд: ${s.consecutiveTimeouts}` : ''}
+                        {s.consecutiveTimeouts ? t('cf_session_timeouts', { n: s.consecutiveTimeouts }) : ''}
                       </span>
                     </li>
                   ))}
                 </ul>
               ) : (
-                <p className="text-sm text-muted">Сессий нет.</p>
+                <p className="text-sm text-muted">{t('cf_no_sessions')}</p>
               )}
-              <p className="mt-4 text-xs text-muted">Каждый сайт за Cloudflare держит свою вкладку Chrome (300-600 МБ). Простаивающие сессии закрываются сами через {d.settings?.sessionIdleMinutes} мин.</p>
+              <p className="mt-4 text-xs text-muted">{t('cf_sessions_note', { n: d.settings?.sessionIdleMinutes })}</p>
             </section>
           </div>
 
           <section className="card p-5" aria-labelledby="cf-settings">
             <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
               <h2 id="cf-settings" className="font-semibold">
-                Настройки и лимиты
+                {t('cf_settings_title')}
               </h2>
               <div className="flex gap-2">
                 <button type="button" className="btn btn-sm" onClick={resetStats} disabled={!!busy}>
-                  <RotateCcw className="size-4" aria-hidden="true" /> Сбросить статистику
+                  <RotateCcw className="size-4" aria-hidden="true" /> {t('cf_reset_stats')}
                 </button>
                 <Link to="/settings" className="btn btn-sm">
-                  <Settings className="size-4" aria-hidden="true" /> Изменить настройки
+                  <Settings className="size-4" aria-hidden="true" /> {t('cf_edit_settings')}
                 </Link>
               </div>
             </div>
             <dl className="grid gap-x-6 gap-y-2 text-sm sm:grid-cols-2">
               {[
-                ['Адрес', d.settings?.url],
-                ['Второй экземпляр (crawlUrl)', d.settings?.crawlUrl || 'нет'],
-                ['Таймаут решения', `${Math.round((d.settings?.maxTimeoutMs || 0) / 1000)} с`],
-                ['Закрывать сессию после простоя', `${d.settings?.sessionIdleMinutes} мин`],
-                ['Пересоздавать после таймаутов подряд', d.settings?.recycleAfterTimeouts],
-                ['Хост считается защищённым', `${d.settings?.guardedHours} ч`],
-                ['cffetch', d.cffetch?.enabled ? `${d.cffetch.url} · ${d.cffetch.impersonate}` : 'выключен'],
-                ['Защищённые хосты', (d.guarded || []).map((g) => g.host).join(', ') || 'нет'],
+                [t('cf_s_url'), d.settings?.url],
+                [t('cf_s_crawlurl'), d.settings?.crawlUrl || t('cf_none')],
+                [t('cf_s_timeout'), t('cf_seconds', { n: Math.round((d.settings?.maxTimeoutMs || 0) / 1000) })],
+                [t('cf_s_idle'), t('cf_minutes', { n: d.settings?.sessionIdleMinutes })],
+                [t('cf_s_recycle'), d.settings?.recycleAfterTimeouts],
+                [t('cf_s_guarded_hours'), t('cf_hours', { n: d.settings?.guardedHours })],
+                ['cffetch', d.cffetch?.enabled ? `${d.cffetch.url} · ${d.cffetch.impersonate}` : t('cf_off')],
+                [t('cf_s_guarded_hosts'), (d.guarded || []).map((g) => g.host).join(', ') || t('cf_none')],
               ].map(([k, v]) => (
                 <div key={k} className="flex justify-between gap-3 border-b border-border py-1.5">
                   <dt className="text-muted">{k}</dt>
@@ -321,9 +324,7 @@ export function CloudflarePage() {
                 </div>
               ))}
             </dl>
-            <p className="mt-4 text-xs text-muted">
-              Лимиты процессора и памяти задаются контейнеру FlareSolverr, а не CrabIndex. Поменять их на ходу, без перезапуска:
-            </p>
+            <p className="mt-4 text-xs text-muted">{t('cf_limits_note')}</p>
             <code className="mt-2 block overflow-x-auto rounded-lg bg-bg px-3 py-2 font-mono text-xs">docker update --cpus 2 --memory 4g --memory-swap 4g flaresolverr</code>
           </section>
         </>

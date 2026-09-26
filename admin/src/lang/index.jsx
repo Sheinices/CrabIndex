@@ -13,6 +13,19 @@ import { getLang } from '../lib/api.js'
 const BUILTIN = { ru, en }
 const STORAGE_KEY = 'crab.lang'
 
+/** Resolve one key against a dictionary and fill `{name}` placeholders. */
+function translate(dict, key, vars) {
+  let s = dict[key]
+  if (s == null) s = key
+  if (vars) for (const k in vars) s = String(s).split(`{${k}}`).join(vars[k])
+  return s
+}
+
+/** Fallback used when a component calls useT() outside a provider: the Russian base. */
+function baseT(key, vars) {
+  return translate(ru, key, vars)
+}
+
 /** First run: saved choice, else the browser's language if we have it, else Russian. */
 function initialLang() {
   try {
@@ -67,15 +80,7 @@ export function LangProvider({ children }) {
     return { ...base, ...builtin, ...pack }
   }, [lang, packs])
 
-  const t = useCallback(
-    (key, vars) => {
-      let s = dict[key]
-      if (s == null) s = key
-      if (vars) for (const k in vars) s = String(s).split(`{${k}}`).join(vars[k])
-      return s
-    },
-    [dict],
-  )
+  const t = useCallback((key, vars) => translate(dict, key, vars), [dict])
 
   const setLang = useCallback((code) => {
     try {
@@ -103,10 +108,10 @@ export function LangProvider({ children }) {
   return <LangContext.Provider value={value}>{children}</LangContext.Provider>
 }
 
-/** Translate function `t(key, vars?)`. Safe to call outside a provider (returns the key). */
+/** Translate function `t(key, vars?)`. Outside a provider it falls back to the Russian base. */
 export function useT() {
   const ctx = useContext(LangContext)
-  return ctx ? ctx.t : (key) => key
+  return ctx ? ctx.t : baseT
 }
 
 /** Current language, setter and the available-languages map. */

@@ -1,20 +1,25 @@
 import { createContext, useCallback, useContext, useRef, useState } from 'react'
 import { AlertTriangle } from 'lucide-react'
 import { Modal } from './Modal.jsx'
+import { useT } from '../lang/index.jsx'
 
 const ConfirmContext = createContext(null)
 
 /** Promise-based confirmation dialog (replaces window.confirm). */
 export function ConfirmProvider({ children }) {
+  const t = useT()
   const [state, setState] = useState(null)
   const resolver = useRef(null)
 
-  const confirm = useCallback((opts) => {
-    return new Promise((resolve) => {
-      resolver.current = resolve
-      setState({ confirmLabel: 'Подтвердить', cancelLabel: 'Отмена', danger: false, ...opts })
-    })
-  }, [])
+  const confirm = useCallback(
+    (opts) => {
+      return new Promise((resolve) => {
+        resolver.current = resolve
+        setState({ confirmLabel: t('confirm_ok'), cancelLabel: t('cancel'), danger: false, ...opts })
+      })
+    },
+    [t],
+  )
 
   const close = (value) => {
     resolver.current?.(value)
