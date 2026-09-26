@@ -10,6 +10,7 @@ use std::sync::Arc;
 pub mod cffetch;
 pub mod clearance;
 pub mod controller;
+pub mod stats;
 mod json_util;
 
 pub use clearance::{extra_browser_headers, fetch_async, recycle_session, session_name_for, should_skip_fast_path_for_origin_503, FlareSolverrSolver};

@@ -68,6 +68,54 @@ function jobs() {
   ]
 }
 
+function cloudflareStatus() {
+  const now = Date.now()
+  const ago = (min) => new Date(now - min * 60_000).toISOString()
+  const host = (name, over) => ({
+    host: name,
+    browserRequests: 0, browserOk: 0, browserFailed: 0, tabCrashed: 0, browserTimeouts: 0, challengeFailed: 0,
+    sessionErrors: 0, unreachable: 0, pageFailed: 0, otherErrors: 0, sessionsCreated: 1, sessionsRecycled: 0,
+    sessionsClosedIdle: 0, fastOk: 0, fastFailed: 0, clearanceRenewals: 0, totalBrowserMs: 0, maxBrowserMs: 0,
+    lastOkAt: ago(3), lastErrorAt: null, lastError: null,
+    ...over,
+  })
+  const crash = 'Error: Error solving the challenge. Message: tab crashed (Session info: chrome=152.0.7977.82)'
+  return {
+    enabled: true,
+    paused: Boolean(state.cfPaused),
+    settings: { url: 'http://127.0.0.1:8191/v1', crawlUrl: '', maxTimeoutMs: 300000, sessionIdleMinutes: 120, browserTimeoutRetries: 1, recycleAfterTimeouts: 3, guardedHours: 6, recheckMinutes: 30 },
+    solver: { url: 'http://127.0.0.1:8191/v1', reachable: true, version: '3.5.2', userAgent: 'Mozilla/5.0 Chrome/152.0.0.0', message: 'FlareSolverr is ready!', sessions: ['crabindex-rutracker_org', 'crabindex-kinozal_guru', 'crabindex-open_selezen_org'] },
+    crawlSolver: null,
+    cffetch: {
+      enabled: true, url: 'http://127.0.0.1:8192/fetch', impersonate: 'chrome136', maxConcurrent: 4, clearanceMinutes: 60,
+      hosts: [
+        { host: 'rutracker.org', clearanceAt: ago(12), blockedUntil: null },
+        { host: 'kinozal.guru', clearanceAt: ago(40), blockedUntil: null },
+      ],
+    },
+    sessions: [
+      { name: 'crabindex-kinozal_guru', host: 'kinozal.guru', alive: true, busy: false, lastUse: ago(6), consecutiveTimeouts: 0 },
+      { name: 'crabindex-open_selezen_org', host: 'open.selezen.org', alive: true, busy: true, lastUse: ago(0), consecutiveTimeouts: 0 },
+      { name: 'crabindex-rutracker_org', host: 'rutracker.org', alive: true, busy: false, lastUse: ago(2), consecutiveTimeouts: 0 },
+    ],
+    guarded: [{ host: 'rutracker.org', since: ago(300) }, { host: 'kinozal.guru', since: ago(200) }, { host: 'open.selezen.org', since: ago(90) }],
+    stats: {
+      since: ago(720),
+      hosts: [
+        host('open.selezen.org', { browserRequests: 96, browserOk: 22, browserFailed: 74, tabCrashed: 70, browserTimeouts: 4, sessionsCreated: 76, sessionsRecycled: 74, fastOk: 310, fastFailed: 41, clearanceRenewals: 38, totalBrowserMs: 2_400_000, maxBrowserMs: 202_000, lastErrorAt: ago(9), lastError: crash }),
+        host('rutracker.org', { browserRequests: 14, browserOk: 14, fastOk: 5210, fastFailed: 12, clearanceRenewals: 12, totalBrowserMs: 98_000, maxBrowserMs: 11_000, sessionsCreated: 2 }),
+        host('kinozal.guru', { browserRequests: 6, browserOk: 5, browserFailed: 1, pageFailed: 1, fastOk: 1330, fastFailed: 3, totalBrowserMs: 54_000, maxBrowserMs: 14_000, lastErrorAt: ago(300), lastError: 'http 403' }),
+      ],
+      recentErrors: [
+        { at: ago(9), host: 'open.selezen.org', kind: 'tabCrashed', message: crash },
+        { at: ago(24), host: 'open.selezen.org', kind: 'tabCrashed', message: crash },
+        { at: ago(41), host: 'open.selezen.org', kind: 'browserTimeout', message: "HTTPConnectionPool(host='localhost', port=55127): Read timed out. (read timeout=120)" },
+        { at: ago(300), host: 'kinozal.guru', kind: 'pageFailed', message: 'http 403' },
+      ],
+    },
+  }
+}
+
 function parseAllStatus() {
   return TRACKERS.filter(([s]) => PARSE_ALL.has(s)).map(([tracker]) => ({
     tracker,
@@ -240,6 +288,16 @@ async function handle(req, res, path, query) {
     await delay(800)
     return send(res, 200, 'warmup ok: crabindex-rutracker_org (cf_clearance valid 29m)', 'text/plain; charset=utf-8')
   }
+  if (path === 'cron/cloudflare/status') return send(res, 200, cloudflareStatus())
+  if (path === 'cron/cloudflare/sessions/close') {
+    await delay(400)
+    return send(res, 200, { ok: true, closed: 2, busy: 1 })
+  }
+  if (path === 'cron/cloudflare/pause') {
+    state.cfPaused = query.get('value') !== 'false'
+    return send(res, 200, { ok: true, paused: state.cfPaused, closed: state.cfPaused ? 3 : 0, busy: 0 })
+  }
+  if (path === 'cron/cloudflare/stats/reset') return send(res, 200, { ok: true })
   if (path === 'jsondb/save') return send(res, 200, 'work', 'text/plain; charset=utf-8')
   if (path.startsWith('dev/')) {
     await delay(700)

@@ -158,6 +158,33 @@ pub fn forget(host: &str) {
     }
 }
 
+/// Fast-path state of one host (admin panel).
+#[derive(serde::Serialize, Clone, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct FastHost {
+    pub host: String,
+    /// When the browser cookie was taken over.
+    pub clearance_at: Option<DateTime<Utc>>,
+    /// Fast path disabled for this host until then (the cookie did not work in cffetch).
+    pub blocked_until: Option<DateTime<Utc>>,
+}
+
+pub fn snapshot() -> Vec<FastHost> {
+    let now = Utc::now();
+    let mut hosts: Vec<String> = CLEARANCE.iter().map(|e| e.key().clone()).collect();
+    hosts.extend(BLOCKED.iter().filter(|e| *e.value() > now).map(|e| e.key().clone()));
+    hosts.sort();
+    hosts.dedup();
+    hosts
+        .into_iter()
+        .map(|h| FastHost {
+            clearance_at: CLEARANCE.get(&h).map(|c| c.at),
+            blocked_until: BLOCKED.get(&h).map(|u| *u).filter(|u| *u > now),
+            host: h,
+        })
+        .collect()
+}
+
 /// Clear all jars, mitigation counters and blocks (tests).
 pub fn reset() {
     CLEARANCE.clear();

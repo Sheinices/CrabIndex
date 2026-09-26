@@ -91,8 +91,8 @@ services:
     deploy:
       resources:
         limits:
-          memory: 1536M
-          cpus: "1.5"
+          memory: 4096M
+          cpus: "2"
 
   # Second FlareSolverr for ParseAll / UpdateTasks / ParseLatest (host :8193).
   # One instance serializes; a second instance is what actually adds throughput.

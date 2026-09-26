@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { NavLink, Outlet, useLocation } from 'react-router'
 import {
   Activity,
+  Cloud,
   ExternalLink,
   FileText,
   LayoutDashboard,
@@ -23,6 +24,7 @@ export const NAV = [
   { to: '/', label: 'Обзор', icon: LayoutDashboard, end: true },
   { to: '/trackers', label: 'Трекеры', icon: Radar },
   { to: '/jobs', label: 'Задачи', icon: Activity },
+  { to: '/cloudflare', label: 'FlareSolverr', icon: Cloud },
   { to: '/settings', label: 'Настройки', icon: Settings },
   { to: '/waf', label: 'WAF', icon: Shield },
   { to: '/maintenance', label: 'Обслуживание', icon: Wrench },

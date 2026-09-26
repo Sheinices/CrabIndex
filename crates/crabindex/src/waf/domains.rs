@@ -1,7 +1,7 @@
 //! Domain blocking: the site a browser request comes from (`Origin`, else `Referer`) and
 //! rule matching (`example.com` covers `example.com` and every `*.example.com`).
 
-/// Sites that are always refused (`403`, reason `domain`), for every client except loopback —
+/// Sites that are always refused (`403`, reason `domain`), for every client except loopback -
 /// even whitelisted IPs, LAN and domains in the admin whitelist.
 ///
 /// Compiled into the binary on purpose: this list can NOT be removed, overridden or

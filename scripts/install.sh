@@ -10,7 +10,7 @@
 #
 # Usage:
 #   sudo scripts/install.sh [--bundle DIR|FILE|URL | --from-source [DIR]] [--admin-path /x]
-#                           [--flaresolverr | --no-flaresolverr] [--yes]
+#                           [--port N] [--flaresolverr | --no-flaresolverr] [--yes]
 #   sudo scripts/install.sh --update [--bundle ... | --from-source]
 #   sudo scripts/install.sh --uninstall [--purge] [--yes]
 #   sudo scripts/install.sh --check
@@ -46,11 +46,16 @@ RELEASE_TAG=""
 RELEASE_REPO="${CRABINDEX_REPO:-sheinices/crabindex}"
 PKG_MGR=""
 LISTEN_PORT=9117
+# --port value ("" = default 9117, or a free one on a fresh install when 9117 is busy).
+PORT_ARG=""
+# 1 = write LISTEN_PORT into init.yaml (fresh install with a busy default port, or --port).
+PORT_WRITE=0
 # Cloudflare bypass (Docker): "" = ask on a fresh install, 1 = install/recreate, 0 = skip.
 WITH_FLARESOLVERR=""
 FLARESOLVERR_IMAGE="${FLARESOLVERR_IMAGE:-ghcr.io/flaresolverr/flaresolverr:latest}"
-FLARESOLVERR_CPUS="${FLARESOLVERR_CPUS:-1.5}"
-FLARESOLVERR_MEMORY="${FLARESOLVERR_MEMORY:-1536m}"
+# Empty = picked from the server's cores and memory (see set_flaresolverr_limits).
+FLARESOLVERR_CPUS="${FLARESOLVERR_CPUS:-}"
+FLARESOLVERR_MEMORY="${FLARESOLVERR_MEMORY:-}"
 CFFETCH_IMAGE="${CFFETCH_IMAGE:-ghcr.io/jacred-fdb/cffetch:latest}"
 CFFETCH_CPUS="${CFFETCH_CPUS:-0.5}"
 CFFETCH_MEMORY="${CFFETCH_MEMORY:-256m}"
@@ -84,6 +89,10 @@ usage() {
   --version vX.Y.Z    скачать этот релиз с GitHub (по умолчанию - последний, если нет
                       ни комплекта, ни исходников рядом со скриптом)
   --admin-path /x     путь админ-панели без вопросов (один сегмент [a-z0-9_-], 2-32 символа)
+  --port N            порт сервера (listenport, 1024-65535, по умолчанию 9117); если порт
+                      занят другой программой, установка прерывается. Без --port при новой
+                      установке и занятом 9117 установщик предложит ближайший свободный
+                      (9118-9199), с --yes выберет его сам. --update сохраняет порт из init.yaml
   --yes, -y           не задавать вопросов (путь /admin, если не указан --admin-path)
   --update            обновить установленную версию (конфиг и данные сохраняются)
   --uninstall         удалить службу, crontab, бинарник и веб-интерфейс (данные остаются)
@@ -99,8 +108,10 @@ usage() {
 iproute2) ставятся автоматически через apt, dnf, yum, zypper, pacman или apk.
 
 FlareSolverr запускает настоящий браузер Chrome и требователен к ресурсам. Лимиты
-контейнеров (переменные окружения): FLARESOLVERR_CPUS=1.5, FLARESOLVERR_MEMORY=1536m,
-CFFETCH_CPUS=0.5, CFFETCH_MEMORY=256m. Рекомендуется от 2 ядер и 4 ГБ памяти.
+контейнеров подбираются по серверу: FLARESOLVERR_MEMORY - 1536m (память до 6 ГБ), 3g (до 12 ГБ),
+4g (больше); FLARESOLVERR_CPUS - 1 (до 2 ядер), 1.5 (3-5 ядер), 2 (6+ ядер). Переменные
+окружения FLARESOLVERR_CPUS, FLARESOLVERR_MEMORY, CFFETCH_CPUS (0.5), CFFETCH_MEMORY (256m)
+задают лимиты явно. Рекомендуется от 2 ядер и 4 ГБ памяти.
 EOF
 }
 
@@ -122,6 +133,15 @@ while [[ $# -gt 0 ]]; do
       ;;
     --admin-path=*)
       ADMIN_PATH_ARG="${1#*=}"
+      shift
+      ;;
+    --port)
+      [[ $# -ge 2 ]] || die "--port: укажите номер порта"
+      PORT_ARG="$2"
+      shift 2
+      ;;
+    --port=*)
+      PORT_ARG="${1#*=}"
       shift
       ;;
     -y | --yes)
@@ -192,6 +212,14 @@ done
 # ---------------------------------------------------------------------------
 # helpers
 # ---------------------------------------------------------------------------
+
+valid_port() { # valid_port <port>: a number 1024-65535 without leading zeros
+  [[ "$1" =~ ^[1-9][0-9]{3,4}$ ]] && (($1 >= 1024 && $1 <= 65535))
+}
+
+if [[ -n "$PORT_ARG" ]] && ! valid_port "$PORT_ARG"; then
+  die "--port: недопустимый порт «${PORT_ARG}» (число от 1024 до 65535)"
+fi
 
 can_prompt() {
   [[ "$ASSUME_YES" -eq 0 ]] && { : </dev/tty; } 2>/dev/null
@@ -318,6 +346,108 @@ server_ip() {
     ip="$(hostname -I 2>/dev/null | awk '{print $1}')"
   fi
   printf '%s' "${ip:-127.0.0.1}"
+}
+
+# ---------------------------------------------------------------------------
+# listen port
+# ---------------------------------------------------------------------------
+
+port_in_use() { # port_in_use <port>: something listens on this TCP port
+  local port="$1"
+  if command -v ss >/dev/null 2>&1; then
+    ss -tlnH 2>/dev/null | awk '{print $4}' | grep -qE "[:.]${port}\$"
+  elif command -v netstat >/dev/null 2>&1; then
+    netstat -tln 2>/dev/null | awk 'NR > 2 {print $4}' | grep -qE "[:.]${port}\$"
+  else
+    # No ss/netstat (iproute2 is installed later): try to connect on localhost.
+    (exec 3<>"/dev/tcp/127.0.0.1/${port}") 2>/dev/null
+  fi
+}
+
+config_listen_port() { # listenport from the installed init.yaml (empty if absent or invalid)
+  local cfg="$INSTALL_DIR/init.yaml" p=""
+  [[ -r "$cfg" ]] && p="$(yaml_top_get listenport "$cfg" 2>/dev/null || true)"
+  if valid_port "$p"; then printf '%s' "$p"; fi
+}
+
+own_port() { # own_port <port>: the port is held by the running crabindex service itself
+  systemctl is-active --quiet "$SERVICE_NAME" 2>/dev/null &&
+    [[ "$1" == "$(config_listen_port)" || ( "$1" == 9117 && -z "$(config_listen_port)" ) ]]
+}
+
+suggest_free_port() { # nearest free port after 9117, empty if 9118-9199 are all busy
+  local p
+  for ((p = 9118; p <= 9199; p++)); do
+    if ! port_in_use "$p"; then
+      printf '%s' "$p"
+      return 0
+    fi
+  done
+}
+
+ask_listen_port() { # ask_listen_port <busy port> <suggestion or ""> -> chosen free port on stdout
+  local busy="$1" suggested="$2" reply
+  {
+    echo
+    echo "Порт $busy уже занят другой программой."
+    if [[ -n "$suggested" ]]; then
+      echo "  Ближайший свободный - $suggested. Enter - принять, или введите другой порт (1024-65535)."
+    else
+      echo "  В диапазоне 9118-9199 свободных портов нет. Введите порт (1024-65535)."
+    fi
+  } >/dev/tty
+  while true; do
+    reply="$(ask "Порт${suggested:+ [$suggested]}: ")"
+    reply="${reply//[[:space:]]/}"
+    reply="${reply:-$suggested}"
+    if ! valid_port "$reply"; then
+      echo "Введите число от 1024 до 65535." >/dev/tty
+    elif port_in_use "$reply"; then
+      echo "Порт $reply тоже занят, выберите другой." >/dev/tty
+    else
+      printf '%s' "$reply"
+      return
+    fi
+  done
+}
+
+# Port for system_check: --port, else listenport from an existing init.yaml, else 9117.
+guess_listen_port() {
+  local p
+  p="$(config_listen_port)"
+  LISTEN_PORT="${PORT_ARG:-${p:-9117}}"
+}
+
+# Sets LISTEN_PORT (and PORT_WRITE=1 when init.yaml must get it). Runs before the service is
+# stopped on update, so a port held by crabindex itself is recognised as its own.
+resolve_listen_port() {
+  local current
+  current="$(config_listen_port)"
+  if [[ -n "$PORT_ARG" ]]; then
+    if port_in_use "$PORT_ARG" && ! own_port "$PORT_ARG"; then
+      die "порт $PORT_ARG (--port) занят другой программой - освободите его или укажите другой --port"
+    fi
+    LISTEN_PORT="$PORT_ARG"
+    PORT_WRITE=1
+    return
+  fi
+  # update, or a config left from a previous installation: keep its port
+  if [[ "$MODE" == "update" || -f "$INSTALL_DIR/init.yaml" || -f "$INSTALL_DIR/init.conf" ]]; then
+    LISTEN_PORT="${current:-9117}"
+    return
+  fi
+  LISTEN_PORT=9117
+  port_in_use "$LISTEN_PORT" || return 0
+  local suggested
+  suggested="$(suggest_free_port)"
+  if can_prompt; then
+    LISTEN_PORT="$(ask_listen_port 9117 "$suggested")"
+  else
+    [[ -n "$suggested" ]] || die "порт 9117 занят, а в 9118-9199 нет свободных - укажите порт: --port N"
+    LISTEN_PORT="$suggested"
+    info "Порт 9117 занят - CrabIndex будет слушать свободный порт $LISTEN_PORT"
+  fi
+  PORT_WRITE=1
 }
 
 require_root() {
@@ -473,16 +603,17 @@ system_check() { # prints a summary; returns 1 when something required is missin
     [[ "$mem_mb" -ge 1024 ]] && ok=0 || ok=1
     check_line "$ok" "память: ${mem_mb} МБ" "рекомендуется 1+ ГБ"
   fi
-  if command -v ss >/dev/null 2>&1; then
-    if ss -tlnH 2>/dev/null | awk '{print $4}' | grep -qE "[:.]${LISTEN_PORT}\$"; then
-      if systemctl is-active --quiet "$SERVICE_NAME" 2>/dev/null; then
-        check_line 0 "порт $LISTEN_PORT занят самим crabindex"
-      else
-        check_line 1 "порт $LISTEN_PORT занят" "освободите его или смените listenport в init.yaml"
-      fi
+  guess_listen_port
+  if port_in_use "$LISTEN_PORT"; then
+    if own_port "$LISTEN_PORT"; then
+      check_line 0 "порт $LISTEN_PORT занят самим crabindex"
+    elif [[ -n "$PORT_ARG" ]]; then
+      check_line 1 "порт $LISTEN_PORT занят" "освободите его или укажите другой --port"
     else
-      check_line 0 "порт $LISTEN_PORT свободен"
+      check_line 1 "порт $LISTEN_PORT занят" "при новой установке установщик предложит другой порт (или --port N)"
     fi
+  else
+    check_line 0 "порт $LISTEN_PORT свободен"
   fi
   return "$bad"
 }
@@ -688,6 +819,9 @@ prepare_config() { # writes admin.path/admin.token/devkey; prints nothing
   local cfg="$INSTALL_DIR/init.yaml" example="$INSTALL_DIR/Data/example.yaml"
   if [[ ! -f "$cfg" && -f "$INSTALL_DIR/init.conf" ]]; then
     warn "используется init.conf (JSON): токен и devkey сгенерирует сервер при первом запуске"
+    if [[ "$PORT_WRITE" -eq 1 ]]; then
+      warn "порт $LISTEN_PORT не записан: в init.conf задайте \"listenport\": $LISTEN_PORT вручную"
+    fi
     CONFIG_IS_JSON=1
     return
   fi
@@ -717,6 +851,9 @@ prepare_config() { # writes admin.path/admin.token/devkey; prints nothing
   yaml_admin_set path "\"$path\"" "$cfg"
   [[ -n "$cur_token" ]] || yaml_admin_set token "\"$token\"" "$cfg"
   [[ -n "$cur_devkey" ]] || yaml_top_set devkey "\"$devkey\"" "$cfg"
+  if [[ "$PORT_WRITE" -eq 1 ]]; then
+    yaml_top_set listenport "$LISTEN_PORT" "$cfg"
+  fi
   chown "$SERVICE_USER:$SERVICE_USER" "$cfg"
   chmod 600 "$cfg"
 }
@@ -748,6 +885,7 @@ print_admin_info() {
     echo " (сервер слушает только localhost: снаружи - через ваш домен, https://<домен>${path}?${token})"
   fi
   echo " Пароль (devkey): ${devkey}"
+  echo " Порт: ${listen:-9117} (listenport в $cfg)"
   echo "════════════════════════════════════════════════════════════"
   echo " Сохраните эти данные. Повторно: cd $INSTALL_DIR && sudo -u $SERVICE_USER ./crabindex admin"
   echo
@@ -762,8 +900,42 @@ managed_container_exists() { # managed_container_exists <name>
     [[ "$(docker ps -a --filter "name=^/$1\$" --filter "label=$MANAGED_LABEL" -q 2>/dev/null)" != "" ]]
 }
 
+# Default FlareSolverr limits scale with the server (FLARESOLVERR_CPUS / FLARESOLVERR_MEMORY
+# override them). Memory is what matters: every tracker behind Cloudflare keeps its own Chrome
+# tab, and a tab can balloon while solving a challenge. Real case: one site's tab grew to 1.2 GB
+# and was OOM-killed ("tab crashed") under a 2.5 GB limit with 4 tracker sessions open; 4 GB
+# fixed it.
+set_flaresolverr_limits() {
+  if [[ -z "$FLARESOLVERR_MEMORY" ]]; then
+    local mem_kb
+    mem_kb="$(awk '/^MemTotal:/ {print $2}' /proc/meminfo 2>/dev/null || true)"
+    [[ "$mem_kb" =~ ^[0-9]+$ ]] || mem_kb=0
+    # thresholds in decimal GB (MemTotal in KiB): a "6 GB" VPS reports a bit under 6 GiB
+    if ((mem_kb < 5859375)); then
+      FLARESOLVERR_MEMORY="1536m"
+    elif ((mem_kb < 11718750)); then
+      FLARESOLVERR_MEMORY="3g"
+    else
+      FLARESOLVERR_MEMORY="4g"
+    fi
+  fi
+  if [[ -z "$FLARESOLVERR_CPUS" ]]; then
+    local cores
+    cores="$(nproc 2>/dev/null || getconf _NPROCESSORS_ONLN 2>/dev/null || echo 1)"
+    [[ "$cores" =~ ^[0-9]+$ ]] || cores=1
+    if ((cores <= 2)); then
+      FLARESOLVERR_CPUS="1"
+    elif ((cores <= 5)); then
+      FLARESOLVERR_CPUS="1.5"
+    else
+      FLARESOLVERR_CPUS="2"
+    fi
+  fi
+}
+
 # Sets WITH_FLARESOLVERR when not given on the command line.
 decide_flaresolverr() {
+  set_flaresolverr_limits
   [[ -n "$WITH_FLARESOLVERR" ]] && return
   # update / reinstall: keep whatever is there
   if [[ "$MODE" == "update" ]] || managed_container_exists flaresolverr; then
@@ -779,7 +951,8 @@ decide_flaresolverr() {
     echo "Обход Cloudflare (FlareSolverr + cffetch в Docker)."
     echo "  Нужен для трекеров за Cloudflare: rutracker, kinozal и других."
     echo "  FlareSolverr запускает настоящий браузер Chrome и заметно нагружает сервер:"
-    echo "  будет ограничен ${FLARESOLVERR_CPUS} ядра CPU и ${FLARESOLVERR_MEMORY} памяти."
+    echo "  Лимиты контейнера по ресурсам сервера: CPU ${FLARESOLVERR_CPUS}, память ${FLARESOLVERR_MEMORY}"
+    echo "  (изменить: FLARESOLVERR_CPUS, FLARESOLVERR_MEMORY)."
     echo "  Рекомендуется от 2 ядер и 4 ГБ памяти. Без него закрытые Cloudflare трекеры не парсятся."
   } >/dev/tty
   if confirm "Установить FlareSolverr?"; then WITH_FLARESOLVERR=1; else WITH_FLARESOLVERR=0; fi
@@ -834,6 +1007,7 @@ run_managed_container() { # run_managed_container <name> <docker run args...>
 }
 
 install_flaresolverr() {
+  set_flaresolverr_limits
   info "Установка FlareSolverr и cffetch (Docker, лимиты: FlareSolverr ${FLARESOLVERR_CPUS} CPU / ${FLARESOLVERR_MEMORY}, cffetch ${CFFETCH_CPUS} CPU / ${CFFETCH_MEMORY})"
   if ! ensure_docker; then
     warn "обход Cloudflare не установлен - трекеры за Cloudflare работать не будут"
@@ -956,13 +1130,20 @@ install_crontab() {
   fi
   command -v flock >/dev/null 2>&1 || warn "flock не найден (пакет util-linux) - нужен для Data/run-job.sh"
   command -v curl >/dev/null 2>&1 || warn "curl не найден - нужен для Data/run-job.sh"
-  local path="$INSTALL_DIR/Data/run-job.sh"
+  local path="$INSTALL_DIR/Data/run-job.sh" edits=()
   if [[ "$INSTALL_DIR" != "/opt/crabindex" ]]; then
-    sed "s|/opt/crabindex/|$INSTALL_DIR/|g" "$tab" | crontab -u "$SERVICE_USER" -
+    edits+=(-e "s|/opt/crabindex/|$INSTALL_DIR/|g")
+  fi
+  # Data/crontab calls http://127.0.0.1:9117/...; follow a non-default listenport.
+  if [[ "$LISTEN_PORT" != 9117 ]]; then
+    edits+=(-e "s|127\.0\.0\.1:9117/|127.0.0.1:$LISTEN_PORT/|g")
+  fi
+  if [[ ${#edits[@]} -gt 0 ]]; then
+    sed "${edits[@]}" "$tab" | crontab -u "$SERVICE_USER" -
   else
     crontab -u "$SERVICE_USER" "$tab"
   fi
-  info "Установлен crontab пользователя $SERVICE_USER ($path)"
+  info "Установлен crontab пользователя $SERVICE_USER ($path, порт $LISTEN_PORT)"
 }
 
 do_install() {
@@ -980,6 +1161,7 @@ do_install() {
     info "Найдена установка в $INSTALL_DIR - выполняется обновление (конфиг и данные сохраняются)"
     MODE="update"
   fi
+  resolve_listen_port
   resolve_bundle
   local src="$BUNDLE_ROOT"
   info "Комплект: $src"

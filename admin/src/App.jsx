@@ -10,6 +10,7 @@ import { LoginPage } from './pages/Login.jsx'
 import { OverviewPage } from './pages/Overview.jsx'
 import { TrackersPage } from './pages/Trackers.jsx'
 import { JobsPage } from './pages/Jobs.jsx'
+import { CloudflarePage } from './pages/Cloudflare.jsx'
 import { MaintenancePage } from './pages/Maintenance.jsx'
 import { LogsPage } from './pages/Logs.jsx'
 import { WafPage } from './pages/waf/Waf.jsx'
@@ -58,6 +59,7 @@ export function createAppRouter(basename = getBase()) {
           { index: true, element: <OverviewPage /> },
           { path: 'trackers', element: <TrackersPage /> },
           { path: 'jobs', element: <JobsPage /> },
+          { path: 'cloudflare', element: <CloudflarePage /> },
           {
             path: 'settings',
             element: (

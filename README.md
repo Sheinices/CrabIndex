@@ -31,32 +31,111 @@
 
 ## Требования
 
-- **Rust** stable (через [rustup](https://rustup.rs)) - для сборки из исходников
-- **Node.js 22+** и npm - только для сборки веб-интерфейса (`web/`)
-- Linux / macOS / Windows; для продакшена рекомендуется Linux (systemd, cron)
-- Либо только **Docker** - всё собирается внутри образа
+- Готовые сборки: **Linux** x86_64 / arm64 (статические, musl), **macOS** Apple Silicon / Intel, **Windows** x64 и Docker-образ (amd64 + arm64) - см. [релизы](https://github.com/sheinices/crabindex/releases/latest)
+- Для продакшена рекомендуется Linux (systemd, cron); для полной базы - 10+ ГБ на диске
+- Для обхода Cloudflare (FlareSolverr) - от 2 ядер и 4 ГБ памяти, см. [требования](docs/docs/configuration/flaresolverr.md)
+- Сборка из исходников: **Rust** stable ([rustup](https://rustup.rs)) и **Node.js 22+** для веб-интерфейса
 
 Внешних системных библиотек не требуется: TLS реализован на rustls.
 
 ---
 
-## Сборка и запуск
+## Установка
+
+Пошаговая инструкция для всех платформ - [docs/docs/installation.md](docs/docs/installation.md) (она же встроена в сервер: `http://<хост>:9117/docs/`).
+
+После установки на любой платформе:
+
+- сайт (поиск) - **`http://<хост>:9117/`**, проверка - `/health` → `{"status":"OK"}`;
+- [админ-панель](docs/docs/admin.md) - адрес `{admin.path}?{admin.token}` и пароль `devkey` выводятся при первом запуске, повторно - `crabindex admin`;
+- конфигурация - `init.yaml` в рабочем каталоге (в Docker - `/app/config/init.yaml`); база наполняется синхронизацией (`syncapi`, уже задан в шаблоне) или парсингом по cron.
+
+### Linux-сервер (установщик, systemd)
+
+1. Запустите установщик на сервере (Debian, Ubuntu, RHEL, Fedora, Arch и другие с systemd). Он поставит недостающие пакеты, скачает сборку под архитектуру сервера и установит её в `/opt/crabindex`:
+
+   ```bash
+   # с вопросами: путь админ-панели, ставить ли FlareSolverr
+   curl -fsSL https://raw.githubusercontent.com/sheinices/crabindex/main/scripts/install.sh | sudo bash
+
+   # сразу с обходом Cloudflare (FlareSolverr + cffetch в Docker, лимиты по ресурсам сервера)
+   curl -fsSL https://raw.githubusercontent.com/sheinices/crabindex/main/scripts/install.sh | sudo bash -s -- --flaresolverr
+
+   # без FlareSolverr и без вопросов
+   curl -fsSL https://raw.githubusercontent.com/sheinices/crabindex/main/scripts/install.sh | sudo bash -s -- --no-flaresolverr --yes
+   ```
+
+2. Выберите путь админ-панели (`/admin` или свой). Если порт 9117 занят, установщик предложит ближайший свободный; свой порт - `--port 9120`.
+3. Сохраните адрес админ-панели, пароль (`devkey`) и порт из итогового сообщения. Повторно: `cd /opt/crabindex && sudo -u crabindex ./crabindex admin`.
+4. Проверьте: `systemctl status crabindex`, `curl http://127.0.0.1:9117/health`.
+
+Конфиг - `/opt/crabindex/init.yaml`, данные - `/opt/crabindex/Data/`. Обновление - `... | sudo bash -s -- --update`, удаление - `--uninstall [--purge]`, проверка системы - `--check`, все параметры - `--help`. Ручная установка со своим unit-файлом - в [документации](docs/docs/installation.md) и на странице [Linux](docs/docs/deployment/linux.md).
+
+### Docker / Docker Compose
+
+1. Запустите готовый образ:
+
+   ```bash
+   docker run -d --name crabindex --restart unless-stopped -p 9117:9117 \
+     -v crabindex-config:/app/config -v crabindex-data:/app/Data \
+     ghcr.io/sheinices/crabindex:latest
+   ```
+
+   Или стек с FlareSolverr, WARP и cffetch для трекеров за Cloudflare на основе [docker-compose.example.yml](docker-compose.example.yml):
+
+   ```bash
+   git clone https://github.com/sheinices/crabindex.git && cd crabindex
+   cp docker-compose.example.yml docker-compose.yml
+   docker compose up -d
+   ```
+
+2. Возьмите адрес админ-панели и `devkey` из лога: `docker logs crabindex 2>&1 | grep admin:` (путь панели при первом запуске - переменная `CRABINDEX_ADMIN_PATH`).
+3. Откройте `http://<хост>:9117/`. Конфиг - `/app/config/init.yaml` в томе.
+
+Конфиг при старте контейнера выбирается так: `/app/config/init.yaml` → `/app/config/init.conf` → `/app/Data/init.*` → шаблон по умолчанию (`Data/example.yaml`). Cron-задачи запускаются снаружи контейнера (`Data/crontab`, `Data/run-job.sh`). Подробнее - [Docker](docs/docs/deployment/docker.md).
+
+### macOS
+
+1. Скачайте [`crabindex-macos-arm64.tar.gz`](https://github.com/sheinices/crabindex/releases/latest/download/crabindex-macos-arm64.tar.gz) (Apple Silicon) или [`crabindex-macos-x86_64.tar.gz`](https://github.com/sheinices/crabindex/releases/latest/download/crabindex-macos-x86_64.tar.gz) (Intel).
+2. Распакуйте и подготовьте конфиг:
+
+   ```bash
+   tar -xzf crabindex-macos-arm64.tar.gz
+   mv crabindex-*-macos-arm64 ~/crabindex && cd ~/crabindex
+   xattr -d com.apple.quarantine ./crabindex   # если скачано браузером: снять карантин Gatekeeper
+   cp Data/example.yaml init.yaml
+   ```
+
+3. Запустите `./crabindex` (из этого каталога). Адрес админ-панели и `devkey` появятся в консоли, повторно - `./crabindex admin`.
+4. Откройте `http://127.0.0.1:9117/`. Конфиг - `~/crabindex/init.yaml`. Автозапуск через launchd - [Windows и macOS](docs/docs/deployment/windows.md).
+
+### Windows
+
+1. Скачайте [`crabindex-windows-x86_64.zip`](https://github.com/sheinices/crabindex/releases/latest/download/crabindex-windows-x86_64.zip) и распакуйте, например, в `C:\crabindex` (чтобы `crabindex.exe`, `wwwroot\` и `Data\` лежали прямо в нём).
+2. В PowerShell:
+
+   ```powershell
+   cd C:\crabindex
+   Copy-Item Data\example.yaml init.yaml
+   .\crabindex.exe
+   ```
+
+3. Адрес админ-панели и `devkey` появятся в консоли, повторно - `.\crabindex.exe admin`. Откройте `http://127.0.0.1:9117/`. Конфиг - `C:\crabindex\init.yaml`.
+4. Останавливайте сервер через Ctrl+C (так сохраняется база). Запуск как службы (NSSM) и Планировщик заданий вместо cron - [Windows и macOS](docs/docs/deployment/windows.md).
+
+### Из исходников
 
 ```bash
+git clone https://github.com/sheinices/crabindex.git && cd crabindex
 make web        # Vue SPA → wwwroot/
 make release    # target/release/crabindex
 cp Data/example.yaml init.yaml   # отредактируйте под себя
 ./target/release/crabindex
 ```
 
-Приложение работает относительно текущего каталога: читает `init.yaml` (или `init.conf`), хранит базу в `Data/`, отдаёт статику из `wwwroot/`.
+Или сразу собрать и установить как службу: `sudo scripts/install.sh` (из клона; Rust и Node.js установщик поставит сам). Подробнее - [Сборка](docs/docs/development/building.md).
 
-После запуска:
-
-- Веб-интерфейс: **`http://127.0.0.1:9117/`** (поиск), **`/stats`**
-- Админ-панель: адрес и пароль выводятся в лог при первом запуске (`admin: http://…/admin?<token>`, `admin: devkey: …`); повторно - `./crabindex admin`
-- Проверка: `curl http://127.0.0.1:9117/health` → `{"status":"OK"}`
-- Версия сборки: `/version`
+Приложение работает относительно текущего каталога: читает `init.yaml` (или `init.conf`), хранит базу в `Data/`, отдаёт статику из `wwwroot/`. При остановке (SIGTERM / Ctrl+C) сервер завершает фоновые задачи и сбрасывает на диск кеш FileDB и `masterDb`.
 
 Цели `make`:
 
@@ -66,66 +145,10 @@ cp Data/example.yaml init.yaml   # отредактируйте под себя
 | `make release` | Release-бинарник (`TARGET=` для кросс-сборки) |
 | `make test` | Все тесты workspace |
 | `make web` | Сборка веб-интерфейса в `wwwroot/` |
-| `make dist` | Готовый бандл в `dist/`: бинарник, `wwwroot/`, шаблоны `Data/` |
+| `make dist` | Готовый бандл в `dist/`: бинарник, `wwwroot/`, шаблоны `Data/`, установщик |
 | `make docker` | Docker-образ `crabindex` |
 
 Версия, git SHA, ветка и дата сборки вшиваются в бинарник при компиляции (`build.rs`) и печатаются при старте. Без `.git` их можно задать переменными `CRABINDEX_VERSION`, `CRABINDEX_GIT_SHA`, `CRABINDEX_GIT_BRANCH`, `CRABINDEX_BUILD_DATE`.
-
-### Установка как сервис (systemd)
-
-Установщик (Linux + systemd) ставит комплект `make dist` в `/opt/crabindex`, создаёт пользователя
-`crabindex`, unit и crontab, спрашивает путь админ-панели и генерирует токен и `devkey`:
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/sheinices/crabindex/main/scripts/install.sh | sudo bash   # готовый релиз
-sudo scripts/install.sh                      # из клона репозитория: проверит пакеты, соберёт и установит
-sudo scripts/install.sh --check              # только проверить систему
-make dist && sudo dist/install.sh            # или: sudo scripts/install.sh --bundle crabindex.tar.gz
-sudo dist/install.sh --update                # обновление (конфиг и данные сохраняются)
-sudo dist/install.sh --admin-path /panel --yes   # без вопросов
-sudo dist/install.sh --uninstall [--purge]
-```
-
-Вручную:
-
-```ini
-# /etc/systemd/system/crabindex.service
-[Unit]
-Description=CrabIndex
-After=network-online.target
-
-[Service]
-WorkingDirectory=/opt/crabindex
-ExecStart=/opt/crabindex/crabindex
-Restart=always
-User=crabindex
-
-[Install]
-WantedBy=multi-user.target
-```
-
-```bash
-systemctl daemon-reload && systemctl enable --now crabindex
-crontab /opt/crabindex/Data/crontab   # полный набор задач парсинга
-```
-
-При остановке (SIGTERM / Ctrl+C) сервер завершает фоновые задачи и сбрасывает на диск кеш FileDB и `masterDb`.
-
----
-
-## Docker
-
-```bash
-docker build -t crabindex .
-docker run -d --name crabindex -p 9117:9117 \
-  -v crabindex-config:/app/config -v crabindex-data:/app/Data crabindex
-```
-
-Или `docker compose` на основе [docker-compose.example.yml](docker-compose.example.yml) - вместе с FlareSolverr, WARP и cffetch для трекеров за Cloudflare.
-
-При первом запуске сервер генерирует `admin.token` и `devkey`, записывает их в конфиг (том `/app/config`) и выводит адрес админ-панели в лог (`docker logs crabindex 2>&1 | grep admin:`; путь можно задать через `CRABINDEX_ADMIN_PATH`).
-
-Конфиг при старте контейнера выбирается так: `/app/config/init.yaml` → `/app/config/init.conf` → `/app/Data/init.*` → шаблон по умолчанию (`Data/example.yaml`). Cron-задачи запускаются снаружи контейнера (`Data/crontab`, `Data/run-job.sh`).
 
 ---
 

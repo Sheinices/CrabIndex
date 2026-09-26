@@ -83,6 +83,19 @@ curl "http://127.0.0.1:9117/cron/cloudflare/Warmup"
 
 Если прогрев успешен, хост помечается как защищённый Cloudflare, и дальнейшие запросы к нему сразу идут через FlareSolverr или cffetch. Если прогрев не удался, пометка снимается. Настройка описана в разделе [FlareSolverr и cffetch](../configuration/flaresolverr.md).
 
+
+## Cloudflare: состояние и управление
+
+Эти маршруты использует раздел **FlareSolverr** админ-панели (через `{admin.path}/api/cron/cloudflare/...`).
+
+| Маршрут | Описание |
+| --- | --- |
+| `GET /cron/cloudflare/status` | Состояние FlareSolverr (`solver`: доступен ли, версия, сессии в браузере) и cffetch, настройки, открытые сессии, защищённые хосты и статистика: `stats.hosts` (по каждому сайту запросы через браузер, успехи, ошибки по причинам `tabCrashed`, `browserTimeouts`, `challengeFailed`, `sessionErrors`, `unreachable`, `pageFailed`, `otherErrors`, сессии, быстрый путь, среднее и максимальное время) и `stats.recentErrors` (до 100 последних ошибок) |
+| `POST /cron/cloudflare/sessions/close[?host=]` | Закрыть сессии браузера: все или одного сайта. Сессии, занятые запросом, пропускаются. Ответ `{"ok": true, "closed": N, "busy": M}` |
+| `POST /cron/cloudflare/pause?value=true\|false` | Приостановить (`true`) или снова включить (`false`) использование браузера до перезапуска службы. Конфиг не меняется; при паузе закрываются все сессии |
+| `POST /cron/cloudflare/stats/reset` | Обнулить статистику и журнал ошибок |
+
+Статистика хранится в памяти и обнуляется при перезапуске.
 ## GET /jsondb/save
 
 Немедленно сохраняет `masterDb` (индекс FileDB) в `Data/masterDb.bz` в фоне. Кроме этого, изменённый `masterDb` сохраняется автоматически примерно раз в 10 минут. Ручной вызов нужен перед остановкой или обновлением. В `Data/crontab` он стоит каждые 5 минут.

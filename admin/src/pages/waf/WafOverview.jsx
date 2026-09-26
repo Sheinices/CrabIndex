@@ -92,7 +92,7 @@ export function WafOverview() {
       {data && data.enabled === false && enabled ? <DisabledNotice /> : null}
       {data?.logRequests === false ? (
         <p role="status" className="card border-warn/40 bg-warn/10 p-4 text-sm">
-          Журнал запросов выключен (waf.logRequests) — статистика и журнал не пополняются.{' '}
+          Журнал запросов выключен (waf.logRequests) - статистика и журнал не пополняются.{' '}
           <Link to={SETTINGS_WAF} className="text-accent hover:underline">
             Настройки WAF
           </Link>

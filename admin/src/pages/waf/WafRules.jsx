@@ -73,7 +73,7 @@ function BuiltinDomains({ domains }) {
             Встроенные заблокированные домены <span className="text-sm font-normal text-muted">· {domains.length}</span>
           </h3>
           <p className="text-xs text-muted">
-            Встроенный список, изменить нельзя: он зашит в программу. Запросы с этих доменов и их поддоменов получают 403 всегда — даже с IP из белого списка и из
+            Встроенный список, изменить нельзя: он зашит в программу. Запросы с этих доменов и их поддоменов получают 403 всегда - даже с IP из белого списка и из
             LAN (кроме localhost).
           </p>
         </div>
@@ -130,7 +130,7 @@ const CONFIG_ROWS = [
 function ConfigValue({ value }) {
   if (typeof value === 'boolean') return <StatusDot tone={value ? 'ok' : 'muted'} label={value ? 'да' : 'нет'} />
   if (Array.isArray(value)) {
-    if (!value.length) return <span className="text-muted">—</span>
+    if (!value.length) return <span className="text-muted">-</span>
     return (
       <span className="flex flex-wrap justify-end gap-1">
         {value.map((v) => (
@@ -141,7 +141,7 @@ function ConfigValue({ value }) {
       </span>
     )
   }
-  if (value == null || value === '') return <span className="text-muted">—</span>
+  if (value == null || value === '') return <span className="text-muted">-</span>
   return <span className="tabular-nums">{String(value)}</span>
 }
 
@@ -198,7 +198,7 @@ export function WafRules() {
             Ваш IP: <span className="font-mono">{you || 'неизвестен'}</span>
           </p>
           <p className="text-muted">
-            Заблокировать или забанить собственный IP (или подсеть, в которую он входит) и loopback-адреса нельзя — сервер отклонит такое правило, чтобы вы не потеряли доступ к
+            Заблокировать или забанить собственный IP (или подсеть, в которую он входит) и loopback-адреса нельзя - сервер отклонит такое правило, чтобы вы не потеряли доступ к
             панели.
           </p>
         </div>
@@ -222,7 +222,7 @@ export function WafRules() {
             <Globe className="size-4 text-muted" aria-hidden="true" /> Домены
           </h2>
           <p className="text-xs text-muted">
-            Домен запроса — хост заголовка Origin, а если его нет — Referer. Правило example.com действует и на все поддомены. Запросы без Origin и Referer по домену не
+            Домен запроса - хост заголовка Origin, а если его нет - Referer. Правило example.com действует и на все поддомены. Запросы без Origin и Referer по домену не
             блокируются; за блокировку по домену IP не банится.
           </p>
         </div>

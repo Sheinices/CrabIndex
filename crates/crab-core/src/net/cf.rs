@@ -53,9 +53,21 @@ pub fn is_crawl_lane() -> bool {
     CRAWL_LANE.try_with(|v| *v).unwrap_or(false)
 }
 
+/// Runtime switch from the admin panel: stops browser use until unpaused or restart,
+/// without touching `flaresolverr.enable` in the config.
+static PAUSED: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+
+pub fn set_paused(v: bool) {
+    PAUSED.store(v, std::sync::atomic::Ordering::SeqCst);
+}
+
+pub fn is_paused() -> bool {
+    PAUSED.load(std::sync::atomic::Ordering::SeqCst)
+}
+
 fn solver_enabled() -> bool {
     let c = conf();
-    c.flaresolverr.enable && !c.flaresolverr.url.trim().is_empty()
+    c.flaresolverr.enable && !c.flaresolverr.url.trim().is_empty() && !is_paused()
 }
 
 /// 403/503 with `cf-mitigated` header.

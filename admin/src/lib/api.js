@@ -124,6 +124,12 @@ export const parseConfig = (payload) => post('config/parse', payload)
 export const formatConfig = (payload) => post('config/format', payload)
 export const saveConfig = (payload) => post('config', payload)
 
+// --- Cloudflare bypass (FlareSolverr / cffetch) --------------------------------
+export const getCloudflareStatus = (opts) => get('cron/cloudflare/status', opts)
+export const closeBrowserSessions = (host) => post('cron/cloudflare/sessions/close', undefined, { query: { host } }).then(ensureOk)
+export const pauseCloudflare = (value) => post('cron/cloudflare/pause', undefined, { query: { value } }).then(ensureOk)
+export const resetCloudflareStats = () => post('cron/cloudflare/stats/reset').then(ensureOk)
+
 // --- Maintenance / dev ---------------------------------------------------------
 export const runPath = (path, query) => get(path, { query, raw: true })
 
