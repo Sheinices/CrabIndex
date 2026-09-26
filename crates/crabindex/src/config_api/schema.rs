@@ -134,9 +134,9 @@ pub fn get() -> Value {
             field("maxreadfile", "int", "Max read file", Some("Лимит чтения fdb"), min(1)),
         ]),
         group("logging", "Логирование", Some("Файлы в Data/log/ и уровни консоли (journalctl)"), vec![
-            fd("logFdb", "bool", "Лог FileDB", Some("Data/log/fdb.*.log, default: true")),
+            fd("logFdb", "bool", "Журнал изменений базы", Some("Data/log/fdb.*.log: строка на каждое изменение раздачи. Много записи на диск, включайте для отладки. По умолчанию выключен")),
             field("logFdbRetentionDays", "int", "Хранение fdb логов (дней)", Some("0 - все"), min(0)),
-            field("logFdbMaxSizeMb", "int", "Max размер fdb логов (MB)", Some("0 - без лимита"), min(0)),
+            field("logFdbMaxSizeMb", "int", "Max размер fdb логов (MB)", Some("Старые файлы удаляются при превышении; 0 - без лимита. По умолчанию 1024"), min(0)),
             field("logFdbMaxFiles", "int", "Max файлов fdb логов", Some("0 - без лимита"), min(0)),
             fd("logParsers", "bool", "Лог парсеров", Some("Data/log/{tracker}.log, default: true")),
             field("logging.defaultLevel", "select", "Уровень консоли", Some("Минимальный уровень для journalctl"), enums(&["Trace", "Debug", "Information", "Warning", "Error", "Critical", "None"])),

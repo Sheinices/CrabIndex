@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router'
 import { ArrowDownToLine, FileText, RefreshCw, Search } from 'lucide-react'
 import { getLog, getLogs } from '../lib/api.js'
+import { FdbJournalCard } from './FdbJournal.jsx'
 import { usePolling } from '../hooks/usePolling.js'
 import { ErrorBox, PageHeader, Spinner, Toggle } from '../components/ui.jsx'
 import { formatBytes, formatDate } from '../lib/format.js'
@@ -102,6 +103,7 @@ export function LogsPage() {
     <>
       <PageHeader title="Логи" description="Файлы Data/log/*.log" />
       <ErrorBox error={logs.error} onRetry={logs.reload} />
+      <FdbJournalCard onChanged={logs.reload} />
       <div className="grid gap-6 lg:grid-cols-[18rem_1fr]">
         <aside className="card min-w-0 p-3" aria-label="Файлы логов">
           <input

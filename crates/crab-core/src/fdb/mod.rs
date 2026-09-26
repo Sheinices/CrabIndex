@@ -651,18 +651,14 @@ fn fdb_log_files() -> Vec<(std::path::PathBuf, u64, chrono::NaiveDate)> {
     list
 }
 
+/// Unix seconds of the last retention / size cleanup (at most once a minute, not per line).
+static FDB_LOG_CLEANUP_AT: std::sync::atomic::AtomicI64 = std::sync::atomic::AtomicI64::new(0);
+const FDB_LOG_CLEANUP_EVERY_SECS: i64 = 60;
+
 fn append_fdb_log(torrent: &TorrentDetails, t: &TorrentDetails) {
     use std::io::Write;
     let c = conf();
     let _ = std::fs::create_dir_all(FDB_LOG_DIR);
-    if c.logFdbRetentionDays > 0 {
-        let cutoff = Utc::now().date_naive() - chrono::Duration::days(c.logFdbRetentionDays as i64);
-        for (p, _, d) in fdb_log_files() {
-            if d < cutoff {
-                let _ = std::fs::remove_file(p);
-            }
-        }
-    }
     let path = format!("{FDB_LOG_DIR}/{FDB_LOG_PREFIX}{}.log", Utc::now().format("%Y-%m-%d"));
     if let Ok(line) = serde_json::to_string(&[torrent, t]) {
         if let Ok(mut f) = std::fs::OpenOptions::new().create(true).append(true).open(&path) {
@@ -670,7 +666,48 @@ fn append_fdb_log(torrent: &TorrentDetails, t: &TorrentDetails) {
             let _ = f.write_all(b"\n");
         }
     }
-    purge_fdb_log(c.logFdbMaxSizeMb, c.logFdbMaxFiles);
+    let now = Utc::now().timestamp();
+    let last = FDB_LOG_CLEANUP_AT.load(std::sync::atomic::Ordering::Relaxed);
+    if now - last >= FDB_LOG_CLEANUP_EVERY_SECS
+        && FDB_LOG_CLEANUP_AT.compare_exchange(last, now, std::sync::atomic::Ordering::SeqCst, std::sync::atomic::Ordering::Relaxed).is_ok()
+    {
+        cleanup_fdb_logs(c.logFdbRetentionDays, c.logFdbMaxSizeMb, c.logFdbMaxFiles);
+    }
+}
+
+/// Retention by age, then size / count limits (oldest files first).
+pub fn cleanup_fdb_logs(retention_days: i32, max_size_mb: i32, max_files: i32) {
+    if retention_days > 0 {
+        let cutoff = Utc::now().date_naive() - chrono::Duration::days(retention_days as i64);
+        for (p, _, d) in fdb_log_files() {
+            if d < cutoff {
+                let _ = std::fs::remove_file(p);
+            }
+        }
+    }
+    purge_fdb_log(max_size_mb, max_files);
+}
+
+/// FileDB change journals on disk: (files, total bytes, oldest day, newest day).
+pub fn fdb_log_usage() -> (usize, u64, Option<chrono::NaiveDate>, Option<chrono::NaiveDate>) {
+    let list = fdb_log_files();
+    let total = list.iter().map(|x| x.1).sum();
+    let oldest = list.iter().map(|x| x.2).min();
+    let newest = list.iter().map(|x| x.2).max();
+    (list.len(), total, oldest, newest)
+}
+
+/// Delete all FileDB change journals; returns (files removed, bytes freed).
+pub fn clear_fdb_logs() -> (usize, u64) {
+    let mut n = 0;
+    let mut bytes = 0;
+    for (p, len, _) in fdb_log_files() {
+        if std::fs::remove_file(p).is_ok() {
+            n += 1;
+            bytes += len;
+        }
+    }
+    (n, bytes)
 }
 
 fn purge_fdb_log(max_size_mb: i32, max_files: i32) {

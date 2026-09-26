@@ -114,6 +114,42 @@ fn modified_utc(meta: &std::fs::Metadata) -> Option<String> {
 }
 
 /// `[{name,size,modified}]` of the regular `*.log` files directly inside `dir`, by name.
+/// `GET {admin}/api/logs/fdb` - FileDB change journal settings and disk usage.
+pub fn fdb_log_info(c: &AppOptions) -> Value {
+    let (files, bytes, oldest, newest) = crab_core::fdb::fdb_log_usage();
+    json!({
+        "enabled": c.logFdb,
+        "retentionDays": c.logFdbRetentionDays,
+        "maxSizeMb": c.logFdbMaxSizeMb,
+        "maxFiles": c.logFdbMaxFiles,
+        "files": files,
+        "totalBytes": bytes,
+        "oldest": oldest,
+        "newest": newest,
+    })
+}
+
+/// `POST {admin}/api/logs/fdb` - change only the journal keys and save the config the same
+/// way the settings editor does (validation, atomic write, hot reload).
+pub fn fdb_log_update(body: &Value) -> Result<Value, String> {
+    let mut v = crate::config_api::validator::options_to_value(&crate::conf());
+    let obj = v.as_object_mut().ok_or("конфиг не является объектом")?;
+    if let Some(b) = body.get("enabled") {
+        obj.insert("logFdb".into(), Value::Bool(b.as_bool().ok_or("enabled: ожидается true или false")?));
+    }
+    for (key, field) in [("retentionDays", "logFdbRetentionDays"), ("maxSizeMb", "logFdbMaxSizeMb"), ("maxFiles", "logFdbMaxFiles")] {
+        if let Some(x) = body.get(key) {
+            let n = x.as_i64().filter(|n| (0..=1_000_000).contains(n)).ok_or_else(|| format!("{key}: ожидается целое число от 0"))?;
+            obj.insert(field.into(), json!(n));
+        }
+    }
+    crate::config_api::save_config_object(&v, None)?;
+    let c = crate::conf();
+    // apply new limits right away instead of waiting for the next journal line
+    crab_core::fdb::cleanup_fdb_logs(c.logFdbRetentionDays, c.logFdbMaxSizeMb, c.logFdbMaxFiles);
+    Ok(fdb_log_info(&c))
+}
+
 pub fn list_logs(dir: &Path) -> Vec<Value> {
     let Ok(rd) = std::fs::read_dir(dir) else { return vec![] };
     let mut items: Vec<(String, Value)> = rd

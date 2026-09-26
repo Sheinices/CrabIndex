@@ -46,6 +46,7 @@ const sidebars = {
       type: 'category',
       label: 'Развёртывание',
       items: [
+        'deployment/where-to-run',
         'deployment/docker',
         'deployment/linux',
         'deployment/windows',

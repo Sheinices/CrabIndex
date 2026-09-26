@@ -77,9 +77,9 @@ mergenumduplicates: true # Объединять дубликаты по номе
 openstats: true
 opensync: true
 web: true # Раздавать статику (веб-интерфейс)
-logFdb: true
+logFdb: false            # journal of every torrent change (Data/log/fdb.*.log); heavy disk writes, enable for debugging
 logFdbRetentionDays: 7
-logFdbMaxSizeMb: 0
+logFdbMaxSizeMb: 1024    # cap for all fdb journals, MB; 0 - no limit
 logFdbMaxFiles: 0
 logParsers: true
 syncapi: https://sync.crab.rip

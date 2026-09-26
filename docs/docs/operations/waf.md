@@ -105,7 +105,7 @@ waf:
 
 Эти домены зашиты в программу и блокируются всегда (`403`, причина `domain`) - для всех клиентов, кроме localhost, в том числе для IP из белого списка и локальной сети:
 
-`ndst.pw`, `diskstation.me`, `krilzov.it`, `myds.me`, `lampa.stream`, `bylampa.online`, `abhq.ru`, `abmsx.tech`, `akter.black`, `lampa.click`, `lampa.land`, `lampa1.ru`, `line.pm`, `nnmtv.pw`, `tvigl.info`, `uspeh.sbs`, `usph.xyz`, `xabb.ru`
+`ndst.pw`, `diskstation.me`, `krilzov.it`, `myds.me`, `lampa.stream`, `bylampa.online`, `abhq.ru`, `abmsx.tech`, `akter.black`, `lampa.click`, `lampa.land`, `lampa1.ru`, `line.pm`, `nnmtv.pw`, `tvigl.info`, `uspeh.sbs`, `usph.xyz`, `xabb.ru`, `lampaua.mooo.com`
 
 :::warning[Внимание]
 Встроенный список нельзя изменить, отключить или обойти через админ-панель, `Data/waf.json` или `init.yaml`: добавить такой домен (или его поддомен) в белый список доменов нельзя, удалить из списка - тоже. Изменить его можно только правкой исходного кода (`crates/crabindex/src/waf/domains.rs`) и пересборкой.

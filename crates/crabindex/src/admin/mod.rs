@@ -329,6 +329,30 @@ async fn api_request(mut req: Request, next: Next, c: &AppOptions, base: &str, s
                 Err(e) => json_response(StatusCode::OK, json!({ "ok": false, "error": e })),
             };
         }
+        ("GET", "logs/fdb") => {
+            let c = crate::conf();
+            let v = tokio::task::spawn_blocking(move || api::fdb_log_info(&c)).await.unwrap_or(Value::Null);
+            return json_response(StatusCode::OK, v);
+        }
+        ("POST", "logs/fdb") => {
+            let bytes = match axum::body::to_bytes(req.into_body(), 64 * 1024).await {
+                Ok(b) => b,
+                Err(_) => return json_response(StatusCode::BAD_REQUEST, json!({ "ok": false, "error": "bad body" })),
+            };
+            let body: Value = match serde_json::from_slice(&bytes) {
+                Ok(v @ Value::Object(_)) => v,
+                _ => return json_response(StatusCode::BAD_REQUEST, json!({ "ok": false, "error": "ожидается JSON-объект" })),
+            };
+            return match tokio::task::spawn_blocking(move || api::fdb_log_update(&body)).await {
+                Ok(Ok(v)) => json_response(StatusCode::OK, json!({ "ok": true, "state": v })),
+                Ok(Err(e)) => json_response(StatusCode::BAD_REQUEST, json!({ "ok": false, "error": e })),
+                Err(_) => crate::app::internal_error_response(),
+            };
+        }
+        ("POST", "logs/fdb/clear") => {
+            let (files, bytes) = tokio::task::spawn_blocking(crab_core::fdb::clear_fdb_logs).await.unwrap_or((0, 0));
+            return json_response(StatusCode::OK, json!({ "ok": true, "files": files, "bytes": bytes }));
+        }
         ("GET", "logs") => {
             let v = tokio::task::spawn_blocking(|| api::list_logs(Path::new(api::LOG_DIR))).await.unwrap_or_default();
             return json_response(StatusCode::OK, Value::Array(v));

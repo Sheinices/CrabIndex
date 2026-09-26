@@ -334,6 +334,20 @@ async function handle(req, res, path, query) {
     return send(res, 200, `${action} ${slug}: ok, added=12, updated=3, skipped=40 (${[...query].map(([k, v]) => `${k}=${v}`).join(' ') || 'defaults'})`, 'text/plain; charset=utf-8')
   }
 
+  if (path === 'logs/fdb') {
+    state.fdb = state.fdb || { enabled: false, retentionDays: 7, maxSizeMb: 1024, maxFiles: 0, files: 2, totalBytes: 48_234_112, oldest: '2026-09-25', newest: '2026-09-26' }
+    if (req.method === 'POST') {
+      const patch = await readJson(req)
+      state.fdb = { ...state.fdb, ...patch }
+      return send(res, 200, { ok: true, state: state.fdb })
+    }
+    return send(res, 200, state.fdb)
+  }
+  if (path === 'logs/fdb/clear') {
+    const freed = state.fdb?.totalBytes || 0
+    state.fdb = { ...(state.fdb || {}), files: 0, totalBytes: 0, oldest: null, newest: null }
+    return send(res, 200, { ok: true, files: 2, bytes: freed })
+  }
   if (path === 'logs') {
     return send(res, 200, LOGS.map((name, i) => ({ name, size: 1024 * (50 + i * 731), modified: new Date(Date.now() - i * 3_600_000).toISOString() })))
   }

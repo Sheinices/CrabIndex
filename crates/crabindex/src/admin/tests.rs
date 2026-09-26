@@ -287,6 +287,20 @@ async fn api_paths_map_to_existing_handlers() {
         let r = Req::get(bad).session(&s).send().await;
         assert_eq!(r.status(), StatusCode::NOT_FOUND, "{bad}");
     }
+
+    // FileDB change journal: state, validation, clear (the route wins over logs/{file})
+    let v = json_body(Req::get("/admin/api/logs/fdb").session(&s).send().await).await;
+    for k in ["enabled", "retentionDays", "maxSizeMb", "maxFiles", "files", "totalBytes"] {
+        assert!(!v[k].is_null(), "{k}");
+    }
+    let r = Req::post("/admin/api/logs/fdb", r#"{"maxSizeMb":-5}"#).session(&s).csrf().send().await;
+    assert_eq!(r.status(), StatusCode::BAD_REQUEST);
+    let r = Req::post("/admin/api/logs/fdb", "[1]").session(&s).csrf().send().await;
+    assert_eq!(r.status(), StatusCode::BAD_REQUEST);
+    let r = Req::post("/admin/api/logs/fdb/clear", "").session(&s).csrf().send().await;
+    assert_eq!(json_body(r).await["ok"], true);
+    let r = Req::post("/admin/api/logs/fdb/clear", "").session(&s).send().await;
+    assert_eq!(r.status(), StatusCode::FORBIDDEN, "CSRF header required");
 }
 
 #[tokio::test]

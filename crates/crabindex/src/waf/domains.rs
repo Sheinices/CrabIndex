@@ -26,6 +26,8 @@ pub const BUILTIN_BLOCKED_DOMAINS: &[&str] = &[
     "uspeh.sbs",
     "usph.xyz",
     "xabb.ru",
+    // FreeDNS shared zone: only this site and its subdomains, never all of mooo.com
+    "lampaua.mooo.com",
 ];
 
 /// Longest domain name.
@@ -109,7 +111,7 @@ mod tests {
 
     #[test]
     fn builtin_list_is_lowercase_and_valid() {
-        assert_eq!(BUILTIN_BLOCKED_DOMAINS.len(), 18);
+        assert_eq!(BUILTIN_BLOCKED_DOMAINS.len(), 19);
         for d in BUILTIN_BLOCKED_DOMAINS {
             assert_eq!(parse_rule(d).as_deref(), Ok(*d));
         }
@@ -123,6 +125,9 @@ mod tests {
         assert!(!domain_matches("ndst.pw.evil.com", "ndst.pw"));
         assert!(!domain_matches("pw", "ndst.pw"));
         assert_eq!(builtin_blocked("app.lampa.stream"), Some("lampa.stream"));
+        assert_eq!(builtin_blocked("lampaua.mooo.com"), Some("lampaua.mooo.com"));
+        assert_eq!(builtin_blocked("x.lampaua.mooo.com"), Some("lampaua.mooo.com"));
+        assert_eq!(builtin_blocked("other.mooo.com"), None);
         assert_eq!(builtin_blocked("mylampa.stream"), None);
         assert_eq!(builtin_blocked("example.com"), None);
     }

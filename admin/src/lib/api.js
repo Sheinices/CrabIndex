@@ -113,6 +113,9 @@ export const runCron = (slug, action, query) =>
 // --- Logs --------------------------------------------------------------------
 export const getLogs = (opts) => get('logs', opts)
 export const getLog = (name, lines, opts) => get(`logs/${encodeURIComponent(name)}`, { ...opts, query: { lines } })
+export const getFdbLog = (opts) => get('logs/fdb', opts)
+export const setFdbLog = (patch) => post('logs/fdb', patch).then(ensureOk)
+export const clearFdbLog = () => post('logs/fdb/clear').then(ensureOk)
 
 // --- Config ------------------------------------------------------------------
 export const getConfig = (format) => get('config', { query: { format } })

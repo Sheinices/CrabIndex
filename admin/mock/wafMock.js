@@ -28,6 +28,7 @@ export const BUILTIN_DOMAINS = [
   'uspeh.sbs',
   'usph.xyz',
   'xabb.ru',
+  'lampaua.mooo.com',
 ]
 
 const UA = {
