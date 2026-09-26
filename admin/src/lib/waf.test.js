@@ -1,5 +1,22 @@
 import { describe, expect, it } from 'vitest'
-import { buildRequestsQuery, builtinDomainOf, coversIp, domainMatches, domainRuleError, isIpOrCidr, normalizeDomain, selfBlockError, validateDomainValue, validateRuleValue } from './waf.js'
+import {
+  BLOCK_REASONS,
+  botCategoryWarning,
+  botRuleOf,
+  buildRequestsQuery,
+  builtinDomainOf,
+  coversIp,
+  domainMatches,
+  domainRuleError,
+  isBotList,
+  isIpOrCidr,
+  normalizeDomain,
+  reasonLabel,
+  selfBlockError,
+  validateBotRule,
+  validateDomainValue,
+  validateRuleValue,
+} from './waf.js'
 
 describe('IP / CIDR validation', () => {
   it.each(['203.0.113.7', '0.0.0.0', '255.255.255.255', '198.51.100.0/24', '10.0.0.0/8', '1.2.3.4/32', '::1', '2001:db8::/32', 'fe80::1', '2001:0db8:85a3:0000:0000:8a2e:0370:7334', '::ffff:192.0.2.1', '::/0', '2001:db8::/128'])(
@@ -90,5 +107,43 @@ describe('domain rules', () => {
 
   it('adds the origin filter to the requests query', () => {
     expect(buildRequestsQuery({ origin: ' NDST.pw ' })).toEqual({ origin: 'ndst.pw', limit: 200 })
+  })
+})
+
+describe('bots and hosts', () => {
+  it('adds the host filter to the requests query', () => {
+    expect(buildRequestsQuery({ host: ' Sync.Crab.RIP ' })).toEqual({ host: 'sync.crab.rip', limit: 200 })
+    expect(buildRequestsQuery({ host: '  ' })).toEqual({ limit: 200 })
+  })
+
+  it('labels the bot block reason', () => {
+    expect(reasonLabel('bot')).toBe('Бот')
+    expect(BLOCK_REASONS.bot.tone).toBe('warn')
+  })
+
+  it('validates bot rules', () => {
+    expect(validateBotRule('')).toMatch(/Укажите/)
+    expect(validateBotRule('ab')).toMatch(/Не короче 3/)
+    expect(validateBotRule('x'.repeat(129))).toMatch(/Не длиннее 128/)
+    expect(validateBotRule('a\u0007bc')).toMatch(/Недопустимые/)
+    expect(validateBotRule('  AhrefsBot ')).toBeNull()
+    expect(validateBotRule('Screaming Frog')).toBeNull()
+  })
+
+  it('warns before blocking risky categories only', () => {
+    expect(botCategoryWarning('libraries')).toMatch(/curl/)
+    expect(botCategoryWarning('empty')).toMatch(/User-Agent/)
+    expect(botCategoryWarning('search')).toMatch(/индексировать/)
+    expect(botCategoryWarning('seo')).toBeNull()
+    expect(isBotList('botBlocked')).toBe(true)
+    expect(isBotList('blacklist')).toBe(false)
+  })
+
+  it('finds the explicit rule of a bot case-insensitively', () => {
+    const rules = { botBlocked: [{ value: 'AhrefsBot' }], botAllowed: [{ value: 'uptimerobot' }] }
+    expect(botRuleOf('ahrefsbot', rules)).toEqual({ list: 'botBlocked', entry: { value: 'AhrefsBot' } })
+    expect(botRuleOf('UptimeRobot', rules).list).toBe('botAllowed')
+    expect(botRuleOf('GPTBot', rules)).toBeNull()
+    expect(botRuleOf('GPTBot', {})).toBeNull()
   })
 })

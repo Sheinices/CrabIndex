@@ -1,5 +1,6 @@
-//! In-memory request statistics: ring buffer log, per-IP / per-path / per-origin aggregates and a
-//! per-minute timeline covering the last 24 hours. All structures are bounded.
+//! In-memory request statistics: ring buffer log, per-IP / per-path / per-origin / per-host
+//! aggregates, per-bot counters (see [`super::bots`]) and a per-minute timeline covering the last
+//! 24 hours. All structures are bounded.
 
 use chrono::{DateTime, TimeZone, Utc};
 use dashmap::DashMap;
@@ -8,6 +9,7 @@ use serde_json::{json, Value};
 use std::collections::VecDeque;
 use std::sync::atomic::{AtomicBool, Ordering};
 
+use super::bots::{BotHit, BotStats};
 use super::store::iso;
 
 /// Tracked client addresses (least recently seen are evicted beyond this).
@@ -16,6 +18,8 @@ pub const MAX_IPS: usize = 10_000;
 pub const MAX_PATHS: usize = 5_000;
 /// Tracked request origins (least recently seen are evicted beyond this).
 pub const MAX_ORIGINS: usize = 5_000;
+/// Tracked request hosts (least recently seen are evicted beyond this).
+pub const MAX_HOSTS: usize = 5_000;
 /// Eviction runs once the map exceeds the cap by this many entries.
 const EVICT_SLACK: usize = 500;
 /// Timeline length in minutes (24 h).
@@ -30,12 +34,13 @@ pub enum Reason {
     Trap,
     Rate,
     Domain,
+    Bot,
 }
 
-const REASONS: usize = 6;
+const REASONS: usize = 7;
 
 impl Reason {
-    pub const ALL: [Reason; REASONS] = [Reason::Blacklist, Reason::Ban, Reason::Ua, Reason::Trap, Reason::Rate, Reason::Domain];
+    pub const ALL: [Reason; REASONS] = [Reason::Blacklist, Reason::Ban, Reason::Ua, Reason::Trap, Reason::Rate, Reason::Domain, Reason::Bot];
 
     pub fn as_str(self) -> &'static str {
         match self {
@@ -45,6 +50,7 @@ impl Reason {
             Reason::Trap => "trap",
             Reason::Rate => "rate",
             Reason::Domain => "domain",
+            Reason::Bot => "bot",
         }
     }
 
@@ -70,6 +76,10 @@ pub struct LogEntry {
     pub blocked: Option<Reason>,
     /// Normalised `Origin` (else `Referer`) host.
     pub origin: Option<String>,
+    /// Normalised `Host` of the request (`-` when missing).
+    pub host: String,
+    /// Bot classification of the User-Agent.
+    pub bot: Option<BotHit>,
 }
 
 impl LogEntry {
@@ -84,6 +94,7 @@ impl LogEntry {
             "ua": self.ua,
             "blocked": self.blocked.map(Reason::as_str),
             "origin": self.origin,
+            "host": self.host,
         })
     }
 }
@@ -106,6 +117,7 @@ struct PathAgg {
     last_seen: DateTime<Utc>,
 }
 
+/// Per-origin and per-host aggregate.
 #[derive(Clone, Debug)]
 struct OriginAgg {
     requests: u64,
@@ -130,6 +142,8 @@ pub struct RequestFilter {
     pub path: Option<String>,
     /// Substring of the recorded origin host.
     pub origin: Option<String>,
+    /// Substring of the recorded request host.
+    pub host: Option<String>,
     /// Exact code or class (`4xx`).
     pub status: Option<String>,
     /// `true`/`false` or a reason name.
@@ -155,6 +169,11 @@ impl RequestFilter {
         }
         if let Some(o) = self.origin.as_deref().map(str::trim).filter(|s| !s.is_empty()) {
             if !e.origin.as_deref().map(|h| h.contains(&o.to_lowercase())).unwrap_or(false) {
+                return false;
+            }
+        }
+        if let Some(h) = self.host.as_deref().map(str::trim).filter(|s| !s.is_empty()) {
+            if !e.host.contains(&h.to_lowercase()) {
                 return false;
             }
         }
@@ -189,6 +208,8 @@ pub struct Stats {
     ips: DashMap<String, IpAgg>,
     paths: DashMap<String, PathAgg>,
     origins: DashMap<String, OriginAgg>,
+    hosts: DashMap<String, OriginAgg>,
+    pub bots: BotStats,
     timeline: Mutex<Vec<Slot>>,
     evicting: AtomicBool,
 }
@@ -201,6 +222,8 @@ impl Default for Stats {
             ips: DashMap::new(),
             paths: DashMap::new(),
             origins: DashMap::new(),
+            hosts: DashMap::new(),
+            bots: BotStats::default(),
             timeline: Mutex::new(vec![Slot::default(); TIMELINE_MINUTES as usize]),
             evicting: AtomicBool::new(false),
         }
@@ -236,6 +259,8 @@ impl Stats {
         self.ips.clear();
         self.paths.clear();
         self.origins.clear();
+        self.hosts.clear();
+        self.bots.reset();
         self.timeline.lock().iter_mut().for_each(|s| *s = Slot::default());
         *self.since.lock() = Utc::now();
     }
@@ -290,7 +315,20 @@ impl Stats {
             a.blocked += blocked as u64;
             a.last_seen = a.last_seen.max(e.time);
         }
-        if self.ips.len() > MAX_IPS + EVICT_SLACK || self.paths.len() > MAX_PATHS + EVICT_SLACK || self.origins.len() > MAX_ORIGINS + EVICT_SLACK {
+        {
+            let mut a = self.hosts.entry(e.host.clone()).or_insert_with(|| OriginAgg { requests: 0, blocked: 0, last_seen: e.time });
+            a.requests += 1;
+            a.blocked += blocked as u64;
+            a.last_seen = a.last_seen.max(e.time);
+        }
+        if let Some(hit) = &e.bot {
+            self.bots.record(hit, &e.ip, &e.path, &e.ua, blocked, e.time);
+        }
+        if self.ips.len() > MAX_IPS + EVICT_SLACK
+            || self.paths.len() > MAX_PATHS + EVICT_SLACK
+            || self.origins.len() > MAX_ORIGINS + EVICT_SLACK
+            || self.hosts.len() > MAX_HOSTS + EVICT_SLACK
+        {
             self.evict();
         }
         let mut log = self.log.lock();
@@ -325,12 +363,14 @@ impl Stats {
                 self.paths.remove(&k);
             }
         }
-        if self.origins.len() > MAX_ORIGINS {
-            let mut v: Vec<(DateTime<Utc>, String)> = self.origins.iter().map(|r| (r.value().last_seen, r.key().clone())).collect();
-            v.sort();
-            let excess = v.len().saturating_sub(MAX_ORIGINS);
-            for (_, k) in v.into_iter().take(excess) {
-                self.origins.remove(&k);
+        for (map, cap) in [(&self.origins, MAX_ORIGINS), (&self.hosts, MAX_HOSTS)] {
+            if map.len() > cap {
+                let mut v: Vec<(DateTime<Utc>, String)> = map.iter().map(|r| (r.value().last_seen, r.key().clone())).collect();
+                v.sort();
+                let excess = v.len().saturating_sub(cap);
+                for (_, k) in v.into_iter().take(excess) {
+                    map.remove(&k);
+                }
             }
         }
         self.evicting.store(false, Ordering::Release);
@@ -397,6 +437,9 @@ impl Stats {
         let mut top_origins: Vec<(String, OriginAgg)> = self.origins.iter().filter(|r| r.value().last_seen >= start).map(|r| (r.key().clone(), r.value().clone())).collect();
         top_origins.sort_by(|a, b| b.1.requests.cmp(&a.1.requests).then_with(|| a.0.cmp(&b.0)));
         top_origins.truncate(TOP_N);
+        let mut top_hosts: Vec<(String, OriginAgg)> = self.hosts.iter().filter(|r| r.value().last_seen >= start).map(|r| (r.key().clone(), r.value().clone())).collect();
+        top_hosts.sort_by(|a, b| b.1.requests.cmp(&a.1.requests).then_with(|| a.0.cmp(&b.0)));
+        top_hosts.truncate(TOP_N);
 
         let span = (now - since.max(start)).num_milliseconds().max(1000) as f64 / 1000.0;
         let span = span.min(window_minutes as f64 * 60.0);
@@ -414,6 +457,7 @@ impl Stats {
             "topIps": top_ips.iter().map(|(ip, a)| json!({ "ip": ip, "requests": a.requests, "blocked": a.blocked, "lastSeen": iso(&a.last_seen) })).collect::<Vec<_>>(),
             "topPaths": top_paths.iter().map(|(p, a)| json!({ "path": p, "requests": a.requests, "errors": a.errors })).collect::<Vec<_>>(),
             "topOrigins": top_origins.iter().map(|(o, a)| json!({ "origin": o, "requests": a.requests, "blocked": a.blocked })).collect::<Vec<_>>(),
+            "topHosts": top_hosts.iter().map(|(h, a)| json!({ "host": h, "requests": a.requests, "blocked": a.blocked })).collect::<Vec<_>>(),
         })
     }
 
@@ -428,7 +472,7 @@ mod tests {
     use super::*;
 
     fn entry(t: DateTime<Utc>, ip: &str, path: &str, status: u16, blocked: Option<Reason>) -> LogEntry {
-        LogEntry { time: t, ip: ip.into(), method: "GET".into(), path: path.into(), status, ms: 1, ua: "ua".into(), blocked, origin: None }
+        LogEntry { time: t, ip: ip.into(), method: "GET".into(), path: path.into(), status, ms: 1, ua: "ua".into(), blocked, origin: None, host: "-".into(), bot: None }
     }
 
     #[test]
@@ -449,6 +493,7 @@ mod tests {
                 ip: ip.map(Into::into),
                 path: path.map(Into::into),
                 origin: None,
+                host: None,
                 status: status.map(Into::into),
                 blocked: blocked.map(Into::into),
                 limit: 100,
@@ -488,6 +533,45 @@ mod tests {
         assert_eq!(o["topOrigins"][0]["blocked"], 2);
         assert_eq!(o["topOrigins"][1]["blocked"], 0);
         assert_eq!(o["topOrigins"].as_array().unwrap().len(), 2);
+    }
+
+    #[test]
+    fn hosts_filter_and_top() {
+        let s = Stats::default();
+        let now = Utc::now();
+        let with = |host: &str, blocked| LogEntry { host: host.into(), ..entry(now, "192.0.2.6", "/api", 200, blocked) };
+        s.record(with("sync.crab.rip", None), 100);
+        s.record(with("sync.crab.rip", None), 100);
+        s.record(with("203.0.113.10", Some(Reason::Bot)), 100);
+        s.record(with("-", None), 100);
+        let f = |h: &str| s.requests(&RequestFilter { host: Some(h.into()), limit: 100, ..Default::default() });
+        assert_eq!(f("CRAB").len(), 2);
+        assert_eq!(f("203.0.113").len(), 1);
+        assert_eq!(f("203.0.113")[0]["host"], "203.0.113.10");
+        assert_eq!(f("").len(), 4);
+        let o = s.overview(60, now);
+        assert_eq!(o["topHosts"][0]["host"], "sync.crab.rip");
+        assert_eq!(o["topHosts"][0]["requests"], 2);
+        assert_eq!(o["topHosts"][0]["blocked"], 0);
+        let ip_row = o["topHosts"].as_array().unwrap().iter().find(|r| r["host"] == "203.0.113.10").unwrap().clone();
+        assert_eq!(ip_row["blocked"], 1);
+        assert_eq!(o["topHosts"].as_array().unwrap().len(), 3);
+        assert_eq!(o["blockedByReason"]["bot"], 1);
+        s.reset();
+        assert!(s.overview(60, now)["topHosts"].as_array().unwrap().is_empty());
+    }
+
+    #[test]
+    fn bots_are_recorded_with_the_entry() {
+        let s = Stats::default();
+        let now = Utc::now();
+        let hit = super::super::bots::classify("AhrefsBot/7.0");
+        s.record(LogEntry { ua: "AhrefsBot/7.0".into(), bot: hit.clone(), ..entry(now, "192.0.2.7", "/a", 403, Some(Reason::Bot)) }, 100);
+        s.record(LogEntry { ua: "AhrefsBot/7.0".into(), bot: hit, ..entry(now, "192.0.2.8", "/a", 200, None) }, 100);
+        let b = &s.bots.aggregates()[0];
+        assert_eq!((b.name.as_str(), b.requests, b.blocked, b.ips.len()), ("AhrefsBot", 2, 1, 2));
+        s.reset();
+        assert!(s.bots.aggregates().is_empty());
     }
 
     #[test]

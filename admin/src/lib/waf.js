@@ -1,4 +1,4 @@
-/** Pure WAF helpers: IP/CIDR and domain validation, query builders, labels. */
+/** Pure WAF helpers: IP/CIDR, domain and bot rule validation, query builders, labels. */
 
 export function isIPv4(s) {
   const parts = String(s).split('.')
@@ -154,11 +154,12 @@ export function domainRuleError(list, value, builtins = []) {
 }
 
 /** Query object for `waf/requests` built from the log filters (blanks dropped). */
-export function buildRequestsQuery({ ip = '', path = '', origin = '', status = '', blocked = false, limit = 200 } = {}) {
+export function buildRequestsQuery({ ip = '', path = '', origin = '', host = '', status = '', blocked = false, limit = 200 } = {}) {
   const q = {}
   if (ip.trim()) q.ip = ip.trim()
   if (path.trim()) q.path = path.trim()
   if (origin.trim()) q.origin = origin.trim().toLowerCase()
+  if (host.trim()) q.host = host.trim().toLowerCase()
   const st = String(status).trim().toLowerCase()
   if (/^[1-5]xx$/.test(st) || /^\d{3}$/.test(st)) q.status = st
   if (blocked) q.blocked = 'true'
@@ -173,6 +174,7 @@ export const BLOCK_REASONS = {
   trap: { label: 'Ловушка', tone: 'warn' },
   rate: { label: 'Лимит запросов', tone: 'warn' },
   domain: { label: 'Домен', tone: 'danger' },
+  bot: { label: 'Бот', tone: 'warn' },
   manual: { label: 'Вручную', tone: 'danger' },
 }
 
@@ -223,4 +225,53 @@ export function percent(part, total) {
   const t = Number(total)
   if (!(t > 0) || !Number.isFinite(p)) return 0
   return Math.round((p / t) * 1000) / 10
+}
+
+// --- bots --------------------------------------------------------------------
+
+export const BOT_LISTS = ['botBlocked', 'botAllowed']
+
+export const isBotList = (list) => BOT_LISTS.includes(list)
+
+export const BOT_RULE_MIN = 3
+export const BOT_RULE_MAX = 128
+
+/** Russian validation message for a bot rule (catalog name or User-Agent substring), or null. */
+export function validateBotRule(value) {
+  const s = String(value ?? '').trim()
+  if (!s) return 'Укажите имя бота или часть User-Agent'
+  // eslint-disable-next-line no-control-regex
+  if (/[\u0000-\u001f\u007f]/.test(s)) return 'Недопустимые символы'
+  if ([...s].length < BOT_RULE_MIN) return `Не короче ${BOT_RULE_MIN} символов`
+  if ([...s].length > BOT_RULE_MAX) return `Не длиннее ${BOT_RULE_MAX} символов`
+  return null
+}
+
+/** Warning shown before blocking a whole category (null when blocking is harmless). */
+export const BOT_CATEGORY_WARNINGS = {
+  search: 'Поисковые системы перестанут индексировать сервер: страницы пропадут из Google, Яндекса и других поисковиков.',
+  libraries:
+    'curl, python-requests, Go, okhttp и другие библиотеки используют и легитимные скрипты: ваши cron-задачи, самописные клиенты, некоторые приложения. Они тоже получат 403.',
+  empty: 'Некоторые легитимные клиенты и скрипты не присылают User-Agent. Они тоже получат 403.',
+  monitoring: 'Если вы сами пользуетесь сервисом мониторинга (UptimeRobot и т. п.), он начнёт считать сервер недоступным.',
+}
+
+export function botCategoryWarning(id) {
+  return BOT_CATEGORY_WARNINGS[id] || null
+}
+
+export const BOT_STATUS = {
+  blocked: { label: 'блокируется', tone: 'danger' },
+  allowed: { label: 'разрешён', tone: 'ok' },
+  seen: { label: 'замечен', tone: 'muted' },
+}
+
+/** Explicit rule for a bot name (`botBlocked` / `botAllowed`, case-insensitive), or null. */
+export function botRuleOf(name, rules = {}) {
+  const n = String(name ?? '').toLowerCase()
+  for (const list of BOT_LISTS) {
+    const e = (Array.isArray(rules[list]) ? rules[list] : []).find((r) => String(r.value).toLowerCase() === n)
+    if (e) return { list, entry: e }
+  }
+  return null
 }

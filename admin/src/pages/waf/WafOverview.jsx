@@ -201,6 +201,44 @@ export function WafOverview() {
                 {!o.topIps?.length ? <Empty>Нет данных</Empty> : null}
               </div>
             </section>
+            <section aria-labelledby="waf-top-origins">
+              <h2 id="waf-top-origins" className="mb-3 font-semibold">
+                Сайты-источники (Origin){' '}
+                <span className="text-sm font-normal text-muted">· с какого сайта пришёл браузерный запрос</span>
+              </h2>
+              <div className="table-wrap">
+                <table className="table">
+                  <thead>
+                    <tr>
+                      <th>Сайт</th>
+                      <th className="text-right">Запросов</th>
+                      <th className="text-right">Блок.</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {(o.topOrigins || []).map((r) => (
+                      <tr key={r.origin}>
+                        <td className="max-w-xs">
+                          <Link
+                            to={`/waf/log?origin=${encodeURIComponent(r.origin)}`}
+                            className="block truncate font-mono text-xs text-accent hover:underline"
+                            title={r.origin}
+                          >
+                            {r.origin}
+                          </Link>
+                        </td>
+                        <td className="text-right tabular-nums">{formatNumber(r.requests)}</td>
+                        <td className={`text-right tabular-nums ${r.blocked ? 'text-danger' : 'text-muted'}`}>{formatNumber(r.blocked)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                {!o.topOrigins?.length ? <Empty>Нет запросов с Origin/Referer</Empty> : null}
+              </div>
+            </section>
+          </div>
+
+          <div className="grid gap-6 lg:grid-cols-2">
             <section aria-labelledby="waf-top-paths">
               <h2 id="waf-top-paths" className="mb-3 font-semibold">
                 Топ путей
@@ -235,42 +273,48 @@ export function WafOverview() {
                 {!o.topPaths?.length ? <Empty>Нет данных</Empty> : null}
               </div>
             </section>
-          </div>
-
-          <section aria-labelledby="waf-top-origins">
-            <h2 id="waf-top-origins" className="mb-3 font-semibold">
-              Топ доменов (Origin)
-            </h2>
-            <div className="table-wrap">
-              <table className="table">
-                <thead>
-                  <tr>
-                    <th>Домен</th>
-                    <th className="text-right">Запросов</th>
-                    <th className="text-right">Блок.</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {(o.topOrigins || []).map((r) => (
-                    <tr key={r.origin}>
-                      <td className="max-w-xs">
-                        <Link
-                          to={`/waf/log?origin=${encodeURIComponent(r.origin)}`}
-                          className="block truncate font-mono text-xs text-accent hover:underline"
-                          title={r.origin}
-                        >
-                          {r.origin}
-                        </Link>
-                      </td>
-                      <td className="text-right tabular-nums">{formatNumber(r.requests)}</td>
-                      <td className={`text-right tabular-nums ${r.blocked ? 'text-danger' : 'text-muted'}`}>{formatNumber(r.blocked)}</td>
+            <section aria-labelledby="waf-top-hosts">
+              <h2 id="waf-top-hosts" className="mb-3 font-semibold">
+                Домены запросов (Host){' '}
+                <span className="text-sm font-normal text-muted">· на какой адрес сервера обращались</span>
+              </h2>
+              <div className="table-wrap">
+                <table className="table">
+                  <thead>
+                    <tr>
+                      <th>Хост</th>
+                      <th className="text-right">Запросов</th>
+                      <th className="text-right">Блок.</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-              {!o.topOrigins?.length ? <Empty>Нет запросов с Origin/Referer</Empty> : null}
-            </div>
-          </section>
+                  </thead>
+                  <tbody>
+                    {(o.topHosts || []).map((r) => (
+                      <tr key={r.host}>
+                        <td className="max-w-xs">
+                          {r.host && r.host !== '-' ? (
+                            <Link
+                              to={`/waf/log?host=${encodeURIComponent(r.host)}`}
+                              className="block truncate font-mono text-xs text-accent hover:underline"
+                              title={r.host}
+                            >
+                              {r.host}
+                            </Link>
+                          ) : (
+                            <span className="text-xs text-muted" title="Запросы без заголовка Host">
+                              без Host
+                            </span>
+                          )}
+                        </td>
+                        <td className="text-right tabular-nums">{formatNumber(r.requests)}</td>
+                        <td className={`text-right tabular-nums ${r.blocked ? 'text-danger' : 'text-muted'}`}>{formatNumber(r.blocked)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                {!o.topHosts?.length ? <Empty>Нет данных</Empty> : null}
+              </div>
+            </section>
+          </div>
         </>
       )}
     </div>

@@ -13,16 +13,18 @@ const LISTS = {
   whitelist: { title: 'Белый список', hint: 'Без лимитов, ловушек и банов', add: 'Добавить' },
   domainBlacklist: { title: 'Чёрный список доменов', hint: 'Origin/Referer домена и поддоменов → 403, без бана', add: 'Заблокировать', danger: true },
   domainWhitelist: { title: 'Белый список доменов', hint: 'Без лимита, ловушек и фильтра User-Agent', add: 'Разрешить' },
+  botBlocked: { title: 'Заблокированные боты', hint: 'User-Agent содержит значение (или это имя бота) → 403, без бана', add: 'Заблокировать', danger: true },
+  botAllowed: { title: 'Разрешённые боты', hint: 'Не блокируются правилами ботов, даже если заблокирована категория', add: 'Разрешить' },
 }
 
-function expiresText(value) {
+export function expiresText(value) {
   if (!value) return 'бессрочно'
   const left = Math.round((new Date(value).getTime() - Date.now()) / 1000)
   if (!Number.isFinite(left)) return String(value)
   return left > 0 ? `ещё ${formatDuration(left)}` : 'истекло'
 }
 
-function ListSection({ list, entries, onAdd, onDelete, nested = false }) {
+export function ListSection({ list, entries, onAdd, onDelete, nested = false }) {
   const meta = LISTS[list]
   const Heading = nested ? 'h3' : 'h2'
   return (

@@ -8,6 +8,7 @@ import { setBaseForTests } from '../../../lib/base.js'
 import { WafPage } from '../Waf.jsx'
 import { WafRules } from '../WafRules.jsx'
 import { WafLog } from '../WafLog.jsx'
+import { WafBots } from '../WafBots.jsx'
 
 const RULES = {
   blacklist: [{ value: '203.0.113.7', comment: 'сканер', created: '2026-09-20T10:00:00Z', expires: null }],
@@ -30,6 +31,37 @@ const RULES = {
   you: '192.168.1.10',
 }
 
+const BOTS = {
+  categories: [
+    { id: 'search', label: 'Поисковые роботы', description: 'Индексируют сайты', requests: 12, blocked: 0, blockedCategory: false, botCount: 1 },
+    { id: 'seo', label: 'SEO-сервисы', description: 'Анализ ссылок', requests: 40, blocked: 5, blockedCategory: false, botCount: 1 },
+    { id: 'libraries', label: 'HTTP-библиотеки и утилиты', description: 'Скрипты', requests: 7, blocked: 0, blockedCategory: false, botCount: 1 },
+    { id: 'ai', label: 'AI-краулеры', description: 'Нейросети', requests: 3, blocked: 3, blockedCategory: true, botCount: 1 },
+  ],
+  bots: [
+    {
+      name: 'AhrefsBot',
+      category: 'seo',
+      requests: 40,
+      blocked: 5,
+      lastSeen: '2026-09-25T10:00:00Z',
+      ips: 2,
+      topPaths: [{ path: '/api/v1.0/torrents', requests: 30 }],
+      samples: ['Mozilla/5.0 (compatible; AhrefsBot/7.0)'],
+      status: 'seen',
+    },
+    { name: 'GPTBot', category: 'ai', requests: 3, blocked: 3, lastSeen: '2026-09-25T10:00:00Z', ips: 1, topPaths: [], samples: [], status: 'blocked' },
+    { name: 'curl', category: 'libraries', requests: 7, blocked: 0, lastSeen: '2026-09-25T10:00:00Z', ips: 1, topPaths: [], samples: ['curl/8.9.1'], status: 'allowed' },
+  ],
+  rules: {
+    botBlockCategories: ['ai'],
+    botBlocked: [],
+    botAllowed: [{ value: 'curl', comment: 'свой cron', created: '2026-09-20T10:00:00Z', expires: null }],
+    robotsDisallow: false,
+  },
+  catalog: { search: ['Googlebot', 'YandexBot'], seo: ['AhrefsBot'], libraries: ['curl'], ai: ['GPTBot'] },
+}
+
 const json = (body, status = 200) => new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json' } })
 
 /** Fetch stub: `overrides[METHOD path]` returns a Response, otherwise sensible defaults. */
@@ -40,6 +72,7 @@ function stubFetch(overrides = {}) {
     if (overrides[key]) return overrides[key](u, init)
     if (key === 'GET waf/rules') return json(RULES)
     if (key === 'GET waf/requests') return json([])
+    if (key === 'GET waf/bots') return json(BOTS)
     return json({ ok: true })
   })
   vi.stubGlobal('fetch', fn)
@@ -55,6 +88,7 @@ function renderAt(path) {
         children: [
           { path: 'log', element: <WafLog /> },
           { path: 'rules', element: <WafRules /> },
+          { path: 'bots', element: <WafBots /> },
         ],
       },
     ],
@@ -267,5 +301,113 @@ describe('WAF log filters', () => {
     await userEvent.clear(screen.getByLabelText('Домен (Origin)'))
     await userEvent.type(screen.getByLabelText('Домен (Origin)'), 'LAMPA{Enter}')
     await waitFor(() => expect(lastQuery(fetch)).toEqual({ origin: 'lampa', limit: '200' }))
+  })
+})
+
+describe('WAF log hosts', () => {
+  beforeEach(() => setBaseForTests('/admin'))
+  afterEach(() => vi.unstubAllGlobals())
+
+  it('shows the host column and filters by host', async () => {
+    const fetch = stubFetch({
+      'GET waf/requests': () =>
+        json([{ time: '2026-09-25T10:00:00Z', ip: '203.0.113.9', method: 'GET', path: '/', status: 200, ms: 1, ua: 'x', blocked: null, origin: null, host: '198.51.100.1' }]),
+    })
+    renderAt('/waf/log')
+    expect(await within(await screen.findByRole('table')).findByRole('columnheader', { name: 'Хост' })).toBeInTheDocument()
+    await userEvent.click(await screen.findByRole('button', { name: '198.51.100.1' }))
+    const last = () => {
+      const list = calls(fetch, 'GET', 'waf/requests')
+      return Object.fromEntries(new URL(String(list[list.length - 1][0]), 'http://x').searchParams)
+    }
+    await waitFor(() => expect(last()).toMatchObject({ host: '198.51.100.1' }))
+    expect(screen.getByLabelText('Хост (Host)')).toHaveValue('198.51.100.1')
+  })
+})
+
+describe('WAF bots tab', () => {
+  beforeEach(() => setBaseForTests('/admin'))
+  afterEach(() => vi.unstubAllGlobals())
+
+  it('renders categories, seen bots and the explanation', async () => {
+    stubFetch()
+    renderAt('/waf/bots')
+    expect(await screen.findByRole('link', { name: 'Боты' })).toHaveAttribute('aria-current', 'page')
+    const seo = await screen.findByRole('region', { name: 'SEO-сервисы' })
+    expect(seo).toHaveTextContent('40')
+    expect(within(screen.getByRole('region', { name: 'AI-краулеры' })).getByLabelText('Блокировать всю категорию')).toBeChecked()
+    expect(within(screen.getByRole('region', { name: 'HTTP-библиотеки и утилиты' })).getByText(/curl, python-requests/)).toBeInTheDocument()
+    expect(screen.getByRole('note')).toHaveTextContent('Jackett')
+    const table = screen.getByRole('table')
+    expect(within(table).getByText('AhrefsBot')).toBeInTheDocument()
+    expect(within(table).getByText('блокируется')).toBeInTheDocument()
+    expect(within(table).getByRole('button', { name: 'Снять правило для curl' })).toBeInTheDocument()
+    expect(within(table).queryByRole('button', { name: 'Блокировать GPTBot' })).not.toBeInTheDocument()
+    expect(within(table).getByRole('button', { name: 'Разрешить GPTBot' })).toBeInTheDocument()
+  })
+
+  it('blocks a category after confirmation with the admin header', async () => {
+    const fetch = stubFetch()
+    renderAt('/waf/bots')
+    const seo = await screen.findByRole('region', { name: 'SEO-сервисы' })
+    await userEvent.click(within(seo).getByLabelText('Блокировать всю категорию'))
+    const dialog = await screen.findByRole('dialog', { name: 'Блокировать категорию «SEO-сервисы»?' })
+    expect(calls(fetch, 'POST', 'waf/bots/category')).toHaveLength(0)
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Блокировать' }))
+    await waitFor(() => expect(calls(fetch, 'POST', 'waf/bots/category')).toHaveLength(1))
+    const [, init] = calls(fetch, 'POST', 'waf/bots/category')[0]
+    expect(init.headers['X-Crab-Admin']).toBe('1')
+    expect(JSON.parse(init.body)).toEqual({ id: 'seo', block: true })
+    expect(await screen.findByText('Категория заблокирована: SEO-сервисы')).toBeInTheDocument()
+  })
+
+  it('warns before blocking libraries and does nothing on cancel', async () => {
+    const fetch = stubFetch()
+    renderAt('/waf/bots')
+    const libs = await screen.findByRole('region', { name: 'HTTP-библиотеки и утилиты' })
+    await userEvent.click(within(libs).getByLabelText('Блокировать всю категорию'))
+    const dialog = await screen.findByRole('dialog')
+    expect(dialog).toHaveTextContent(/легитимные скрипты/)
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Отмена' }))
+    expect(calls(fetch, 'POST', 'waf/bots/category')).toHaveLength(0)
+  })
+
+  it('blocks a seen bot, adds a custom rule and toggles robots.txt', async () => {
+    const fetch = stubFetch()
+    renderAt('/waf/bots')
+    await userEvent.click(await screen.findByRole('button', { name: 'Блокировать AhrefsBot' }))
+    await waitFor(() => expect(calls(fetch, 'POST', 'waf/bots/rules')).toHaveLength(1))
+    expect(JSON.parse(calls(fetch, 'POST', 'waf/bots/rules')[0][1].body)).toEqual({ list: 'botBlocked', value: 'AhrefsBot' })
+
+    const section = screen.getByRole('region', { name: /^Заблокированные боты/ })
+    await userEvent.click(within(section).getByRole('button', { name: /Заблокировать/ }))
+    const dialog = await screen.findByRole('dialog')
+    const input = within(dialog).getByLabelText('Имя бота или часть User-Agent')
+    await userEvent.type(input, 'ab')
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Заблокировать' }))
+    expect(within(dialog).getByRole('alert')).toHaveTextContent(/Не короче 3/)
+    await userEvent.clear(input)
+    await userEvent.type(input, 'MyScraper/')
+    await userEvent.type(within(dialog).getByLabelText(/Комментарий/), 'парсер')
+    await userEvent.selectOptions(within(dialog).getByLabelText('Срок действия'), '60')
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Заблокировать' }))
+    await waitFor(() => expect(calls(fetch, 'POST', 'waf/bots/rules')).toHaveLength(2))
+    expect(JSON.parse(calls(fetch, 'POST', 'waf/bots/rules')[1][1].body)).toEqual({ list: 'botBlocked', value: 'MyScraper/', comment: 'парсер', expiresMinutes: 60 })
+
+    await userEvent.click(screen.getByLabelText('robots.txt: запретить индексацию'))
+    await waitFor(() => expect(calls(fetch, 'POST', 'waf/bots/robots')).toHaveLength(1))
+    expect(JSON.parse(calls(fetch, 'POST', 'waf/bots/robots')[0][1].body)).toEqual({ disallow: true })
+  })
+
+  it('removes a bot rule after confirmation', async () => {
+    const fetch = stubFetch()
+    renderAt('/waf/bots')
+    await userEvent.click(await screen.findByRole('button', { name: 'Снять правило для curl' }))
+    const dialog = await screen.findByRole('dialog', { name: 'Снять правило?' })
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Снять правило' }))
+    await waitFor(() => expect(calls(fetch, 'DELETE', 'waf/bots/rules')).toHaveLength(1))
+    const url = new URL(String(calls(fetch, 'DELETE', 'waf/bots/rules')[0][0]), 'http://x')
+    expect(url.searchParams.get('list')).toBe('botAllowed')
+    expect(url.searchParams.get('value')).toBe('curl')
   })
 })

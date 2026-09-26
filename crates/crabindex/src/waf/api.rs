@@ -8,10 +8,11 @@ use chrono::{DateTime, Duration, Utc};
 use serde_json::{json, Value};
 use std::net::IpAddr;
 
+use super::bots::{self, Category};
 use super::domains::{self, BUILTIN_BLOCKED_DOMAINS};
 use super::net::{loopback_nets, IpNet};
 use super::stats::{RequestFilter, MAX_IPS};
-use super::store::{iso, DomainKind, ListEntry, ListKind};
+use super::store::{iso, BotList, DomainKind, ListEntry, ListKind};
 use super::{client_ip, save_in_background, WAF};
 use crate::admin::json_response;
 use crate::config_api::schema::MAX_WAF_HISTORY;
@@ -22,6 +23,9 @@ const DEFAULT_LIMIT: usize = 200;
 const MAX_MINUTES: i64 = 10 * 365 * 24 * 60;
 const MAX_COMMENT: usize = 200;
 const LIST_EXPECTED: &str = "list: blacklist, whitelist, domainBlacklist or domainWhitelist expected";
+const BOT_LIST_EXPECTED: &str = "list: botBlocked or botAllowed expected";
+/// Rows of `GET waf/bots`.
+const MAX_BOT_ROWS: usize = 500;
 
 /// `list` of `waf/rules`: an IP list or an admin domain list.
 enum AnyList {
@@ -140,6 +144,7 @@ pub async fn handle(req: Request, sub: &str) -> Response {
                 ip: param(&q, "ip").map(|s| s.trim().to_string()),
                 path: param(&q, "path").map(|s| s.trim().to_string()),
                 origin: param(&q, "origin").map(|s| s.trim().to_string()),
+                host: param(&q, "host").map(|s| s.trim().to_string()),
                 status: param(&q, "status").map(|s| s.trim().to_string()),
                 blocked: param(&q, "blocked").map(|s| s.trim().to_string()),
                 limit: limit(&q, MAX_WAF_HISTORY as usize),
@@ -227,6 +232,57 @@ pub async fn handle(req: Request, sub: &str) -> Response {
             WAF.stats.reset();
             ok()
         }
+        (Method::GET, "bots") => json_response(StatusCode::OK, bots_overview(now)),
+        (Method::POST, "bots/category") => {
+            let v = match body_json(req).await {
+                Ok(v) => v,
+                Err(r) => return r,
+            };
+            let Some(c) = Category::parse(str_field(&v, "id")) else {
+                return bad(format!("id: {} expected", Category::ALL.map(Category::id).join(", ")));
+            };
+            let Some(block) = v["block"].as_bool() else { return bad("block: true or false expected") };
+            if WAF.set_bot_category(c, block) {
+                save_in_background();
+            }
+            ok()
+        }
+        (Method::POST, "bots/rules") => {
+            let v = match body_json(req).await {
+                Ok(v) => v,
+                Err(r) => return r,
+            };
+            match add_bot_rule(&v, now) {
+                Ok(()) => {
+                    save_in_background();
+                    ok()
+                }
+                Err(e) => bad(e),
+            }
+        }
+        (Method::DELETE, "bots/rules") => {
+            let Some(kind) = param(&q, "list").and_then(BotList::parse) else { return bad(BOT_LIST_EXPECTED) };
+            let value = param(&q, "value").unwrap_or("").trim();
+            if value.is_empty() {
+                return bad("value: required");
+            }
+            if !WAF.remove_bot(kind, value) {
+                return not_found();
+            }
+            save_in_background();
+            ok()
+        }
+        (Method::POST, "bots/robots") => {
+            let v = match body_json(req).await {
+                Ok(v) => v,
+                Err(r) => return r,
+            };
+            let Some(disallow) = v["disallow"].as_bool() else { return bad("disallow: true or false expected") };
+            if WAF.set_robots_disallow(disallow) {
+                save_in_background();
+            }
+            ok()
+        }
         _ => json_response(StatusCode::NOT_FOUND, json!({ "error": "not found" })),
     }
 }
@@ -257,6 +313,65 @@ pub fn add_rule(v: &Value, you: Option<IpAddr>, now: DateTime<Utc>) -> Result<()
     }
     WAF.upsert_rule(kind, net, clip(str_field(v, "comment"), MAX_COMMENT), expires, now);
     Ok(())
+}
+
+pub fn add_bot_rule(v: &Value, now: DateTime<Utc>) -> Result<(), String> {
+    let kind = BotList::parse(str_field(v, "list")).ok_or(BOT_LIST_EXPECTED)?;
+    let value = bots::parse_rule(str_field(v, "value"))?;
+    let expires = expiry(v, "expiresMinutes", now, false)?;
+    WAF.upsert_bot(kind, value, clip(str_field(v, "comment"), MAX_COMMENT), expires, now);
+    Ok(())
+}
+
+/// `GET waf/bots` payload: category cards, seen bots, rules and the builtin catalog.
+fn bots_overview(now: DateTime<Utc>) -> Value {
+    let rows = WAF.stats.bots.aggregates();
+    let totals = WAF.stats.bots.category_totals();
+    let rules = WAF.snapshot(now);
+    let blocked_cats: Vec<Category> = rules.bot_block_categories.iter().filter_map(|c| Category::parse(c)).collect();
+    let categories: Vec<Value> = Category::ALL
+        .iter()
+        .enumerate()
+        .map(|(i, c)| {
+            json!({
+                "id": c.id(),
+                "label": c.label(),
+                "description": c.description(),
+                "requests": totals[i].0,
+                "blocked": totals[i].1,
+                "blockedCategory": blocked_cats.contains(c),
+                "botCount": rows.iter().filter(|r| r.category == *c).count(),
+            })
+        })
+        .collect();
+    let bots_json: Vec<Value> = rows
+        .iter()
+        .take(MAX_BOT_ROWS)
+        .map(|a| {
+            let hit = bots::BotHit { category: a.category, name: a.name.clone() };
+            let mut v = bots::bot_json(a);
+            v["status"] = json!(WAF.bot_status(&hit, &a.samples, now));
+            v
+        })
+        .collect();
+    let mut catalog = serde_json::Map::new();
+    for c in Category::ALL {
+        let names = bots::catalog_names(c);
+        if !names.is_empty() {
+            catalog.insert(c.id().into(), json!(names));
+        }
+    }
+    json!({
+        "categories": categories,
+        "bots": bots_json,
+        "rules": {
+            "botBlockCategories": rules.bot_block_categories,
+            "botBlocked": rules.bot_blocked.iter().map(entry_json).collect::<Vec<_>>(),
+            "botAllowed": rules.bot_allowed.iter().map(entry_json).collect::<Vec<_>>(),
+            "robotsDisallow": rules.robots_disallow,
+        },
+        "catalog": catalog,
+    })
 }
 
 pub fn add_ban(v: &Value, you: Option<IpAddr>, now: DateTime<Utc>) -> Result<(), String> {

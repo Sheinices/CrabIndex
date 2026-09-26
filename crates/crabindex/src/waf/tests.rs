@@ -185,6 +185,66 @@ fn admin_domain_lists_and_allowlist_only() {
 }
 
 #[test]
+fn bot_rules_order_and_overrides() {
+    let w = temp_waf("bots");
+    let c = cfg();
+    let now = Utc::now();
+    let ahrefs = "Mozilla/5.0 (compatible; AhrefsBot/7.0; +http://ahrefs.com/robot/)";
+    let pub1 = Some(ip("198.51.100.160"));
+    // nothing is blocked by default, not even an empty User-Agent or curl
+    for ua in [ahrefs, "", "curl/8.9.1", "python-requests/2.31", "Mozilla/5.0 (compatible; FooBot/1.0)"] {
+        assert_eq!(w.evaluate(&c, pub1, "/api", ua, now), None, "{ua}");
+    }
+
+    w.set_bot_category(bots::Category::Seo, true);
+    let b = w.evaluate(&c, pub1, "/api", ahrefs, now).unwrap();
+    assert_eq!((b.reason, b.status, b.banned), (Reason::Bot, StatusCode::FORBIDDEN, false));
+    assert!(w.lists.read().bans.is_empty());
+    assert_eq!(w.evaluate(&c, pub1, "/api", "Jackett/0.22.1880", now), None);
+    assert_eq!(w.evaluate(&c, pub1, "/api", "CrabIndex/1.0.3", now), None);
+    // the bot check runs before the UA filter and trap paths (403 bot, no ban)
+    assert_eq!(w.evaluate(&c, pub1, "/.env", &format!("{ahrefs} sqlmap"), now).unwrap().reason, Reason::Bot);
+    assert!(w.lists.read().bans.is_empty());
+
+    // botAllowed overrides a blocked category
+    w.upsert_bot(BotList::Allowed, "ahrefs.com".into(), String::new(), None, now);
+    assert_eq!(w.evaluate(&c, pub1, "/api", ahrefs, now), None);
+    assert!(w.remove_bot(BotList::Allowed, "AHREFS.COM"));
+
+    // custom substring and catalog name rules
+    w.upsert_bot(BotList::Blocked, "MyScraper".into(), String::new(), None, now);
+    assert_eq!(w.evaluate(&c, pub1, "/api", "myscraper/2.0", now).unwrap().reason, Reason::Bot);
+    w.upsert_bot(BotList::Blocked, "GPTBot".into(), String::new(), Some(now + Duration::minutes(5)), now);
+    let gpt = "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; GPTBot/1.2)";
+    assert_eq!(w.evaluate(&c, pub1, "/api", gpt, now).unwrap().reason, Reason::Bot);
+    assert_eq!(w.evaluate(&c, pub1, "/api", gpt, now + Duration::minutes(6)), None);
+
+    // whitelisted IP, LAN, loopback and a whitelisted domain are not affected
+    w.upsert_rule(ListKind::Whitelist, IpNet::parse("198.51.100.161").unwrap(), String::new(), None, now);
+    assert_eq!(w.evaluate(&c, Some(ip("198.51.100.161")), "/api", ahrefs, now), None);
+    assert_eq!(w.evaluate(&c, Some(ip("192.168.1.7")), "/api", ahrefs, now), None);
+    assert_eq!(w.evaluate(&c, Some(ip("127.0.0.1")), "/api", ahrefs, now), None);
+    w.upsert_domain(DomainKind::Whitelist, "bots-friend.example".into(), String::new(), None, now);
+    assert_eq!(w.evaluate_request(&c, pub1, "/api", ahrefs, Some("bots-friend.example"), None, now), None);
+    // the IP blacklist still comes first
+    w.upsert_rule(ListKind::Blacklist, IpNet::parse("198.51.100.162").unwrap(), String::new(), None, now);
+    assert_eq!(w.evaluate(&c, Some(ip("198.51.100.162")), "/api", ahrefs, now).unwrap().reason, Reason::Blacklist);
+
+    // waf.enable: false blocks nothing
+    let off = WafSettings { enable: false, ..cfg() };
+    assert_eq!(w.evaluate(&off, pub1, "/api", ahrefs, now), None);
+    assert_eq!(w.evaluate(&off, Some(ip("198.51.100.162")), "/.env", "sqlmap", now), None);
+
+    // status for the admin table
+    let hit = bots::classify(ahrefs).unwrap();
+    assert_eq!(w.bot_status(&hit, &[ahrefs.to_string()], now), "blocked");
+    w.upsert_bot(BotList::Allowed, "AhrefsBot".into(), String::new(), None, now);
+    assert_eq!(w.bot_status(&hit, &[], now), "allowed");
+    let seen = bots::classify("Twitterbot/1.0").unwrap();
+    assert_eq!(w.bot_status(&seen, &[], now), "seen");
+}
+
+#[test]
 fn persistence_round_trip() {
     let w = temp_waf("persist");
     let now = Utc::now();
@@ -519,6 +579,128 @@ async fn pipeline_domain_blocking() {
 }
 
 #[tokio::test]
+async fn pipeline_records_request_host() {
+    let peer = "203.0.113.130";
+    Req::get("/health", peer).header("host", "Sync.Crab.RIP:443").send().await;
+    Req::get("/health", peer).header("host", "203.0.113.5:9117").send().await;
+    Req::get("/health", peer).send().await;
+    let log = logged(peer);
+    assert_eq!(log[0]["host"], "-");
+    assert_eq!(log[1]["host"], "203.0.113.5");
+    assert_eq!(log[2]["host"], "sync.crab.rip");
+    let rows = WAF.stats.requests(&stats::RequestFilter { ip: Some(peer.into()), host: Some("CRAB".into()), limit: 100, ..Default::default() });
+    assert_eq!(rows.len(), 1);
+    let o = WAF.stats.overview(60, Utc::now());
+    assert!(o["topHosts"].as_array().unwrap().iter().any(|h| h["host"] == "sync.crab.rip"));
+}
+
+#[tokio::test]
+async fn pipeline_bot_block_and_robots() {
+    let me = "203.0.113.131";
+    let peer = "203.0.113.132";
+    let ua = "Mozilla/5.0 (compatible; PipeTestBot-7781/1.0)";
+    let post = |path: &str, body: &str| Req::new(Method::POST, &format!("/admin/api/waf/{path}"), me).admin().body(body).send();
+
+    assert_eq!(Req::get("/health", peer).ua(ua).send().await.status(), StatusCode::OK);
+    let r = post("bots/rules", r#"{"list":"botBlocked","value":"PipeTestBot-7781","comment":"тест"}"#).await;
+    assert_eq!(json(r).await["ok"], true);
+    let r = Req::get("/health", peer).ua(ua).send().await;
+    assert_eq!(r.status(), StatusCode::FORBIDDEN);
+    assert_eq!(text(r).await, "Forbidden");
+    assert!(ban_reason(peer).is_none());
+    assert_eq!(logged(peer)[0]["blocked"], "bot");
+
+    // robots.txt: served by the WAF only with robotsDisallow, also to the blocked bot
+    assert_eq!(json(post("bots/robots", r#"{"disallow":true}"#).await).await["ok"], true);
+    let r = Req::get("/robots.txt", peer).ua(ua).send().await;
+    assert_eq!(r.status(), StatusCode::OK);
+    assert_eq!(r.headers()[header::CONTENT_TYPE], "text/plain; charset=utf-8");
+    assert_eq!(text(r).await, "User-agent: *\nDisallow: /\n");
+    assert_eq!(logged(peer)[0]["status"], 200);
+    assert!(logged(peer)[0]["blocked"].is_null());
+    assert_eq!(post("bots/robots", r#"{"disallow":"yes"}"#).await.status(), StatusCode::BAD_REQUEST);
+    assert_eq!(json(post("bots/robots", r#"{"disallow":false}"#).await).await["ok"], true);
+    assert_eq!(Req::get("/robots.txt", peer).ua(ua).send().await.status(), StatusCode::FORBIDDEN);
+
+    let bots_view = json(Req::get("/admin/api/waf/bots", me).admin().send().await).await;
+    let row = bots_view["bots"].as_array().unwrap().iter().find(|b| b["name"] == "PipeTestBot-7781").unwrap().clone();
+    assert_eq!(row["category"], "other");
+    assert_eq!(row["status"], "blocked");
+    assert!(row["blocked"].as_u64().unwrap() >= 2);
+    assert!(row["ips"].as_u64().unwrap() >= 1);
+    assert_eq!(row["samples"][0], ua);
+    assert!(row["topPaths"].as_array().unwrap().iter().any(|p| p["path"] == "/health"));
+    assert!(row["lastSeen"].as_str().unwrap().ends_with('Z'));
+    let rules = &bots_view["rules"];
+    let e = rules["botBlocked"].as_array().unwrap().iter().find(|e| e["value"] == "PipeTestBot-7781").unwrap().clone();
+    assert_eq!(e["comment"], "тест");
+    assert!(rules["robotsDisallow"].is_boolean());
+    let cats = bots_view["categories"].as_array().unwrap();
+    assert_eq!(cats.len(), 9);
+    let other = cats.iter().find(|c| c["id"] == "other").unwrap();
+    assert!(other["requests"].as_u64().unwrap() >= 1 && other["botCount"].as_u64().unwrap() >= 1);
+    assert!(other["label"].is_string() && other["description"].is_string());
+    assert!(bots_view["catalog"]["search"].as_array().unwrap().iter().any(|n| n == "Googlebot"));
+    assert!(bots_view["catalog"].get("empty").is_none());
+
+    // allowing the same value moves it out of botBlocked
+    assert_eq!(post("bots/rules", r#"{"list":"botAllowed","value":"pipetestbot-7781"}"#).await.status(), StatusCode::OK);
+    assert_eq!(Req::get("/health", peer).ua(ua).send().await.status(), StatusCode::OK);
+    let del = |q: &str| Req::new(Method::DELETE, &format!("/admin/api/waf/bots/rules?{q}"), me).admin().send();
+    assert_eq!(del("list=botBlocked&value=PipeTestBot-7781").await.status(), StatusCode::NOT_FOUND);
+    assert_eq!(del("list=botAllowed&value=PIPETESTBOT-7781").await.status(), StatusCode::OK);
+    assert_eq!(del("list=botAllowed&value=PIPETESTBOT-7781").await.status(), StatusCode::NOT_FOUND);
+    assert_eq!(del("list=nope&value=abc").await.status(), StatusCode::BAD_REQUEST);
+    assert_eq!(del("list=botAllowed").await.status(), StatusCode::BAD_REQUEST);
+}
+
+#[tokio::test]
+async fn admin_api_bot_validation_and_category() {
+    let me = "203.0.113.133";
+    let peer = "203.0.113.134";
+    let post = |path: &str, body: &str| Req::new(Method::POST, &format!("/admin/api/waf/{path}"), me).admin().body(body).send();
+    for (path, body) in [
+        ("bots/rules", r#"{"list":"botBlocked","value":"ab"}"#),
+        ("bots/rules", r#"{"list":"bots","value":"abcdef"}"#),
+        ("bots/rules", r#"{"list":"botBlocked","value":"abcdef","expiresMinutes":-1}"#),
+        ("bots/category", r#"{"id":"robots","block":true}"#),
+        ("bots/category", r#"{"id":"social","block":"yes"}"#),
+        ("bots/category", "not json"),
+    ] {
+        let r = post(path, body).await;
+        assert_eq!(r.status(), StatusCode::BAD_REQUEST, "{body}");
+        let v = json(r).await;
+        assert_eq!(v["ok"], false);
+        assert!(v["error"].is_string());
+    }
+    // missing X-Crab-Admin is refused by the admin layer
+    let gate = crypto::gate_value("/admin", TOKEN);
+    let s = session::create(DEVKEY, 2);
+    let r = Req::new(Method::POST, "/admin/api/waf/bots/category", me)
+        .header("cookie", &format!("{GATE_COOKIE}={gate}; {SESSION_COOKIE}={s}"))
+        .body(r#"{"id":"social","block":true}"#)
+        .send()
+        .await;
+    assert_eq!(r.status(), StatusCode::FORBIDDEN);
+
+    // block the social category for a moment (no other test sends such User-Agents)
+    let tg = "TelegramBot (like TwitterBot)";
+    assert_eq!(json(post("bots/category", r#"{"id":"social","block":true}"#).await).await["ok"], true);
+    let v = json(Req::get("/admin/api/waf/bots", me).admin().send().await).await;
+    assert!(v["categories"].as_array().unwrap().iter().any(|c| c["id"] == "social" && c["blockedCategory"] == true));
+    assert!(v["rules"]["botBlockCategories"].as_array().unwrap().iter().any(|c| c == "social"));
+    let r = Req::get("/health", peer).ua(tg).send().await;
+    assert_eq!(r.status(), StatusCode::FORBIDDEN);
+    assert_eq!(json(post("bots/category", r#"{"id":"social","block":false}"#).await).await["ok"], true);
+    assert_eq!(Req::get("/health", peer).ua(tg).send().await.status(), StatusCode::OK);
+    assert!(ban_reason(peer).is_none());
+    let log = logged(peer);
+    assert_eq!(log[1]["blocked"], "bot");
+    let o = json(Req::get("/admin/api/waf/overview", me).admin().send().await).await;
+    assert!(o["blockedByReason"]["bot"].as_u64().unwrap() >= 1);
+}
+
+#[tokio::test]
 async fn admin_api_domain_rules() {
     let me = "203.0.113.93";
     let post = |body: &str| Req::new(Method::POST, "/admin/api/waf/rules", me).admin().body(body).send();
@@ -615,11 +797,11 @@ async fn admin_api_statistics_endpoints() {
     for k in ["2xx", "3xx", "4xx", "5xx"] {
         assert!(o["statusCodes"][k].is_u64(), "{k}");
     }
-    for k in ["blacklist", "ban", "ua", "trap", "rate", "domain"] {
+    for k in ["blacklist", "ban", "ua", "trap", "rate", "domain", "bot"] {
         assert!(o["blockedByReason"][k].is_u64(), "{k}");
     }
     assert_eq!(o["timeline"].as_array().unwrap().len(), 60);
-    assert!(o["topIps"].is_array() && o["topPaths"].is_array() && o["topOrigins"].is_array() && o["since"].is_string());
+    assert!(o["topIps"].is_array() && o["topPaths"].is_array() && o["topOrigins"].is_array() && o["topHosts"].is_array() && o["since"].is_string());
     let o = json(Req::get("/admin/api/waf/overview?window=24h", me).admin().send().await).await;
     assert_eq!(o["timeline"].as_array().unwrap().len(), 144);
 

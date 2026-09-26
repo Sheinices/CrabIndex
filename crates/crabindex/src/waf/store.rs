@@ -1,10 +1,12 @@
-//! Dynamic WAF lists (IP and domain blacklist / whitelist, bans) and their `Data/waf.json` file.
+//! Dynamic WAF lists (IP and domain blacklist / whitelist, bans, bot rules) and their
+//! `Data/waf.json` file.
 
 use chrono::{DateTime, SecondsFormat, Utc};
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use std::collections::HashMap;
 use std::net::IpAddr;
 
+use super::bots::{self, Category};
 use super::domains;
 use super::net::{unmap, IpNet};
 
@@ -73,7 +75,8 @@ pub struct BanEntry {
     pub expires: DateTime<Utc>,
 }
 
-/// On-disk document (every list is optional: older files without the domain lists load).
+/// On-disk document (every list is optional: older files without the domain lists or the
+/// bot rules load).
 #[derive(Clone, Debug, Default, Serialize, Deserialize)]
 #[serde(default)]
 pub struct WafFile {
@@ -84,6 +87,18 @@ pub struct WafFile {
     pub domain_blacklist: Vec<ListEntry>,
     #[serde(rename = "domainWhitelist")]
     pub domain_whitelist: Vec<ListEntry>,
+    /// Bot category ids blocked as a whole (see [`bots::Category`]).
+    #[serde(rename = "botBlockCategories")]
+    pub bot_block_categories: Vec<String>,
+    /// Catalog bot names or User-Agent substrings that get `403` (reason `bot`).
+    #[serde(rename = "botBlocked")]
+    pub bot_blocked: Vec<ListEntry>,
+    /// User-Agent substrings that are never blocked as bots (override the two above).
+    #[serde(rename = "botAllowed")]
+    pub bot_allowed: Vec<ListEntry>,
+    /// Serve `Disallow: /` for `/robots.txt`.
+    #[serde(rename = "robotsDisallow")]
+    pub robots_disallow: bool,
 }
 
 #[derive(Clone, Debug)]
@@ -135,7 +150,24 @@ fn entry_active(e: &ListEntry, now: DateTime<Utc>) -> bool {
     e.expires.map(|x| x > now).unwrap_or(true)
 }
 
-/// In-memory lists (parsed networks, bans keyed by address, canonical domain entries).
+/// Bot rule lists (`waf/bots/rules` `list` values `botBlocked` / `botAllowed`).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum BotList {
+    Blocked,
+    Allowed,
+}
+
+impl BotList {
+    pub fn parse(s: &str) -> Option<BotList> {
+        match s.trim().to_ascii_lowercase().as_str() {
+            "botblocked" => Some(BotList::Blocked),
+            "botallowed" => Some(BotList::Allowed),
+            _ => None,
+        }
+    }
+}
+
+/// In-memory lists (parsed networks, bans keyed by address, canonical domain entries, bot rules).
 #[derive(Debug, Default)]
 pub struct Lists {
     pub blacklist: Vec<Rule>,
@@ -143,6 +175,24 @@ pub struct Lists {
     pub bans: HashMap<IpAddr, BanEntry>,
     pub domain_blacklist: Vec<ListEntry>,
     pub domain_whitelist: Vec<ListEntry>,
+    pub bot_block_categories: Vec<Category>,
+    pub bot_blocked: Vec<ListEntry>,
+    pub bot_allowed: Vec<ListEntry>,
+    pub robots_disallow: bool,
+}
+
+/// Valid, active bot rules deduplicated case-insensitively.
+fn bot_rules_from(entries: Vec<ListEntry>, now: DateTime<Utc>) -> Vec<ListEntry> {
+    let mut out: Vec<ListEntry> = Vec::new();
+    for mut e in entries {
+        let Ok(v) = bots::parse_rule(&e.value) else { continue };
+        if !entry_active(&e, now) || out.iter().any(|x| x.value.eq_ignore_ascii_case(&v)) {
+            continue;
+        }
+        e.value = v;
+        out.push(e);
+    }
+    out
 }
 
 /// Canonical, active, deduplicated domain entries. Builtin blocked domains are never kept in
@@ -190,6 +240,15 @@ impl Lists {
             bans,
             domain_blacklist: domains_from(f.domain_blacklist, now),
             domain_whitelist: domains_from(f.domain_whitelist, now),
+            bot_block_categories: {
+                let mut v: Vec<Category> = f.bot_block_categories.iter().filter_map(|c| Category::parse(c)).collect();
+                v.sort();
+                v.dedup();
+                v
+            },
+            bot_blocked: bot_rules_from(f.bot_blocked, now),
+            bot_allowed: bot_rules_from(f.bot_allowed, now),
+            robots_disallow: f.robots_disallow,
         }
     }
 
@@ -202,6 +261,10 @@ impl Lists {
             bans,
             domain_blacklist: self.domain_blacklist.clone(),
             domain_whitelist: self.domain_whitelist.clone(),
+            bot_block_categories: self.bot_block_categories.iter().map(|c| c.id().to_string()).collect(),
+            bot_blocked: self.bot_blocked.clone(),
+            bot_allowed: self.bot_allowed.clone(),
+            robots_disallow: self.robots_disallow,
         }
     }
 
@@ -259,6 +322,66 @@ impl Lists {
         list.len() != before
     }
 
+    fn bot_list_mut(&mut self, kind: BotList) -> &mut Vec<ListEntry> {
+        match kind {
+            BotList::Blocked => &mut self.bot_blocked,
+            BotList::Allowed => &mut self.bot_allowed,
+        }
+    }
+
+    /// Add or replace (same value, case-insensitive) a bot rule; the same value is removed from
+    /// the opposite list so the latest decision wins.
+    pub fn upsert_bot(&mut self, kind: BotList, value: String, comment: String, expires: Option<DateTime<Utc>>, now: DateTime<Utc>) {
+        let other = match kind {
+            BotList::Blocked => BotList::Allowed,
+            BotList::Allowed => BotList::Blocked,
+        };
+        self.bot_list_mut(other).retain(|e| !e.value.eq_ignore_ascii_case(&value));
+        let entry = ListEntry { value, comment, created: whole_secs(now), expires: expires.map(whole_secs) };
+        let list = self.bot_list_mut(kind);
+        match list.iter_mut().find(|e| e.value.eq_ignore_ascii_case(&entry.value)) {
+            Some(e) => *e = entry,
+            None => list.push(entry),
+        }
+    }
+
+    pub fn remove_bot(&mut self, kind: BotList, value: &str) -> bool {
+        let list = self.bot_list_mut(kind);
+        let before = list.len();
+        list.retain(|e| !e.value.eq_ignore_ascii_case(value.trim()));
+        list.len() != before
+    }
+
+    /// Block or unblock a whole category; true when changed.
+    pub fn set_bot_category(&mut self, c: Category, block: bool) -> bool {
+        let has = self.bot_block_categories.contains(&c);
+        if has == block {
+            return false;
+        }
+        if block {
+            self.bot_block_categories.push(c);
+            self.bot_block_categories.sort();
+        } else {
+            self.bot_block_categories.retain(|x| *x != c);
+        }
+        true
+    }
+
+    /// Any bot blocking rule at all (the bot check is skipped otherwise).
+    pub fn bot_rules_active(&self) -> bool {
+        !self.bot_block_categories.is_empty() || !self.bot_blocked.is_empty()
+    }
+
+    /// Would a request with this User-Agent be refused as a bot? `hit` is its classification,
+    /// `ua_lower` the lowercased User-Agent. `botAllowed` wins over everything.
+    pub fn bot_blocked(&self, hit: Option<&bots::BotHit>, ua_lower: &str, now: DateTime<Utc>) -> bool {
+        let m = |e: &ListEntry| entry_active(e, now) && bots::rule_matches(&e.value, hit, ua_lower);
+        if self.bot_allowed.iter().any(&m) {
+            return false;
+        }
+        hit.is_some_and(|h| self.bot_block_categories.contains(&h.category)) || self.bot_blocked.iter().any(&m)
+    }
+
     /// Active ban of `ip` (expiry), if any.
     pub fn ban_of(&self, ip: IpAddr, now: DateTime<Utc>) -> Option<&BanEntry> {
         self.bans.get(&unmap(ip)).filter(|b| b.expires > now)
@@ -310,17 +433,22 @@ impl Lists {
         self.blacklist.iter().chain(self.whitelist.iter()).any(|r| !r.active(now))
             || self.bans.values().any(|b| b.expires <= now)
             || self.domain_blacklist.iter().chain(self.domain_whitelist.iter()).any(|e| !entry_active(e, now))
+            || self.bot_blocked.iter().chain(self.bot_allowed.iter()).any(|e| !entry_active(e, now))
     }
 
     /// Drop expired entries and bans; true when anything was removed.
     pub fn prune(&mut self, now: DateTime<Utc>) -> bool {
-        let count = |l: &Lists| l.blacklist.len() + l.whitelist.len() + l.bans.len() + l.domain_blacklist.len() + l.domain_whitelist.len();
+        let count = |l: &Lists| {
+            l.blacklist.len() + l.whitelist.len() + l.bans.len() + l.domain_blacklist.len() + l.domain_whitelist.len() + l.bot_blocked.len() + l.bot_allowed.len()
+        };
         let before = count(self);
         self.blacklist.retain(|r| r.active(now));
         self.whitelist.retain(|r| r.active(now));
         self.bans.retain(|_, b| b.expires > now);
         self.domain_blacklist.retain(|e| entry_active(e, now));
         self.domain_whitelist.retain(|e| entry_active(e, now));
+        self.bot_blocked.retain(|e| entry_active(e, now));
+        self.bot_allowed.retain(|e| entry_active(e, now));
         before != count(self)
     }
 }
@@ -426,6 +554,59 @@ mod tests {
         let mut back = back;
         assert!(back.remove_domain(DomainKind::Whitelist, "ok.example"));
         assert!(!back.remove_domain(DomainKind::Whitelist, "ok.example"));
+        let _ = std::fs::remove_file(&path);
+    }
+
+    #[test]
+    fn bot_rules_round_trip_and_old_files_load() {
+        let now = Utc::now();
+        let path = std::env::temp_dir().join(format!("crab-waf-store-bots-{}.json", std::process::id()));
+        // a file written before the bot rules existed
+        std::fs::write(&path, r#"{"blacklist":[],"whitelist":[],"bans":[],"domainBlacklist":[],"domainWhitelist":[]}"#).unwrap();
+        let f = load(&path).unwrap();
+        assert!(f.bot_block_categories.is_empty() && f.bot_blocked.is_empty() && f.bot_allowed.is_empty() && !f.robots_disallow);
+        let mut l = Lists::from_file(f, now);
+        assert!(!l.bot_rules_active());
+
+        assert!(l.set_bot_category(Category::Seo, true));
+        assert!(!l.set_bot_category(Category::Seo, true));
+        l.upsert_bot(BotList::Blocked, "MyScraper".into(), "парсер".into(), None, now);
+        l.upsert_bot(BotList::Allowed, "UptimeRobot".into(), String::new(), Some(now + Duration::hours(1)), now);
+        l.robots_disallow = true;
+        save(&path, &l.to_file()).unwrap();
+        let v: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(&path).unwrap()).unwrap();
+        assert_eq!(v["botBlockCategories"][0], "seo");
+        assert_eq!(v["botBlocked"][0]["value"], "MyScraper");
+        assert!(v["botAllowed"][0]["expires"].is_string());
+        assert_eq!(v["robotsDisallow"], true);
+
+        let mut back = Lists::from_file(load(&path).unwrap(), now);
+        assert_eq!(back.bot_block_categories, vec![Category::Seo]);
+        assert!(back.robots_disallow);
+        let ua = "mozilla/5.0 (compatible; ahrefsbot/7.0)";
+        assert!(back.bot_blocked(bots::classify(ua).as_ref(), ua, now));
+        assert!(back.bot_blocked(None, "myscraper/1.0", now));
+        assert!(!back.bot_blocked(None, "mozilla/5.0", now));
+        // moving a value to the other list removes it from the first one
+        back.upsert_bot(BotList::Allowed, "myscraper".into(), String::new(), None, now);
+        assert!(back.bot_blocked.is_empty());
+        assert!(!back.bot_blocked(None, "myscraper/1.0", now));
+        assert!(back.remove_bot(BotList::Allowed, "MYSCRAPER"));
+        assert!(!back.remove_bot(BotList::Allowed, "MYSCRAPER"));
+        // expiry is pruned
+        assert!(back.has_expired(now + Duration::hours(2)));
+        assert!(back.prune(now + Duration::hours(2)));
+        assert!(back.bot_allowed.is_empty());
+
+        // hand-edited file: unknown categories, short and duplicate values are dropped
+        std::fs::write(
+            &path,
+            r#"{"botBlockCategories":["ai","nope","AI"],"botBlocked":[{"value":"ab","created":"2024-01-01T00:00:00Z"},{"value":"Foo Bot","created":"2024-01-01T00:00:00Z"},{"value":"foo bot","created":"2024-01-01T00:00:00Z"}]}"#,
+        )
+        .unwrap();
+        let back = Lists::from_file(load(&path).unwrap(), now);
+        assert_eq!(back.bot_block_categories, vec![Category::Ai]);
+        assert_eq!(back.bot_blocked.iter().map(|e| e.value.as_str()).collect::<Vec<_>>(), ["Foo Bot"]);
         let _ = std::fs::remove_file(&path);
     }
 

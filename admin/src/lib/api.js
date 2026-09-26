@@ -160,3 +160,8 @@ export const deleteWafRule = (list, value) => del('waf/rules', { query: { list, 
 export const banWafIp = (payload) => post('waf/ban', payload).then(ensureOk)
 export const unbanWafIp = (ip) => del('waf/ban', { query: { ip } }).then(ensureOk)
 export const resetWafStats = () => post('waf/reset').then(ensureOk)
+export const getWafBots = (opts) => get('waf/bots', opts)
+export const setWafBotCategory = (id, block) => post('waf/bots/category', { id, block }).then(ensureOk)
+export const addWafBotRule = (entry) => post('waf/bots/rules', entry).then(ensureOk)
+export const deleteWafBotRule = (list, value) => del('waf/bots/rules', { query: { list, value } }).then(ensureOk)
+export const setWafRobots = (disallow) => post('waf/bots/robots', { disallow }).then(ensureOk)

@@ -1,9 +1,10 @@
-//! Web application firewall: IP and domain lists, bans, User-Agent / trap-path filters,
-//! per-IP rate limit and the in-memory request log shown in the admin panel.
+//! Web application firewall: IP and domain lists, bans, bot rules, User-Agent / trap-path
+//! filters, per-IP rate limit and the in-memory request log shown in the admin panel.
 //!
 //! Evaluated right after the client network is captured (so the real client IP is known),
 //! before the admin panel, static files and routing. The request domain is the `Origin`
-//! host, else the `Referer` host (see [`domains`]); requests without both have none.
+//! host, else the `Referer` host (see [`domains`]); requests without both have none. The
+//! request host (`Host` header) is only recorded for statistics.
 //!
 //! 1. loopback → allowed;
 //! 2. domain in the compiled-in [`domains::BUILTIN_BLOCKED_DOMAINS`] → `403` (reason `domain`),
@@ -13,15 +14,21 @@
 //! 5. admin domain blacklist, or (`waf.domainAllowlistOnly`) a domain that is neither in the
 //!    admin domain whitelist nor the request's own `Host` → `403` (reason `domain`, no ban);
 //! 6. admin domain whitelist → allowed, the checks below are skipped;
-//! 7. `blockUserAgents` match → `403` + ban for `rateLimit.banMinutes` (reason `ua`);
-//! 8. `trapPaths` prefix → `404` + ban for `trapBanMinutes` (reason `trap`);
-//! 9. rate limit exceeded → `429` + `Retry-After` + ban for `rateLimit.banMinutes` (reason `rate`).
+//! 7. bot rules (see [`bots`]): a blocked category or a `botBlocked` match that is not in
+//!    `botAllowed` → `403` (reason `bot`, no ban);
+//! 8. `blockUserAgents` match → `403` + ban for `rateLimit.banMinutes` (reason `ua`);
+//! 9. `trapPaths` prefix → `404` + ban for `trapBanMinutes` (reason `trap`);
+//! 10. rate limit exceeded → `429` + `Retry-After` + ban for `rateLimit.banMinutes` (reason `rate`).
+//!
+//! With `robotsDisallow` in `Data/waf.json`, `GET /robots.txt` is answered here with
+//! `Disallow: /` (also for bots refused by step 7, so polite crawlers learn to stop).
 //!
 //! Every request is recorded (when `waf.logRequests`) with its final status and duration.
 //! The query string is never stored. Lists and bans persist in `Data/waf.json`; statistics
 //! live in memory only.
 
 pub mod api;
+pub mod bots;
 pub mod domains;
 pub mod limiter;
 pub mod net;
@@ -50,7 +57,7 @@ use crate::security::request_network;
 use limiter::RateLimiter;
 use net::{is_loopback, unmap, IpNet};
 use stats::{LogEntry, Reason, Stats};
-use store::{DomainKind, ListKind, Lists};
+use store::{BotList, DomainKind, ListKind, Lists};
 
 /// Log category.
 pub const CAT: &str = "waf";
@@ -58,6 +65,8 @@ pub const CAT: &str = "waf";
 pub const WAF_FILE: &str = "Data/waf.json";
 const MAX_PATH_LEN: usize = 512;
 const MAX_UA_LEN: usize = 256;
+/// `/robots.txt` served with `robotsDisallow`.
+pub const ROBOTS_DISALLOW: &str = "User-agent: *\nDisallow: /\n";
 
 fn store_path() -> PathBuf {
     #[cfg(test)]
@@ -81,14 +90,16 @@ pub fn init() {
     crab_core::log::info(
         CAT,
         format!(
-            "{}: {} blacklist, {} whitelist, {} bans, {} domain blacklist, {} domain whitelist, {} builtin blocked domains",
+            "{}: {} blacklist, {} whitelist, {} bans, {} domain blacklist, {} domain whitelist, {} builtin blocked domains, {} blocked bot categories, {} bot rules",
             WAF.path.display(),
             l.blacklist.len(),
             l.whitelist.len(),
             l.bans.len(),
             l.domain_blacklist.len(),
             l.domain_whitelist.len(),
-            domains::BUILTIN_BLOCKED_DOMAINS.len()
+            domains::BUILTIN_BLOCKED_DOMAINS.len(),
+            l.bot_block_categories.len(),
+            l.bot_blocked.len() + l.bot_allowed.len()
         ),
     );
 }
@@ -254,8 +265,8 @@ impl Waf {
         self.evaluate_request(cfg, ip, path, ua, None, None, now)
     }
 
-    /// Run the filter chain for one request; `None` = allowed. `domain` is the normalised
-    /// `Origin`/`Referer` host, `own_host` the normalised `Host` of the request.
+    /// Run the filter chain for one request; `None` = allowed (always with `waf.enable: false`).
+    /// `domain` is the normalised `Origin`/`Referer` host, `own_host` the normalised `Host`.
     #[allow(clippy::too_many_arguments)]
     pub fn evaluate_request(
         &self,
@@ -267,6 +278,9 @@ impl Waf {
         own_host: Option<&str>,
         now: DateTime<Utc>,
     ) -> Option<Block> {
+        if !cfg.enable {
+            return None;
+        }
         let forbidden = |reason| Block { reason, status: StatusCode::FORBIDDEN, retry_after: None, banned: false };
         let ip = ip.map(unmap);
         if ip.is_some_and(is_loopback) {
@@ -299,6 +313,12 @@ impl Waf {
                 }
                 if cfg.domainAllowlistOnly && !domain_allowed && own_host != Some(d) {
                     return Some(forbidden(Reason::Domain));
+                }
+            }
+            if !domain_allowed && l.bot_rules_active() {
+                let hit = bots::classify_cached(ua);
+                if l.bot_blocked(hit.as_ref(), &ua.to_lowercase(), now) {
+                    return Some(forbidden(Reason::Bot));
                 }
             }
         }
@@ -346,6 +366,49 @@ impl Waf {
         self.lists.write().remove_domain(kind, domain)
     }
 
+    pub fn upsert_bot(&self, kind: BotList, value: String, comment: String, expires: Option<DateTime<Utc>>, now: DateTime<Utc>) {
+        self.lists.write().upsert_bot(kind, value, comment, expires, now);
+    }
+
+    pub fn remove_bot(&self, kind: BotList, value: &str) -> bool {
+        self.lists.write().remove_bot(kind, value)
+    }
+
+    /// Block or unblock a bot category; true when changed.
+    pub fn set_bot_category(&self, c: bots::Category, block: bool) -> bool {
+        self.lists.write().set_bot_category(c, block)
+    }
+
+    /// Set `robotsDisallow`; true when changed.
+    pub fn set_robots_disallow(&self, v: bool) -> bool {
+        let mut l = self.lists.write();
+        let changed = l.robots_disallow != v;
+        l.robots_disallow = v;
+        changed
+    }
+
+    pub fn robots_disallow(&self) -> bool {
+        self.lists.read().robots_disallow
+    }
+
+    /// Status of a tracked bot for the admin table: `blocked`, `allowed` (a `botAllowed` rule
+    /// matches) or `seen`. `samples` are recorded User-Agents of the bot.
+    pub fn bot_status(&self, hit: &bots::BotHit, samples: &[String], now: DateTime<Utc>) -> &'static str {
+        let l = self.lists.read();
+        let active = |e: &&store::ListEntry| e.expires.map(|x| x > now).unwrap_or(true);
+        let lowered: Vec<String> = samples.iter().map(|s| s.to_lowercase()).collect();
+        let hits = |e: &store::ListEntry| {
+            bots::rule_matches(&e.value, Some(hit), "") || lowered.iter().any(|s| bots::rule_matches(&e.value, None, s))
+        };
+        if l.bot_allowed.iter().filter(active).any(hits) {
+            "allowed"
+        } else if l.bot_block_categories.contains(&hit.category) || l.bot_blocked.iter().filter(active).any(hits) {
+            "blocked"
+        } else {
+            "seen"
+        }
+    }
+
     /// Active entries of the admin domain whitelist.
     pub fn domain_whitelist_len(&self, now: DateTime<Utc>) -> usize {
         self.lists.read().domain_whitelist.iter().filter(|e| e.expires.map(|x| x > now).unwrap_or(true)).count()
@@ -368,6 +431,8 @@ impl Waf {
         f.whitelist.retain(active);
         f.domain_blacklist.retain(active);
         f.domain_whitelist.retain(active);
+        f.bot_blocked.retain(active);
+        f.bot_allowed.retain(active);
         f.bans.retain(|b| b.expires > now);
         f
     }
@@ -417,6 +482,16 @@ pub fn record_path(path: &str, admin_token: &str) -> String {
     } else {
         p.to_string()
     }
+}
+
+fn is_robots(req: &Request) -> bool {
+    (req.method() == axum::http::Method::GET || req.method() == axum::http::Method::HEAD) && req.uri().path().eq_ignore_ascii_case("/robots.txt")
+}
+
+fn robots_response() -> Response {
+    let mut r = (StatusCode::OK, Body::from(ROBOTS_DISALLOW)).into_response();
+    r.headers_mut().insert(header::CONTENT_TYPE, HeaderValue::from_static("text/plain; charset=utf-8"));
+    r
 }
 
 fn blocked_response(b: &Block) -> Response {
@@ -473,8 +548,9 @@ impl Drop for RecordGuard {
 pub async fn waf_mw(req: Request, next: Next) -> Response {
     let c = crate::conf();
     let cfg = &c.waf;
+    let robots = is_robots(&req) && WAF.robots_disallow();
     if !cfg.enable && !cfg.logRequests {
-        return next.run(req).await;
+        return if robots { robots_response() } else { next.run(req).await };
     }
     let start = Instant::now();
     let now = Utc::now();
@@ -488,13 +564,11 @@ pub async fn waf_mw(req: Request, next: Next) -> Response {
         .map(|d| truncate(&d, domains::MAX_DOMAIN_LEN).to_string());
     let own_host = header_str(header::HOST).or_else(|| req.uri().host()).and_then(domains::normalize_host);
 
-    let block = if cfg.enable {
-        WAF.evaluate_request(cfg, ip, req.uri().path(), &ua, domain.as_deref(), own_host.as_deref(), now)
-    } else {
-        None
-    };
+    let block = WAF.evaluate_request(cfg, ip, req.uri().path(), &ua, domain.as_deref(), own_host.as_deref(), now);
+    // Crawlers refused as bots may still read the robots.txt that tells them to stop.
+    let block = block.filter(|b| !(robots && b.reason == Reason::Bot));
     if !cfg.logRequests && block.is_none() {
-        return next.run(req).await;
+        return if robots { robots_response() } else { next.run(req).await };
     }
     let ip_text = ip.map(|i| i.to_string()).unwrap_or_else(|| "unknown".into());
     let entry = LogEntry {
@@ -504,9 +578,11 @@ pub async fn waf_mw(req: Request, next: Next) -> Response {
         path: record_path(req.uri().path(), &c.admin.token),
         status: 0,
         ms: 0,
-        ua,
         blocked: block.map(|b| b.reason),
         origin: domain,
+        host: own_host.as_deref().map(|h| truncate(h, domains::MAX_DOMAIN_LEN).to_string()).unwrap_or_else(|| "-".into()),
+        bot: bots::classify_cached(&ua),
+        ua,
     };
     let history = cfg.historySize.clamp(0, crate::config_api::schema::MAX_WAF_HISTORY) as usize;
 
@@ -524,6 +600,11 @@ pub async fn waf_mw(req: Request, next: Next) -> Response {
             Pending { entry, start, history }.commit(b.status.as_u16());
         }
         return resp;
+    }
+
+    if robots {
+        Pending { entry, start, history }.commit(200);
+        return robots_response();
     }
 
     let guard = RecordGuard(Some(Pending { entry, start, history }));

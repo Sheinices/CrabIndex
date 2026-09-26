@@ -25,6 +25,7 @@ function readFilters(params) {
     ip: params.get('ip') || '',
     path: params.get('path') || '',
     origin: params.get('origin') || '',
+    host: params.get('host') || '',
     status: params.get('status') || '',
     blocked: params.get('blocked') === '1',
     limit: Number(params.get('limit')) || 200,
@@ -34,15 +35,15 @@ function readFilters(params) {
 export function WafLog() {
   const [params, setParams] = useSearchParams()
   const filters = useMemo(() => readFilters(params), [params])
-  const [draft, setDraft] = useState({ ip: filters.ip, path: filters.path, origin: filters.origin })
+  const [draft, setDraft] = useState({ ip: filters.ip, path: filters.path, origin: filters.origin, host: filters.host })
   const [paused, setPaused] = useState(false)
   const query = useMemo(() => buildRequestsQuery(filters), [filters])
   const { data, error, loading, reload } = usePolling(() => getWafRequests(query), paused ? 0 : 5000, { enabled: !paused })
 
   // Keep the text inputs in sync when filters change from outside (IP click, links).
   useEffect(() => {
-    setDraft({ ip: filters.ip, path: filters.path, origin: filters.origin })
-  }, [filters.ip, filters.path, filters.origin])
+    setDraft({ ip: filters.ip, path: filters.path, origin: filters.origin, host: filters.host })
+  }, [filters.ip, filters.path, filters.origin, filters.host])
 
   useEffect(() => {
     reload()
@@ -54,6 +55,7 @@ export function WafLog() {
     if (next.ip) p.set('ip', next.ip)
     if (next.path) p.set('path', next.path)
     if (next.origin) p.set('origin', next.origin)
+    if (next.host) p.set('host', next.host)
     if (next.status) p.set('status', next.status)
     if (next.blocked) p.set('blocked', '1')
     if (next.limit && next.limit !== 200) p.set('limit', String(next.limit))
@@ -61,7 +63,7 @@ export function WafLog() {
   }
 
   const rows = Array.isArray(data) ? data : Array.isArray(data?.requests) ? data.requests : []
-  const active = filters.ip || filters.path || filters.origin || filters.status || filters.blocked
+  const active = filters.ip || filters.path || filters.origin || filters.host || filters.status || filters.blocked
 
   return (
     <div className="space-y-4">
@@ -70,7 +72,7 @@ export function WafLog() {
         aria-label="Фильтры журнала"
         onSubmit={(e) => {
           e.preventDefault()
-          update({ ip: draft.ip.trim(), path: draft.path.trim(), origin: draft.origin.trim() })
+          update({ ip: draft.ip.trim(), path: draft.path.trim(), origin: draft.origin.trim(), host: draft.host.trim() })
         }}
       >
         <div className="w-full sm:w-44">
@@ -95,6 +97,19 @@ export function WafLog() {
             value={draft.origin}
             onChange={(e) => setDraft((d) => ({ ...d, origin: e.target.value }))}
             placeholder="example.com"
+            spellCheck={false}
+          />
+        </div>
+        <div className="w-full sm:w-44">
+          <label className="label" htmlFor="waf-f-host">
+            Хост (Host)
+          </label>
+          <input
+            id="waf-f-host"
+            className="input font-mono"
+            value={draft.host}
+            onChange={(e) => setDraft((d) => ({ ...d, host: e.target.value }))}
+            placeholder="sync.example.com"
             spellCheck={false}
           />
         </div>
@@ -163,6 +178,7 @@ export function WafLog() {
               <tr>
                 <th>Время</th>
                 <th>IP</th>
+                <th>Хост</th>
                 <th>Запрос</th>
                 <th>Origin</th>
                 <th>Статус</th>
@@ -186,6 +202,20 @@ export function WafLog() {
                     >
                       {r.ip}
                     </button>
+                  </td>
+                  <td className="max-w-40">
+                    {r.host && r.host !== '-' ? (
+                      <button
+                        type="button"
+                        className="block max-w-full truncate font-mono text-xs text-accent hover:underline"
+                        onClick={() => update({ host: r.host })}
+                        title={`Показать запросы к ${r.host}`}
+                      >
+                        {r.host}
+                      </button>
+                    ) : (
+                      <span className="text-xs text-muted">-</span>
+                    )}
                   </td>
                   <td className="max-w-md">
                     <span className="mr-1.5 font-mono text-[11px] font-semibold text-muted">{r.method}</span>

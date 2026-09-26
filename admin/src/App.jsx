@@ -19,6 +19,7 @@ import { WafOverview } from './pages/waf/WafOverview.jsx'
 import { WafLog } from './pages/waf/WafLog.jsx'
 import { WafIps } from './pages/waf/WafIps.jsx'
 import { WafRules } from './pages/waf/WafRules.jsx'
+import { WafBots } from './pages/waf/WafBots.jsx'
 import { getBase } from './lib/base.js'
 
 // The settings editor pulls in CodeMirror - load it on demand.
@@ -80,6 +81,7 @@ export function createAppRouter(basename = getBase()) {
               { path: 'log', element: <WafLog /> },
               { path: 'ips', element: <WafIps /> },
               { path: 'rules', element: <WafRules /> },
+              { path: 'bots', element: <WafBots /> },
               { path: '*', element: <Navigate to="/waf" replace /> },
             ],
           },

@@ -14,7 +14,9 @@ import {
   BLOCK_REASONS,
   domainRuleError,
   isDomainList,
+  isBotList,
   normalizeDomain,
+  validateBotRule,
 } from '../../lib/waf.js'
 import { formatDate } from '../../lib/format.js'
 
@@ -103,10 +105,12 @@ const DIALOG_TEXT = {
     title: 'Разрешить домен',
     description: 'Запросы с этого домена и его поддоменов не проверяются лимитом, ловушками и фильтром User-Agent.',
   },
+  botBlocked: { title: 'Заблокировать бота', description: 'Запросы с таким User-Agent будут получать 403. IP не банится.' },
+  botAllowed: { title: 'Разрешить бота', description: 'Запросы с таким User-Agent не блокируются правилами ботов, даже если заблокирована вся категория.' },
 }
 
 /**
- * Add-to-list form (IP or domain blacklist / whitelist). `onSubmit({list, value,
+ * Add-to-list form (IP, domain or bot blacklist / whitelist). `onSubmit({list, value,
  * comment, expiresMinutes})` must resolve to true on success (closes the dialog).
  * `builtinDomains` is used to reject builtin conflicts before the request.
  */
@@ -130,12 +134,17 @@ export function RuleDialog({ open, onClose, list, initialValue = '', you, onSubm
   }, [open, initialValue])
 
   const domain = isDomainList(list)
-  const black = list === 'blacklist' || list === 'domainBlacklist'
+  const bot = isBotList(list)
+  const black = list === 'blacklist' || list === 'domainBlacklist' || list === 'botBlocked'
   const text = DIALOG_TEXT[list] || DIALOG_TEXT.blacklist
   const submit = async (e) => {
     e.preventDefault()
     const v = domain ? normalizeDomain(value) : value.trim()
-    const err = domain ? domainRuleError(list, value, builtinDomains) : validateRuleValue(v) || (black ? selfBlockError(v, you) : null)
+    const err = bot
+      ? validateBotRule(v)
+      : domain
+        ? domainRuleError(list, value, builtinDomains)
+        : validateRuleValue(v) || (black ? selfBlockError(v, you) : null)
     if (err) return setError(err)
     let expiresMinutes
     if (expiry === 'custom') {
@@ -163,7 +172,7 @@ export function RuleDialog({ open, onClose, list, initialValue = '', you, onSubm
       <form id={`${ids}-form`} onSubmit={submit} className="space-y-4" noValidate>
         <div>
           <label className="label" htmlFor={`${ids}-v`}>
-            {domain ? 'Домен' : 'IP-адрес или CIDR'}
+            {bot ? 'Имя бота или часть User-Agent' : domain ? 'Домен' : 'IP-адрес или CIDR'}
           </label>
           <input
             id={`${ids}-v`}
@@ -171,7 +180,7 @@ export function RuleDialog({ open, onClose, list, initialValue = '', you, onSubm
             value={value}
             readOnly={lockValue}
             onChange={(e) => setValue(e.target.value)}
-            placeholder={domain ? 'example.com' : '203.0.113.7 или 198.51.100.0/24'}
+            placeholder={bot ? 'AhrefsBot или MyScraper/1.0' : domain ? 'example.com' : '203.0.113.7 или 198.51.100.0/24'}
             aria-invalid={!!error}
             aria-describedby={error ? `${ids}-err` : undefined}
             data-autofocus={lockValue ? undefined : true}
@@ -208,6 +217,9 @@ export function RuleDialog({ open, onClose, list, initialValue = '', you, onSubm
           ) : null}
         </div>
         {domain ? <p className="text-xs text-muted">Поддомены входят автоматически. Можно вставить адрес целиком: схема, порт, путь и «*.» отбрасываются.</p> : null}
+        {bot ? (
+          <p className="text-xs text-muted">Имя из каталога или любая часть заголовка User-Agent, от 3 символов. Регистр не важен.</p>
+        ) : null}
         {error ? (
           <p id={`${ids}-err`} role="alert" className="text-sm text-danger">
             {error}

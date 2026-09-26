@@ -1,5 +1,5 @@
 import { NavLink, Outlet, useOutletContext } from 'react-router'
-import { Gauge, ListFilter, Network, ShieldCheck } from 'lucide-react'
+import { Bot, Gauge, ListFilter, Network, ShieldCheck } from 'lucide-react'
 import { getWafRules } from '../../lib/api.js'
 import { usePolling } from '../../hooks/usePolling.js'
 import { PageHeader } from '../../components/ui.jsx'
@@ -10,6 +10,7 @@ const TABS = [
   { to: '/waf/log', label: 'Журнал', icon: ListFilter },
   { to: '/waf/ips', label: 'IP-адреса', icon: Network },
   { to: '/waf/rules', label: 'Правила', icon: ShieldCheck },
+  { to: '/waf/bots', label: 'Боты', icon: Bot },
 ]
 
 /** Shared WAF state for the sub-tabs: rules (lists, bans, config, `you`). */
