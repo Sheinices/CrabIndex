@@ -21,16 +21,18 @@ import { WafIps } from './pages/waf/WafIps.jsx'
 import { WafRules } from './pages/waf/WafRules.jsx'
 import { WafBots } from './pages/waf/WafBots.jsx'
 import { getBase } from './lib/base.js'
+import { LangProvider, useT } from './lang/index.jsx'
 
 // The settings editor pulls in CodeMirror - load it on demand.
 const SettingsPage = lazy(() => import('./pages/settings/Settings.jsx'))
 
 function Gate() {
   const { status, error, refresh } = useAuth()
+  const t = useT()
   if (status === 'loading') {
     return (
       <div className="grid min-h-screen place-items-center">
-        <Spinner className="size-6" label="Загрузка…" />
+        <Spinner className="size-6" label={t('loading')} />
       </div>
     )
   }
@@ -38,10 +40,10 @@ function Gate() {
     return (
       <div className="grid min-h-screen place-items-center p-4">
         <div className="card max-w-md p-6 text-center">
-          <p className="font-medium">Не удалось связаться с сервером</p>
+          <p className="font-medium">{t('server_unreachable')}</p>
           <p className="mt-2 text-sm text-muted">{error?.message}</p>
           <button type="button" className="btn btn-primary mt-4" onClick={refresh}>
-            Повторить
+            {t('retry')}
           </button>
         </div>
       </div>
@@ -96,14 +98,16 @@ export function createAppRouter(basename = getBase()) {
 export default function App() {
   const [router] = useState(() => createAppRouter())
   return (
-    <ToastProvider>
-      <ConfirmProvider>
-        <ResultProvider>
-          <AuthProvider>
-            <RouterProvider router={router} />
-          </AuthProvider>
-        </ResultProvider>
-      </ConfirmProvider>
-    </ToastProvider>
+    <LangProvider>
+      <ToastProvider>
+        <ConfirmProvider>
+          <ResultProvider>
+            <AuthProvider>
+              <RouterProvider router={router} />
+            </AuthProvider>
+          </ResultProvider>
+        </ConfirmProvider>
+      </ToastProvider>
+    </LangProvider>
   )
 }

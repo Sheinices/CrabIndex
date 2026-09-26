@@ -3,17 +3,19 @@ import { Eye, EyeOff, KeyRound, LogIn } from 'lucide-react'
 import { useAuth } from '../components/Auth.jsx'
 import { getBase } from '../lib/base.js'
 import { Spinner } from '../components/ui.jsx'
+import { useT } from '../lang/index.jsx'
 
-export function loginErrorText(err) {
+export function loginErrorText(err, t = (k) => k) {
   if (!err) return ''
-  if (err.status === 401) return 'Неверный ключ'
-  if (err.status === 429) return 'Слишком много попыток, подождите несколько минут'
-  if (err.status === 0) return 'Сервер недоступен'
-  return err.message || 'Не удалось войти'
+  if (err.status === 401) return t('login_err_invalid')
+  if (err.status === 429) return t('login_err_ratelimit')
+  if (err.status === 0) return t('login_err_unreachable')
+  return err.message || t('login_err_generic')
 }
 
 export function LoginPage() {
   const { login } = useAuth()
+  const t = useT()
   const [devkey, setDevkey] = useState('')
   const [show, setShow] = useState(false)
   const [busy, setBusy] = useState(false)
@@ -46,13 +48,13 @@ export function LoginPage() {
               <span className="text-accent">Crab</span>
               <span>Index</span>
             </h1>
-            <p className="text-sm text-muted">Вход в админ-панель</p>
+            <p className="text-sm text-muted">{t('login_subtitle')}</p>
           </div>
         </div>
         <form onSubmit={submit} className="card space-y-4 p-6" noValidate>
           <div>
             <label htmlFor={inputId} className="label">
-              Dev-ключ
+              {t('login_devkey')}
             </label>
             <div className="relative">
               <KeyRound className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted" aria-hidden="true" />
@@ -72,7 +74,7 @@ export function LoginPage() {
                 type="button"
                 className="absolute top-1/2 right-1.5 -translate-y-1/2 rounded-md p-1.5 text-muted hover:text-fg"
                 onClick={() => setShow((s) => !s)}
-                aria-label={show ? 'Скрыть ключ' : 'Показать ключ'}
+                aria-label={show ? t('login_hide_key') : t('login_show_key')}
                 aria-pressed={show}
               >
                 {show ? <EyeOff className="size-4" aria-hidden="true" /> : <Eye className="size-4" aria-hidden="true" />}
@@ -81,16 +83,16 @@ export function LoginPage() {
           </div>
           {error ? (
             <p id={errId} role="alert" className="rounded-lg bg-danger/10 px-3 py-2 text-sm text-danger">
-              {loginErrorText(error)}
+              {loginErrorText(error, t)}
             </p>
           ) : null}
           <button type="submit" className="btn btn-primary w-full" disabled={busy || !devkey.trim()}>
             {busy ? <Spinner /> : <LogIn className="size-4" aria-hidden="true" />}
-            Войти
+            {t('login_submit')}
           </button>
           <p id={hintId} className="text-xs leading-relaxed text-muted">
-            Ключ - значение <code className="font-mono text-fg">devkey</code> из <code className="font-mono text-fg">init.yaml</code>. При
-            первом запуске сервер генерирует его и печатает в лог; напомнить адрес и ключ можно командой{' '}
+            {t('login_hint_prefix')} <code className="font-mono text-fg">devkey</code> {t('login_hint_from')}{' '}
+            <code className="font-mono text-fg">init.yaml</code>. {t('login_hint_suffix')}{' '}
             <code className="font-mono text-fg">crabindex admin</code>.
           </p>
         </form>

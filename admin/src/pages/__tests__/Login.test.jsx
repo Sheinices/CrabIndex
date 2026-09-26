@@ -3,6 +3,7 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { LoginPage } from '../Login.jsx'
 import { AuthProvider } from '../../components/Auth.jsx'
+import { LangProvider } from '../../lang/index.jsx'
 import { setBaseForTests } from '../../lib/base.js'
 
 function stubFetch(loginStatus, loginBody) {
@@ -18,10 +19,15 @@ function stubFetch(loginStatus, loginBody) {
 
 function renderLogin() {
   setBaseForTests('/admin')
+  // Pin the UI language to Russian so assertions match the base dictionary regardless of the
+  // test env locale (this env has no localStorage, so the panel falls back to navigator.language).
+  Object.defineProperty(navigator, 'language', { value: 'ru', configurable: true })
   return render(
-    <AuthProvider>
-      <LoginPage />
-    </AuthProvider>,
+    <LangProvider>
+      <AuthProvider>
+        <LoginPage />
+      </AuthProvider>
+    </LangProvider>,
   )
 }
 

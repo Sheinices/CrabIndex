@@ -294,6 +294,11 @@ async fn api_request(mut req: Request, next: Next, c: &AppOptions, base: &str, s
                 json!({ "authenticated": has_session(req.headers(), c), "version": version::VERSION, "loginEnabled": !devkey.is_empty() }),
             );
         }
+        ("GET", "lang") => {
+            // Public: the login screen is localized too. Runtime packs from Data/lang/*.json.
+            let v = tokio::task::spawn_blocking(api::lang_packs).await.unwrap_or_else(|_| json!({ "languages": [] }));
+            return json_response(StatusCode::OK, v);
+        }
         ("POST", "login") => return login(req, c, base).await,
         ("POST", "logout") => {
             for v in cookie_values(req.headers(), SESSION_COOKIE) {

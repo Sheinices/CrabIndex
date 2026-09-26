@@ -100,6 +100,11 @@ export const getSession = () => get('session', { silent401: true })
 export const login = (devkey) => post('login', { devkey }, { silent401: true })
 export const logout = () => post('logout', undefined, { silent401: true })
 
+// --- UI language packs -------------------------------------------------------
+// Runtime translation packs from the server's `Data/lang/*.json`. Public (works before login)
+// so the login screen is localized too.
+export const getLang = (opts) => get('lang', { ...opts, silent401: true })
+
 // --- Dashboard / jobs --------------------------------------------------------
 export const getOverview = (opts) => get('overview', opts)
 export const getBackgroundJobs = (opts) => get('health/background-jobs', opts)

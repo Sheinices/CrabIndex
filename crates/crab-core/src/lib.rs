@@ -19,7 +19,7 @@ pub use config::conf;
 
 /// Create the Data/* directory layout used by the app (relative to cwd).
 pub fn ensure_data_dirs() {
-    for d in ["Data/fdb", "Data/temp", "Data/log", "Data/tracks"] {
+    for d in ["Data/fdb", "Data/temp", "Data/log", "Data/tracks", "Data/lang"] {
         let _ = std::fs::create_dir_all(d);
     }
 }

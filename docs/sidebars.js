@@ -64,7 +64,7 @@ const sidebars = {
     {
       type: 'category',
       label: 'Разработка',
-      items: ['development/building', 'development/adding-trackers', 'development/docs-workflow'],
+      items: ['development/building', 'development/adding-trackers', 'development/localization', 'development/docs-workflow'],
     },
   ],
   trackers: [

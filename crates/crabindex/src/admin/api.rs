@@ -18,6 +18,37 @@ pub const LOG_DIR: &str = "Data/log";
 pub const DEFAULT_TAIL_LINES: usize = 300;
 pub const MAX_TAIL_LINES: usize = 5000;
 
+/// Directory of runtime UI language packs served by `lang`.
+pub const LANG_DIR: &str = "Data/lang";
+
+/// Runtime UI language packs for the admin panel. Every `Data/lang/<code>.json` is one extra
+/// language the panel can switch to without a rebuild: `_name` is the display name, every other
+/// key is a translation string. Built-in languages (ru, en) ship in the panel bundle; these are
+/// merged on top. Returns `{ "languages": [ { code, name, strings } ] }`, sorted by code.
+pub fn lang_packs() -> Value {
+    let mut langs: Vec<Value> = Vec::new();
+    if let Ok(rd) = std::fs::read_dir(LANG_DIR) {
+        let mut paths: Vec<PathBuf> = rd.flatten().map(|e| e.path()).collect();
+        paths.sort();
+        for path in paths {
+            if path.extension().and_then(|x| x.to_str()) != Some("json") {
+                continue;
+            }
+            let Some(code) = path.file_stem().and_then(|s| s.to_str()) else { continue };
+            let Ok(text) = std::fs::read_to_string(&path) else { continue };
+            let Ok(Value::Object(mut map)) = serde_json::from_str::<Value>(&text) else { continue };
+            let name = map
+                .remove("_name")
+                .and_then(|v| v.as_str().map(str::to_owned))
+                .unwrap_or_else(|| code.to_owned());
+            // Drop any other underscore-prefixed metadata keys so only real strings are sent.
+            map.retain(|k, _| !k.starts_with('_'));
+            langs.push(json!({ "code": code, "name": name, "strings": Value::Object(map) }));
+        }
+    }
+    json!({ "languages": langs })
+}
+
 static STARTED: Lazy<Instant> = Lazy::new(Instant::now);
 
 /// Pin the uptime origin (call once at startup).

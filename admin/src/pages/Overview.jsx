@@ -27,6 +27,7 @@ import {
   formatRelative,
   jobPercent,
 } from "../lib/format.js";
+import { useT } from "../lang/index.jsx";
 
 function Stat({ icon: Icon, label, value, hint }) {
   return (
@@ -41,21 +42,13 @@ function Stat({ icon: Icon, label, value, hint }) {
   );
 }
 
-export function JobList({ jobs, empty = "Нет активных задач", hint = true }) {
+export function JobList({ jobs, empty, hint = true }) {
+  const t = useT();
   if (!jobs?.length) {
     return (
       <div className="text-sm text-muted">
-        <p>{empty}</p>
-        {hint ? (
-          <p className="mt-2 text-xs">
-            Это нормально. Здесь видны только долгие задачи, которые идут прямо
-            сейчас: полный обход трекера (ParseAll), составление карт задач
-            (UpdateTasksParse), догрузка старых раздач. Они запускаются по
-            расписанию, в основном ночью и утром по UTC, поэтому после установки
-            или перезапуска данные появляются не сразу. Обычный парсинг каждые
-            15 минут занимает секунды и сюда не попадает.
-          </p>
-        ) : null}
+        <p>{empty ?? t("jobs_empty")}</p>
+        {hint ? <p className="mt-2 text-xs">{t("jobs_empty_hint")}</p> : null}
       </div>
     );
   }
@@ -87,13 +80,16 @@ export function JobList({ jobs, empty = "Нет активных задач", hi
 
 /** WAF summary for the last 60 minutes (`waf/overview?window=60m`). */
 export function WafCard() {
+  const t = useT();
   const { data, error, loading } = usePolling(
     () => getWafOverview("60m"),
     10_000,
   );
-  const t = data?.totals || {};
+  const totals = data?.totals || {};
   const pct =
-    t.requests > 0 ? Math.round((t.blocked / t.requests) * 1000) / 10 : 0;
+    totals.requests > 0
+      ? Math.round((totals.blocked / totals.requests) * 1000) / 10
+      : 0;
   return (
     <section className="card p-5" aria-labelledby="ov-waf">
       <div className="mb-3 flex items-center justify-between">
@@ -101,39 +97,39 @@ export function WafCard() {
           <Shield className="size-4 text-muted" aria-hidden="true" /> WAF
         </h2>
         <Link to="/waf" className="text-sm text-accent hover:underline">
-          Подробнее
+          {t("more")}
         </Link>
       </div>
       {loading && !data ? (
-        <Spinner label="Загрузка…" />
+        <Spinner label={t("loading")} />
       ) : error && !data ? (
         <p className="text-sm text-muted">
-          Статистика недоступна: {error.message}
+          {t("waf_stats_unavailable", { msg: error.message })}
         </p>
       ) : data?.enabled === false ? (
         <p className="text-sm">
-          <StatusDot tone="muted" label="WAF выключен" />{" "}
+          <StatusDot tone="muted" label={t("waf_disabled")} />{" "}
           <Link
             to="/settings?group=waf"
             className="text-accent hover:underline"
           >
-            Включить
+            {t("enable")}
           </Link>
         </p>
       ) : (
         <dl className="grid grid-cols-2 gap-3">
           <div>
-            <dt className="text-xs text-muted">Запросов за 60 мин</dt>
+            <dt className="text-xs text-muted">{t("waf_requests_60m")}</dt>
             <dd className="text-xl font-semibold tabular-nums">
-              {formatNumber(t.requests)}
+              {formatNumber(totals.requests)}
             </dd>
           </div>
           <div>
-            <dt className="text-xs text-muted">Заблокировано</dt>
+            <dt className="text-xs text-muted">{t("waf_blocked")}</dt>
             <dd
-              className={`text-xl font-semibold tabular-nums ${t.blocked ? "text-danger" : ""}`}
+              className={`text-xl font-semibold tabular-nums ${totals.blocked ? "text-danger" : ""}`}
             >
-              {formatNumber(t.blocked)}{" "}
+              {formatNumber(totals.blocked)}{" "}
               <span className="text-xs font-normal text-muted">{pct}%</span>
             </dd>
           </div>
@@ -144,6 +140,7 @@ export function WafCard() {
 }
 
 export function OverviewPage() {
+  const t = useT();
   const { data, error, loading, reload } = usePolling(
     () => getOverview(),
     10_000,
@@ -161,26 +158,26 @@ export function OverviewPage() {
   return (
     <>
       <PageHeader
-        title="Обзор"
-        description="Обновляется каждые 10 секунд"
+        title={t("nav_overview")}
+        description={t("ov_updates_every_10s")}
         actions={
           <button type="button" className="btn btn-sm" onClick={reload}>
-            <RefreshCw className="size-4" aria-hidden="true" /> Обновить
+            <RefreshCw className="size-4" aria-hidden="true" /> {t("refresh")}
           </button>
         }
       />
       <ErrorBox error={error} onRetry={reload} />
       {loading && !data ? (
-        <Spinner className="size-5" label="Загрузка…" />
+        <Spinner className="size-5" label={t("loading")} />
       ) : (
         <div className="space-y-6">
           <section
-            aria-label="Показатели"
+            aria-label={t("ov_metrics")}
             className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4"
           >
             <Stat
               icon={GitCommit}
-              label="Версия"
+              label={t("ov_version")}
               value={o.version || "-"}
               hint={[o.gitSha, o.buildDate && formatDate(o.buildDate)]
                 .filter(Boolean)
@@ -188,19 +185,22 @@ export function OverviewPage() {
             />
             <Stat
               icon={Clock}
-              label="Аптайм"
+              label={t("ov_uptime")}
               value={formatDuration(o.uptimeSeconds)}
-              hint={o.listen ? `Слушает ${o.listen}` : undefined}
+              hint={o.listen ? t("ov_listening", { addr: o.listen }) : undefined}
             />
             <Stat
               icon={Database}
-              label="Раздачи"
+              label={t("ov_torrents")}
               value={formatNumber(o.torrents)}
-              hint={`${formatNumber(o.masterDbKeys)} ключей · fast ${formatNumber(o.fastDbKeys)}`}
+              hint={t("ov_torrents_hint", {
+                keys: formatNumber(o.masterDbKeys),
+                fast: formatNumber(o.fastDbKeys),
+              })}
             />
             <Stat
               icon={HardDrive}
-              label="Обновление БД"
+              label={t("ov_db_update")}
               value={formatRelative(o.lastUpdateDb)}
               hint={formatDate(o.lastUpdateDb)}
             />
@@ -213,13 +213,13 @@ export function OverviewPage() {
             >
               <div className="mb-4 flex items-center justify-between">
                 <h2 id="ov-jobs" className="font-semibold">
-                  Фоновые задачи
+                  {t("ov_background_jobs")}
                 </h2>
                 <Link
                   to="/jobs"
                   className="text-sm text-accent hover:underline"
                 >
-                  Все задачи
+                  {t("ov_all_jobs")}
                 </Link>
               </div>
               <JobList jobs={o.activeJobs} />
@@ -229,32 +229,32 @@ export function OverviewPage() {
               <WafCard />
               <section className="card p-5" aria-labelledby="ov-sync">
                 <h2 id="ov-sync" className="mb-3 font-semibold">
-                  Синхронизация
+                  {t("sync_title")}
                 </h2>
                 <dl className="space-y-2 text-sm">
                   <div className="flex justify-between gap-3">
-                    <dt className="text-muted">Статус</dt>
+                    <dt className="text-muted">{t("sync_status")}</dt>
                     <dd>
                       <StatusDot
                         tone={sync.enabled ? "ok" : "muted"}
-                        label={sync.enabled ? "включена" : "выключена"}
+                        label={sync.enabled ? t("sync_on") : t("sync_off")}
                       />
                     </dd>
                   </div>
                   <div className="flex justify-between gap-3">
-                    <dt className="text-muted">Источник</dt>
+                    <dt className="text-muted">{t("sync_source")}</dt>
                     <dd className="truncate font-mono text-xs">
                       {sync.syncapi || "-"}
                     </dd>
                   </div>
                   <div className="flex justify-between gap-3">
-                    <dt className="text-muted">Последняя</dt>
+                    <dt className="text-muted">{t("sync_last")}</dt>
                     <dd>{formatRelative(sync.lastsync)}</dd>
                   </div>
                   {syncPct !== null && (
                     <div>
                       <div className="flex justify-between gap-3">
-                        <dt className="text-muted">Наполнение</dt>
+                        <dt className="text-muted">{t("sync_fill")}</dt>
                         <dd>
                           {formatNumber(syncLocal)} / {formatNumber(syncRemote)}{" "}
                           <span className="text-muted">({syncPct}%)</span>
@@ -269,13 +269,16 @@ export function OverviewPage() {
                     </div>
                   )}
                   <div className="flex justify-between gap-3">
-                    <dt className="text-muted">Трекеры</dt>
+                    <dt className="text-muted">{t("nav_trackers")}</dt>
                     <dd>
-                      {enabled} / {(o.trackers || []).length} включены
+                      {t("sync_trackers_enabled", {
+                        enabled,
+                        total: (o.trackers || []).length,
+                      })}
                     </dd>
                   </div>
                   <div className="flex justify-between gap-3">
-                    <dt className="text-muted">Конфиг</dt>
+                    <dt className="text-muted">{t("sync_config")}</dt>
                     <dd className="font-mono text-xs">
                       {o.config?.path || "-"}
                       {o.config?.format ? ` (${o.config.format})` : ""}
@@ -286,12 +289,12 @@ export function OverviewPage() {
 
               <section className="card p-5" aria-labelledby="ov-links">
                 <h2 id="ov-links" className="mb-3 font-semibold">
-                  Быстрые ссылки
+                  {t("ov_quick_links")}
                 </h2>
                 <ul className="space-y-1 text-sm">
                   {[
-                    { href: "/", label: "Открыть сайт", icon: Server },
-                    { href: "/docs/", label: "Документация", icon: BookOpen },
+                    { href: "/", label: t("open_site"), icon: Server },
+                    { href: "/docs/", label: t("docs"), icon: BookOpen },
                     { href: "/swagger/", label: "Swagger", icon: Braces },
                   ].map(({ href, label, icon: Icon }) => (
                     <li key={href}>

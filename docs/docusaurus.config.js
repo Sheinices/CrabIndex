@@ -77,6 +77,8 @@ const config = {
           // Links to the crabindex server itself (outside /docs/): raw HTML so baseUrl is not prepended.
           { type: 'html', position: 'right', value: '<a class="navbar__item navbar__link" href="/">Веб-интерфейс</a>' },
           { type: 'html', position: 'right', value: '<a class="navbar__item navbar__link" href="/swagger/">Swagger</a>' },
+          // Shows only once more than one locale is listed in `i18n.locales` above.
+          { type: 'localeDropdown', position: 'right' },
           { href: GITHUB, position: 'right', className: 'header-github-link', 'aria-label': 'GitHub' },
         ],
       },
