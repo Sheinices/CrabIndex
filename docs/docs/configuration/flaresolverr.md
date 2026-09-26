@@ -117,7 +117,7 @@ cffetch:
 
 ## Установка на сервер
 
-Установщик ставит FlareSolverr и cffetch в Docker сам: при установке он спрашивает, нужен ли обход Cloudflare, либо можно передать флаг:
+Установщик ставит FlareSolverr и cffetch в Docker сам: при установке он спрашивает, нужен ли обход Cloudflare, либо можно передать флаг. Спрашивает он только в режиме собственного парсинга (`--db parse`, см. [Источник базы](../installation.md#db-source)): при синхронизации FlareSolverr не нужен и ставится только по явному `--flaresolverr`.
 
 ```bash
 sudo bash install.sh --flaresolverr      # поставить (Docker установится автоматически)

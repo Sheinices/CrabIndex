@@ -319,6 +319,16 @@ async fn api_request(mut req: Request, next: Next, c: &AppOptions, base: &str, s
                 Err(_) => crate::app::internal_error_response(),
             };
         }
+        ("GET", "update") => {
+            let force = req.uri().query().map(|q| q.split('&').any(|kv| kv == "force=1" || kv == "force=true")).unwrap_or(false);
+            return json_response(StatusCode::OK, crate::update::check(force).await);
+        }
+        ("POST", "update/apply") => {
+            return match crate::update::apply().await {
+                Ok(v) => json_response(StatusCode::OK, v),
+                Err(e) => json_response(StatusCode::OK, json!({ "ok": false, "error": e })),
+            };
+        }
         ("GET", "logs") => {
             let v = tokio::task::spawn_blocking(|| api::list_logs(Path::new(api::LOG_DIR))).await.unwrap_or_default();
             return json_response(StatusCode::OK, Value::Array(v));

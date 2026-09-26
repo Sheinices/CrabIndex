@@ -65,7 +65,7 @@
    curl -fsSL https://raw.githubusercontent.com/sheinices/crabindex/main/scripts/install.sh | sudo bash -s -- --no-flaresolverr --yes
    ```
 
-2. Выберите путь админ-панели (`/admin` или свой). Если порт 9117 занят, установщик предложит ближайший свободный; свой порт - `--port 9120`.
+2. Выберите язык установщика (русский или английский; сразу - `--lang ru|en`), путь админ-панели (`/admin` или свой) и источник базы: синхронизация с `sync.crab.rip` (рекомендуется, `--db sync`) или собственный парсинг трекеров (`--db parse`, FlareSolverr предлагается только в этом режиме). Если порт 9117 занят, установщик предложит ближайший свободный; свой порт - `--port 9120`.
 3. Сохраните адрес админ-панели, пароль (`devkey`) и порт из итогового сообщения. Повторно: `cd /opt/crabindex && sudo -u crabindex ./crabindex admin`.
 4. Проверьте: `systemctl status crabindex`, `curl http://127.0.0.1:9117/health`.
 

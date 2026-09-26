@@ -273,6 +273,27 @@ async function handle(req, res, path, query) {
   if (waf) return send(res, waf[0], waf[1])
 
   if (path === 'overview') return send(res, 200, overview())
+  if (path === 'update') {
+    return send(res, 200, {
+      current: '1.4.0-dev',
+      available: true,
+      canSelfUpdate: true,
+      reason: null,
+      latest: {
+        tag: 'v1.5.0',
+        version: '1.5.0',
+        name: 'v1.5.0',
+        publishedAt: new Date(Date.now() - 86_400_000).toISOString(),
+        notes: '## Что нового\n- Раздел FlareSolverr в админ-панели\n- Обновление из панели\n',
+        url: 'https://github.com/sheinices/crabindex/releases/tag/v1.5.0',
+        assets: [],
+        checkedAt: new Date().toISOString(),
+      },
+      asset: { name: 'crabindex-linux-x86_64.tar.gz', url: '#', size: 17_000_000 },
+      state: { stage: 'idle', message: '', target: null, startedAt: null },
+    })
+  }
+  if (path === 'update/apply') return send(res, 200, { ok: false, error: 'В режиме разработки обновление не выполняется' })
   if (path === 'health/background-jobs') return send(res, 200, { jobs: jobs() })
   if (path === 'cron/maintenance/parseallstatus') return send(res, 200, parseAllStatus())
   if (path === 'cron/maintenance/resumeparseall') return send(res, 200, 'resumed: kinozal (12 pending)', 'text/plain; charset=utf-8')

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { NavLink, Outlet, useLocation } from 'react-router'
 import {
   Activity,
+  ArrowUpCircle,
   Cloud,
   ExternalLink,
   FileText,
@@ -19,6 +20,7 @@ import {
 import { useAuth } from './Auth.jsx'
 import { useTheme } from '../hooks/useTheme.js'
 import { getBase } from '../lib/base.js'
+import { getUpdate } from '../lib/api.js'
 
 export const NAV = [
   { to: '/', label: 'Обзор', icon: LayoutDashboard, end: true },
@@ -29,13 +31,14 @@ export const NAV = [
   { to: '/waf', label: 'WAF', icon: Shield },
   { to: '/maintenance', label: 'Обслуживание', icon: Wrench },
   { to: '/logs', label: 'Логи', icon: FileText },
+  { to: '/update', label: 'Обновление', icon: ArrowUpCircle },
 ]
 
 export function Logo({ className = 'size-8' }) {
   return <img src={`${getBase()}/icon-192.png`} alt="" className={`${className} rounded-lg`} width="32" height="32" />
 }
 
-function NavItems({ onNavigate }) {
+function NavItems({ onNavigate, updateAvailable }) {
   return (
     <ul className="space-y-1">
       {NAV.map(({ to, label, icon: Icon, end }) => (
@@ -52,6 +55,9 @@ function NavItems({ onNavigate }) {
           >
             <Icon className="size-4 shrink-0" aria-hidden="true" />
             {label}
+            {to === '/update' && updateAvailable ? (
+              <span className="ml-auto size-2 rounded-full bg-warn" role="img" aria-label="доступна новая версия" title="Доступна новая версия" />
+            ) : null}
           </NavLink>
         </li>
       ))}
@@ -63,7 +69,19 @@ export function Layout() {
   const { logout, session } = useAuth()
   const { theme, toggle } = useTheme()
   const [menuOpen, setMenuOpen] = useState(false)
+  const [updateAvailable, setUpdateAvailable] = useState(false)
   const location = useLocation()
+
+  // One check per panel load; the server caches the GitHub answer for 6 hours.
+  useEffect(() => {
+    let alive = true
+    getUpdate(false, { silent401: true })
+      .then((r) => alive && setUpdateAvailable(Boolean(r?.available)))
+      .catch(() => {})
+    return () => {
+      alive = false
+    }
+  }, [])
 
   useEffect(() => {
     const current = NAV.find((n) => (n.end ? location.pathname === n.to : location.pathname.startsWith(n.to)))
@@ -79,7 +97,7 @@ export function Layout() {
           <p className="text-xs text-muted">Админ-панель{session?.version ? ` · ${session.version}` : ''}</p>
         </div>
       </div>
-      <NavItems onNavigate={onNavigate} />
+      <NavItems updateAvailable={updateAvailable} onNavigate={onNavigate} />
       <div className="mt-auto space-y-1 border-t border-border pt-4">
         <a href="/" className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-muted hover:bg-surface-2 hover:text-fg" target="_blank" rel="noopener">
           <ExternalLink className="size-4" aria-hidden="true" /> Открыть сайт

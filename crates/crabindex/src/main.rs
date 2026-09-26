@@ -12,6 +12,7 @@ mod normalize;
 mod openapi;
 mod security;
 mod static_files;
+mod update;
 mod version;
 mod waf;
 #[cfg(test)]
@@ -193,6 +194,10 @@ async fn run(addr: SocketAddr) -> i32 {
     if let Err(e) = tokio::task::spawn_blocking(crab_core::fdb::flush_all).await {
         log::error(cat::FDB, format!("flush on shutdown failed: {e}"));
         code = 1;
+    }
+    // Installed from the admin panel: a non-zero exit makes systemd start the new binary.
+    if update::restart_requested() {
+        code = update::RESTART_EXIT_CODE;
     }
     code
 }

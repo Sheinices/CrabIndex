@@ -124,6 +124,10 @@ export const parseConfig = (payload) => post('config/parse', payload)
 export const formatConfig = (payload) => post('config/format', payload)
 export const saveConfig = (payload) => post('config', payload)
 
+// --- Self-update ---------------------------------------------------------------
+export const getUpdate = (force, opts) => get('update', { ...opts, query: force ? { force: 1 } : undefined })
+export const applyUpdate = () => post('update/apply').then(ensureOk)
+
 // --- Cloudflare bypass (FlareSolverr / cffetch) --------------------------------
 export const getCloudflareStatus = (opts) => get('cron/cloudflare/status', opts)
 export const closeBrowserSessions = (host) => post('cron/cloudflare/sessions/close', undefined, { query: { host } }).then(ensureOk)

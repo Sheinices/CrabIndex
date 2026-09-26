@@ -39,6 +39,8 @@ regex.workspace = true
 url.workspace = true
 rand.workspace = true
 sha2.workspace = true
+flate2.workspace = true
+tar.workspace = true
 hex.workspace = true
 
 [build-dependencies]

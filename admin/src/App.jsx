@@ -11,6 +11,7 @@ import { OverviewPage } from './pages/Overview.jsx'
 import { TrackersPage } from './pages/Trackers.jsx'
 import { JobsPage } from './pages/Jobs.jsx'
 import { CloudflarePage } from './pages/Cloudflare.jsx'
+import { UpdatePage } from './pages/Update.jsx'
 import { MaintenancePage } from './pages/Maintenance.jsx'
 import { LogsPage } from './pages/Logs.jsx'
 import { WafPage } from './pages/waf/Waf.jsx'
@@ -70,6 +71,7 @@ export function createAppRouter(basename = getBase()) {
           },
           { path: 'maintenance', element: <MaintenancePage /> },
           { path: 'logs', element: <LogsPage /> },
+          { path: 'update', element: <UpdatePage /> },
           {
             path: 'waf',
             element: <WafPage />,
