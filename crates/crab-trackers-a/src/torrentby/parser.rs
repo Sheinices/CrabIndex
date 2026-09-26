@@ -5,7 +5,7 @@ use tokio_util::sync::CancellationToken;
 
 use crab_core::models::TorrentDetails;
 use crab_core::net::{self, Req};
-use crab_core::parsing::tparse;
+use crab_core::parsing::{has_season_marker, tparse};
 use crab_core::rx;
 use crab_core::trackers::{self, Cancelled};
 use crab_core::{conf, fdb, time};
@@ -14,6 +14,7 @@ use super::categories::{TorrentByTitleKind, MAP};
 use crate::common::{g, match_row as m, name_before_brackets, nb, parse_int, year};
 
 const TRACKER_NAME: &str = "torrentby";
+const SERIAL_TYPES: &[&str] = &["serial"];
 
 /// Fetch + parse + upsert one listing page. An empty listing (pager past the last row)
 /// is still a fetched page (`Ok(true)`).
@@ -74,7 +75,23 @@ pub fn parse_torrents_from_html(html: &str, cat: &str) -> Vec<TorrentDetails> {
         }
 
         let url = format!("{}/{}", conf().TorrentBy.host, url);
-        let (mut name, originalname, relased) = match meta.title_kind {
+
+        // The film sections (`films`, `movies`) also list series - e.g. UKR-dubbed shows. A season
+        // marker in the title is decisive: type the row as a serial and use the serial patterns,
+        // or the film patterns keep an "[S03]" tail in `originalname` and a `movie` row stays
+        // invisible to serial card searches.
+        let movie_only = meta.types.len() == 1 && meta.types[0] == "movie";
+        let (types, kind) = if movie_only && has_season_marker(&title) {
+            let kind = match meta.title_kind {
+                TorrentByTitleKind::FilmsRu => TorrentByTitleKind::SerialRu,
+                _ => TorrentByTitleKind::SerialForeign,
+            };
+            (SERIAL_TYPES, kind)
+        } else {
+            (meta.types, meta.title_kind)
+        };
+
+        let (mut name, originalname, relased) = match kind {
             TorrentByTitleKind::FilmsForeign => parse_films_foreign(&title),
             TorrentByTitleKind::FilmsRu => parse_films_ru(&title),
             TorrentByTitleKind::SerialForeign => parse_serial_foreign(&title),
@@ -89,7 +106,7 @@ pub fn parse_torrents_from_html(html: &str, cat: &str) -> Vec<TorrentDetails> {
             continue;
         }
 
-        let mut t = TorrentDetails::new(TRACKER_NAME, meta.types, url, title);
+        let mut t = TorrentDetails::new(TRACKER_NAME, types, url, title);
         t.sid = parse_int(&sid);
         t.pir = parse_int(&pir);
         t.sizeName = size_name;
@@ -135,9 +152,11 @@ fn parse_films_ru(title: &str) -> Names {
         .unwrap_or_else(none)
 }
 
-/// Зарубежные сериалы: Name / Orig (year) … / Name / Alt / Orig [S01] (year) …
+/// Зарубежные сериалы: Name / Alt / Alt2 / Orig [S01] (year) …, Name / Alt / Orig [S01] (year) …,
+/// Name / Orig (year) … - the last slash-separated part before the season block is the original.
 fn parse_serial_foreign(title: &str) -> Names {
-    nameorig(title, r"^([^/\(\[]+) / [^/]+ / ([^/\[\(]+)(?: \[[^\]]+\])? \(((?:19|20)[0-9]{2})(?:\)|-)")
+    nameorig(title, r"^([^/\(\[]+) / [^/]+ / [^/]+ / ([^/\[\(]+)(?: \[[^\]]+\])? \(((?:19|20)[0-9]{2})(?:\)|-)")
+        .or_else(|| nameorig(title, r"^([^/\(\[]+) / [^/]+ / ([^/\[\(]+)(?: \[[^\]]+\])? \(((?:19|20)[0-9]{2})(?:\)|-)"))
         .or_else(|| nameorig(title, r"^([^/\(\[]+) / ([^/\[\(]+)(?: \[[^\]]+\])? \(((?:19|20)[0-9]{2})(?:\)|-)"))
         .or_else(|| nameorig(title, r"^([^/\(\[]+) / ([^/\[\(]+) \[[^\]]+\] \(((?:19|20)[0-9]{2})(?:\)|-)"))
         .or_else(|| nameyear(title, r"^([^/\(\[]+)(?: \[[^\]]+\])? \(((?:19|20)[0-9]{2})(?:\)|-)"))

@@ -6,7 +6,7 @@ pub mod cleanup;
 pub mod domain_dups;
 pub mod names;
 pub mod parsers;
-pub mod rutor;
+pub mod serial_types;
 
 use crab_core::fdb;
 use crab_core::models::TorrentDetails;

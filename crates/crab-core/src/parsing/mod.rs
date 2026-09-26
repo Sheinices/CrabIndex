@@ -8,11 +8,11 @@ pub use parser_log as plog;
 use crate::rx;
 
 /// True when a release title carries a season marker in brackets: `[S01]`, `[S01-03]`,
-/// `[S01E05]`, `[01x01-08 из 08]`, `[2 сезон]`. Used by trackers whose "movie" categories also
-/// list series (rutor cat 17 "Иностранные релизы") and by the matching data migration.
-/// Bracketed forms only, so a film titled "Сезон охоты" is not mistaken for a series.
+/// `[S01E05]`, `[01x01-08 из 08]` (Latin or Cyrillic "x"), `[2 сезон]`. Used by trackers whose
+/// film sections also list series (rutor cat 17, torrentby `films`, selezen) and by the matching
+/// data migration. Bracketed forms only, so a film titled "Сезон охоты" is not mistaken for a series.
 pub fn has_season_marker(title: &str) -> bool {
-    rx::is_match_i(title, r"\[(?:s\d{1,2}|\d{1,2}x\d{1,2}|[^\]]*сезон)")
+    rx::is_match_i(title, r"\[(?:s\d{1,2}|\d{1,2}[xх]\d{1,2}|[^\]]*сезон)")
 }
 
 #[cfg(test)]
@@ -25,6 +25,7 @@ mod season_marker_tests {
             "Ведьмак / Відьмак / The Witcher [S01] (2019) WEBRip 1080p | UKR",
             "Дом Дракона / House of the Dragon [S01-03] (2022-2026) WEB-DLRip-AVC",
             "Слово пацана. Кровь на асфальте [01x01-08 из 08] (2023) WEB-DL 1080p",
+            "Сериал / Show [01х01-02 из 09] (2025) WEB-DLRip",
             "Шоу [2 сезон] (2024) WEB-DL",
             "Serial [s02e05] (2020)",
         ] {

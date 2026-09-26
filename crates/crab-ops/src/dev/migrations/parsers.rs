@@ -8,12 +8,13 @@ fn trim_end_chars(s: &str, chars: &[char]) -> String {
     s.trim_end_matches(|c| chars.contains(&c)).to_string()
 }
 
-pub mod rutor {
+pub mod serial_title {
     use super::*;
 
-    /// Serial title patterns of the rutor parser (4-, 3- and 2-part foreign titles), then the
-    /// Russian one. Returns (name, originalname, year); empty strings / 0 when nothing matched.
-    pub fn parse_serial_title(title: &str) -> (String, String, i32) {
+    /// Serial title patterns shared by rutor / torrentby / selezen listings (4-, 3- and 2-part
+    /// "Name / Alt / Orig [S01] (year)" titles), then the Russian "Name [01x01] (year)" one.
+    /// Returns (name, originalname, year); empty strings / 0 when nothing matched.
+    pub fn parse(title: &str) -> (String, String, i32) {
         const FOREIGN: [&str; 3] = [
             r"^([^/]+) / [^/]+ / [^/]+ / ([^/\[]+) \[[^\]]+\] +\(([0-9]{4})(\)|-)",
             r"^([^/]+) / [^/]+ / ([^/\[]+) \[[^\]]+\] +\(([0-9]{4})(\)|-)",
@@ -43,23 +44,28 @@ pub mod rutor {
 
     #[cfg(test)]
     mod tests {
-        use super::parse_serial_title;
+        use super::parse;
 
         #[test]
         fn parses_foreign_and_russian_serial_titles() {
             assert_eq!(
-                parse_serial_title("Ведьмак / Відьмак / The Witcher [S01] (2019) WEBRip 1080p | P | UKR"),
+                parse("Ведьмак / Відьмак / The Witcher [S01] (2019) WEBRip 1080p | P | UKR"),
                 ("Ведьмак".into(), "The Witcher".into(), 2019)
             );
             assert_eq!(
-                parse_serial_title("Игра в кальмара / Гра в кальмара / Ojingeo geim / Squid Game [S01] (2021) WEB-DL"),
+                parse("Игра в кальмара / Гра в кальмара / Ojingeo geim / Squid Game [S01] (2021) WEB-DL"),
                 ("Игра в кальмара".into(), "Squid Game".into(), 2021)
             );
+            // selezen 2-part form
             assert_eq!(
-                parse_serial_title("Слово пацана. Кровь на асфальте [01x01-08 из 08] (2023) WEB-DL 1080p"),
+                parse("Очень странные дела / Stranger Things [05x01-08 из 08] (2025) WEB-DLRip-AVC от DoMiNo"),
+                ("Очень странные дела".into(), "Stranger Things".into(), 2025)
+            );
+            assert_eq!(
+                parse("Слово пацана. Кровь на асфальте [01x01-08 из 08] (2023) WEB-DL 1080p"),
                 ("Слово пацана. Кровь на асфальте".into(), String::new(), 2023)
             );
-            assert_eq!(parse_serial_title("Опасное небо / Top Gunner (2020) WEB-DL"), (String::new(), String::new(), 0));
+            assert_eq!(parse("Опасное небо / Top Gunner (2020) WEB-DL"), (String::new(), String::new(), 0));
         }
     }
 }

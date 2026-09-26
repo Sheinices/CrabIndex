@@ -40,9 +40,9 @@ export const MIGRATIONS = [
   { path: 'dev/fixkinozaldomainduplicates', label: 'kinozal: дубли доменов', description: 'Сводит записи со старых доменов к текущему host.' },
   { path: 'dev/fixultradoxdomainduplicates', label: 'ultradox: дубли доменов', description: 'Сводит записи со старых доменов к текущему host.' },
   {
-    path: 'dev/fixrutorserialtypes',
-    label: 'rutor: сериалы в категориях фильмов',
-    description: 'Раздачи с маркером сезона ([S01], [01x01]) из категорий фильмов (в т.ч. 17 «Иностранные релизы» UKR) переводит в serial, пересобирает названия и сезоны.',
+    path: 'dev/fixserialtypes',
+    label: 'Сериалы, записанные как фильмы',
+    description: 'rutor, torrentby, selezen: раздачи с маркером сезона ([S01], [01x01]) переводит из movie в serial, убирает хвост скобок из originalname, пересчитывает сезоны.',
   },
   {
     path: 'dev/removebucket',

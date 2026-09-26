@@ -46,7 +46,7 @@ simple!(remove_duplicate_aniliberty, migrations::aniliberty::remove_duplicates);
 simple!(fix_animelayer_duplicates, migrations::animelayer::fix_duplicates);
 simple!(fix_kinozal_domain_duplicates, migrations::domain_dups::fix_kinozal);
 simple!(fix_ultradox_domain_duplicates, migrations::domain_dups::fix_ultradox);
-simple!(fix_rutor_serial_types, migrations::rutor::fix_serial_types);
+simple!(fix_serial_types, migrations::serial_types::fix_serial_types);
 
 async fn find_corrupt(q: Q) -> Response {
     let n = Params::from_query(q).i32("samplesize", 20);
@@ -93,5 +93,5 @@ pub fn router() -> Router {
         .route("/dev/fixanimelayerduplicates", any(fix_animelayer_duplicates))
         .route("/dev/fixkinozaldomainduplicates", any(fix_kinozal_domain_duplicates))
         .route("/dev/fixultradoxdomainduplicates", any(fix_ultradox_domain_duplicates))
-        .route("/dev/fixrutorserialtypes", any(fix_rutor_serial_types))
+        .route("/dev/fixserialtypes", any(fix_serial_types))
 }

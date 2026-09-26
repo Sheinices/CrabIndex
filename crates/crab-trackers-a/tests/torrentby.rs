@@ -141,7 +141,13 @@ fn fixtures_yield_typed_torrents() {
         assert!(torrents.len() >= 30, "expected >=30 torrents for cat {cat}, got {}", torrents.len());
         for t in &torrents {
             assert_eq!(t.trackerName, "torrentby");
-            assert_eq!(types(t), MAP[cat].types);
+            // Film sections retype rows with a season marker (UKR-dubbed shows are listed there).
+            let expected: &[&str] = if MAP[cat].types == ["movie"] && crab_core::parsing::has_season_marker(&t.title) {
+                &["serial"]
+            } else {
+                MAP[cat].types
+            };
+            assert_eq!(types(t), expected, "{}", t.title);
             assert!(!t.name.trim().is_empty());
             assert!(!t.title.trim().is_empty());
             assert!(t.url.starts_with(&host));
@@ -202,6 +208,32 @@ fn films_foreign_parses_name_orig_year() {
         assert_eq!(t.originalname, orig);
         assert_eq!(t.relased, year);
     }
+}
+
+#[test]
+fn film_sections_retype_series_by_season_marker() {
+    // UKR-dubbed shows are listed under `films`; the season marker decides, and the serial
+    // patterns keep `originalname` clean (no "[S03]" tail).
+    let t = single("Ведьмак / Відьмак / The Witcher [S03] (2023) WEB-DL 1080p | D, P, L | UKR", "films");
+    assert_eq!(types(&t), ["serial"]);
+    assert_eq!(t.name, "Ведьмак");
+    assert_eq!(t.originalname, "The Witcher");
+    assert_eq!(t.relased, 2023);
+
+    let t = single("Игра в кальмара / Шестой раунд / Ojingeo geim / Squid Game [S01] (2021) WEB-DL 1080p | UKR", "films");
+    assert_eq!(types(&t), ["serial"]);
+    assert_eq!(t.name, "Игра в кальмара");
+    assert_eq!(t.originalname, "Squid Game");
+
+    let t = single("Слово пацана. Кровь на асфальте [01x01-08 из 08] (2023) WEB-DL 1080p", "movies");
+    assert_eq!(types(&t), ["serial"]);
+    assert_eq!(t.name, "Слово пацана. Кровь на асфальте");
+    assert_eq!(t.relased, 2023);
+
+    // A film stays a film: only bracketed markers count, not the word in a name.
+    let t = single("Сезон охоты / Open Season (2006) BDRip 1080p", "films");
+    assert_eq!(types(&t), ["movie"]);
+    assert_eq!(t.originalname, "Open Season");
 }
 
 #[test]
