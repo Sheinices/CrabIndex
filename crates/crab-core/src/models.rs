@@ -375,6 +375,10 @@ pub mod api {
         pub relased: i32,
     }
 
+    fn ser_size_i64<S: serde::Serializer>(v: &f64, s: S) -> std::result::Result<S::Ok, S::Error> {
+        s.serialize_i64(*v as i64)
+    }
+
     /// Jackett-compatible result row.
     #[derive(Clone, Debug, Serialize, Deserialize)]
     pub struct Result {
@@ -384,6 +388,7 @@ pub mod api {
         pub Details: Option<String>,
         #[serde(skip_serializing_if = "Option::is_none")]
         pub Title: Option<String>,
+        #[serde(serialize_with = "ser_size_i64")]
         pub Size: f64,
         #[serde(with = "time::net")]
         pub PublishDate: DateTime<Utc>,

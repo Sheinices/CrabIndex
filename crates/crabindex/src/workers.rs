@@ -54,3 +54,22 @@ pub fn spawn_config_reload(ct: CancellationToken) {
         }
     });
 }
+
+/// Refreshes the GitHub release check in the background (every 3 hours, after a short
+/// startup delay) so the panel's "update available" indicator is current without anyone
+/// opening the Update page. The result is cached in [`crate::update`]; failures are ignored.
+pub fn spawn_update_check(ct: CancellationToken) {
+    tokio::spawn(async move {
+        tokio::select! {
+            _ = ct.cancelled() => return,
+            _ = tokio::time::sleep(Duration::from_secs(60)) => {}
+        }
+        loop {
+            let _ = crate::update::check(true).await;
+            tokio::select! {
+                _ = ct.cancelled() => break,
+                _ = tokio::time::sleep(Duration::from_secs(3 * 3600)) => {}
+            }
+        }
+    });
+}

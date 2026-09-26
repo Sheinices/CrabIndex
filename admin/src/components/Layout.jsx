@@ -72,14 +72,20 @@ export function Layout() {
   const [updateAvailable, setUpdateAvailable] = useState(false)
   const location = useLocation()
 
-  // One check per panel load; the server caches the GitHub answer for 6 hours.
+  // Reflect the server's cached GitHub check: once on load, then every 30 minutes so a
+  // release that lands while the panel stays open lights up the indicator on its own. The
+  // server refreshes that cache in the background, so this never hits GitHub directly.
   useEffect(() => {
     let alive = true
-    getUpdate(false, { silent401: true })
-      .then((r) => alive && setUpdateAvailable(Boolean(r?.available)))
-      .catch(() => {})
+    const check = () =>
+      getUpdate(false, { silent401: true })
+        .then((r) => alive && setUpdateAvailable(Boolean(r?.available)))
+        .catch(() => {})
+    check()
+    const id = setInterval(check, 30 * 60 * 1000)
     return () => {
       alive = false
+      clearInterval(id)
     }
   }, [])
 

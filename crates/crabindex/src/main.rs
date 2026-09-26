@@ -122,6 +122,7 @@ fn spawn_workers(ct: &CancellationToken) {
     workers::spawn_filedb(ct.clone());
     crab_tracks::spawn_workers(ct.clone());
     crab_ops::spawn_workers(ct.clone());
+    workers::spawn_update_check(ct.clone());
 }
 
 async fn shutdown_signal() {
