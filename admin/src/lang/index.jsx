@@ -26,6 +26,9 @@ function baseT(key, vars) {
   return translate(ru, key, vars)
 }
 
+/** Same fallback for plain (non-hook) helpers that accept an optional `t`. */
+export const tBase = baseT
+
 /** First run: saved choice, else the browser's language if we have it, else Russian. */
 function initialLang() {
   try {

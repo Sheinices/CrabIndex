@@ -2,8 +2,10 @@ import { useId, useState } from 'react'
 import { Eye, EyeOff, Wand2 } from 'lucide-react'
 import { generateToken, stringListToText, textToStringList } from '../../lib/config.js'
 import { Toggle } from '../../components/ui.jsx'
+import { useT } from '../../lang/index.jsx'
 
 function JsonField({ id, value, onChange, describedBy }) {
+  const t = useT()
   const [text, setText] = useState(() => (value == null ? '' : JSON.stringify(value, null, 2)))
   const [error, setError] = useState('')
   return (
@@ -16,18 +18,18 @@ function JsonField({ id, value, onChange, describedBy }) {
         aria-invalid={!!error}
         aria-describedby={describedBy}
         onChange={(e) => {
-          const t = e.target.value
-          setText(t)
-          if (!t.trim()) {
+          const next = e.target.value
+          setText(next)
+          if (!next.trim()) {
             setError('')
             onChange(null)
             return
           }
           try {
-            onChange(JSON.parse(t))
+            onChange(JSON.parse(next))
             setError('')
           } catch {
-            setError('Некорректный JSON - значение не применено')
+            setError(t('sf_bad_json'))
           }
         }}
       />
@@ -38,6 +40,7 @@ function JsonField({ id, value, onChange, describedBy }) {
 
 /** One schema-driven config field. `path` is the dotted key in the config document. */
 export function SettingsField({ field, path, value, onChange }) {
+  const t = useT()
   const id = useId()
   const descId = `${id}-desc`
   const [reveal, setReveal] = useState(false)
@@ -86,7 +89,7 @@ export function SettingsField({ field, path, value, onChange }) {
     case 'select':
       control = (
         <select id={id} className="input" value={value ?? ''} aria-describedby={describedBy} onChange={(e) => onChange(e.target.value || null)}>
-          <option value="">- по умолчанию -</option>
+          <option value="">{t('sf_default_opt')}</option>
           {(field.enumValues || []).map((v) => (
             <option key={v} value={v}>
               {v}
@@ -101,7 +104,7 @@ export function SettingsField({ field, path, value, onChange }) {
           id={id}
           className="input min-h-20 font-mono text-xs"
           value={stringListToText(value)}
-          placeholder="по одному значению на строку"
+          placeholder={t('sf_one_per_line')}
           aria-describedby={describedBy}
           onChange={(e) => onChange(textToStringList(e.target.value))}
         />
@@ -124,7 +127,7 @@ export function SettingsField({ field, path, value, onChange }) {
             aria-describedby={describedBy}
             onChange={(e) => onChange(e.target.value === '' ? null : e.target.value)}
           />
-          <button type="button" className="btn" onClick={() => setReveal((r) => !r)} aria-label={reveal ? 'Скрыть' : 'Показать'} aria-pressed={reveal}>
+          <button type="button" className="btn" onClick={() => setReveal((r) => !r)} aria-label={reveal ? t('sf_hide') : t('sf_show')} aria-pressed={reveal}>
             {reveal ? <EyeOff className="size-4" aria-hidden="true" /> : <Eye className="size-4" aria-hidden="true" />}
           </button>
           {isToken ? (
@@ -135,8 +138,8 @@ export function SettingsField({ field, path, value, onChange }) {
                 onChange(generateToken())
                 setReveal(true)
               }}
-              title="Сгенерировать новый токен"
-              aria-label="Сгенерировать новый токен"
+              title={t('sf_gen_token')}
+              aria-label={t('sf_gen_token')}
             >
               <Wand2 className="size-4" aria-hidden="true" />
             </button>

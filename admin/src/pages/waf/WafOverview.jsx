@@ -9,17 +9,19 @@ import { formatDate, formatNumber, formatRelative } from '../../lib/format.js'
 import { BLOCK_REASONS, percent } from '../../lib/waf.js'
 import { DisabledNotice, Empty, SETTINGS_WAF } from './shared.jsx'
 import { useWaf } from './Waf.jsx'
+import { useT } from '../../lang/index.jsx'
 
+// Labels are i18n keys, resolved with t() inside the component.
 const SERIES = [
-  { key: 'requests', label: 'Запросы', color: 'text-chart-1', area: true },
-  { key: 'blocked', label: 'Заблокировано', color: 'text-chart-2' },
+  { key: 'requests', labelKey: 'waf_s_requests', color: 'text-chart-1', area: true },
+  { key: 'blocked', labelKey: 'waf_blocked', color: 'text-chart-2' },
 ]
 
 const STATUS_ROWS = [
-  { key: '2xx', label: '2xx успешно', bar: 'bg-ok' },
-  { key: '3xx', label: '3xx редиректы', bar: 'bg-muted' },
-  { key: '4xx', label: '4xx ошибки клиента', bar: 'bg-warn' },
-  { key: '5xx', label: '5xx ошибки сервера', bar: 'bg-danger' },
+  { key: '2xx', labelKey: 'waf_2xx', bar: 'bg-ok' },
+  { key: '3xx', labelKey: 'waf_3xx', bar: 'bg-muted' },
+  { key: '4xx', labelKey: 'waf_4xx', bar: 'bg-warn' },
+  { key: '5xx', labelKey: 'waf_5xx', bar: 'bg-danger' },
 ]
 
 const BAR_TONE = { danger: 'bg-danger', warn: 'bg-warn' }
@@ -37,8 +39,9 @@ function Stat({ icon: Icon, label, value, hint }) {
   )
 }
 
-export function Breakdown({ rows, total, empty = 'Нет данных' }) {
-  if (!(total > 0)) return <p className="text-sm text-muted">{empty}</p>
+export function Breakdown({ rows, total, empty }) {
+  const t = useT()
+  if (!(total > 0)) return <p className="text-sm text-muted">{empty ?? t('no_data')}</p>
   return (
     <ul className="space-y-3">
       {rows.map((r) => {
@@ -68,6 +71,7 @@ const windowTime = (win) => (t) => {
 }
 
 export function WafOverview() {
+  const t = useT()
   const { enabled } = useWaf()
   const [win, setWin] = useState('60m')
   const [auto, setAuto] = useState(true)
@@ -81,7 +85,9 @@ export function WafOverview() {
   const totals = o.totals || {}
   const codes = o.statusCodes || {}
   const reasons = o.blockedByReason || {}
-  const codeTotal = STATUS_ROWS.reduce((a, r) => a + (Number(codes[r.key]) || 0), 0)
+  const series = SERIES.map((s) => ({ ...s, label: t(s.labelKey) }))
+  const statusRows = STATUS_ROWS.map((r) => ({ ...r, label: t(r.labelKey) }))
+  const codeTotal = statusRows.reduce((a, r) => a + (Number(codes[r.key]) || 0), 0)
   const reasonRows = Object.keys(BLOCK_REASONS)
     .filter((k) => k !== 'manual')
     .map((k) => ({ key: k, label: BLOCK_REASONS[k].label, value: Number(reasons[k]) || 0, bar: BAR_TONE[BLOCK_REASONS[k].tone] }))
@@ -92,17 +98,17 @@ export function WafOverview() {
       {data && data.enabled === false && enabled ? <DisabledNotice /> : null}
       {data?.logRequests === false ? (
         <p role="status" className="card border-warn/40 bg-warn/10 p-4 text-sm">
-          Журнал запросов выключен (waf.logRequests) - статистика и журнал не пополняются.{' '}
+          {t('waf_log_off_note')}{' '}
           <Link to={SETTINGS_WAF} className="text-accent hover:underline">
-            Настройки WAF
+            {t('waf_settings_link')}
           </Link>
         </p>
       ) : null}
       <div className="flex flex-wrap items-center gap-3">
-        <div role="group" aria-label="Окно статистики" className="inline-flex rounded-lg border border-border p-0.5">
+        <div role="group" aria-label={t('waf_window')} className="inline-flex rounded-lg border border-border p-0.5">
           {[
-            ['60m', '60 мин'],
-            ['24h', '24 ч'],
+            ['60m', t('waf_60m')],
+            ['24h', t('waf_24h')],
           ].map(([v, l]) => (
             <button
               key={v}
@@ -115,72 +121,72 @@ export function WafOverview() {
             </button>
           ))}
         </div>
-        {o.since ? <span className="text-xs text-muted">Статистика с {formatDate(o.since)}</span> : null}
+        {o.since ? <span className="text-xs text-muted">{t('waf_since_stats', { date: formatDate(o.since) })}</span> : null}
         <div className="ml-auto flex items-center gap-3">
-          <Toggle id="waf-ov-auto" checked={auto} onChange={setAuto} label="Автообновление 10 с" />
-          <button type="button" className="btn btn-sm" onClick={reload} aria-label="Обновить">
+          <Toggle id="waf-ov-auto" checked={auto} onChange={setAuto} label={t('waf_auto10')} />
+          <button type="button" className="btn btn-sm" onClick={reload} aria-label={t('refresh')}>
             <RefreshCw className={`size-4 ${loading ? 'animate-spin' : ''}`} aria-hidden="true" />
           </button>
         </div>
       </div>
       <ErrorBox error={error} onRetry={reload} />
       {loading && !data ? (
-        <Spinner className="size-5" label="Загрузка…" />
+        <Spinner className="size-5" label={t('loading')} />
       ) : (
         <>
-          <section aria-label="Итоги" className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
-            <Stat icon={Activity} label="Запросов" value={formatNumber(totals.requests)} hint={win === '60m' ? 'за 60 минут' : 'за 24 часа'} />
+          <section aria-label={t('waf_totals')} className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            <Stat icon={Activity} label={t('requests')} value={formatNumber(totals.requests)} hint={win === '60m' ? t('waf_per_60m') : t('waf_per_24h')} />
             <Stat
               icon={ShieldBan}
-              label="Заблокировано"
+              label={t('waf_blocked')}
               value={formatNumber(totals.blocked)}
-              hint={`${percent(totals.blocked, totals.requests)}% запросов`}
+              hint={t('waf_pct_requests', { pct: percent(totals.blocked, totals.requests) })}
             />
-            <Stat icon={Users} label="Уникальных IP" value={formatNumber(totals.uniqueIps)} />
+            <Stat icon={Users} label={t('waf_unique_ips')} value={formatNumber(totals.uniqueIps)} />
             <Stat
               icon={Gauge}
-              label="Запросов/сек"
+              label={t('waf_rps')}
               value={Number.isFinite(Number(totals.rps)) ? Number(totals.rps).toLocaleString('ru-RU', { maximumFractionDigits: 2 }) : '-'}
-              hint="в среднем за окно"
+              hint={t('waf_avg_window')}
             />
           </section>
 
           <section className="card p-5" aria-labelledby="waf-tl">
             <h2 id="waf-tl" className="mb-3 font-semibold">
-              Запросы и блокировки{' '}
-              <span className="text-sm font-normal text-muted">{win === '60m' ? '· по минутам' : '· по 10 минут'}</span>
+              {t('waf_tl_title')}{' '}
+              <span className="text-sm font-normal text-muted">{win === '60m' ? t('waf_per_minute') : t('waf_per_10min')}</span>
             </h2>
-            <TimelineChart data={o.timeline} series={SERIES} formatX={windowTime(win)} label="Запросы и блокировки" />
+            <TimelineChart data={o.timeline} series={series} formatX={windowTime(win)} label={t('waf_tl_title')} />
           </section>
 
           <div className="grid gap-6 lg:grid-cols-2">
             <section className="card p-5" aria-labelledby="waf-codes">
               <h2 id="waf-codes" className="mb-4 font-semibold">
-                Коды ответа
+                {t('waf_codes')}
               </h2>
-              <Breakdown rows={STATUS_ROWS.map((r) => ({ ...r, value: Number(codes[r.key]) || 0 }))} total={codeTotal} />
+              <Breakdown rows={statusRows.map((r) => ({ ...r, value: Number(codes[r.key]) || 0 }))} total={codeTotal} />
             </section>
             <section className="card p-5" aria-labelledby="waf-reasons">
               <h2 id="waf-reasons" className="mb-4 font-semibold">
-                Причины блокировок
+                {t('waf_reasons')}
               </h2>
-              <Breakdown rows={reasonRows} total={reasonTotal} empty="Блокировок не было" />
+              <Breakdown rows={reasonRows} total={reasonTotal} empty={t('waf_no_blocks')} />
             </section>
           </div>
 
           <div className="grid gap-6 lg:grid-cols-2">
             <section aria-labelledby="waf-top-ips">
               <h2 id="waf-top-ips" className="mb-3 font-semibold">
-                Топ IP
+                {t('waf_top_ips')}
               </h2>
               <div className="table-wrap">
                 <table className="table">
                   <thead>
                     <tr>
                       <th>IP</th>
-                      <th className="text-right">Запросов</th>
-                      <th className="text-right">Блок.</th>
-                      <th>Последний</th>
+                      <th className="text-right">{t('requests')}</th>
+                      <th className="text-right">{t('blocked_short')}</th>
+                      <th>{t('last_seen')}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -198,21 +204,21 @@ export function WafOverview() {
                     ))}
                   </tbody>
                 </table>
-                {!o.topIps?.length ? <Empty>Нет данных</Empty> : null}
+                {!o.topIps?.length ? <Empty>{t('no_data')}</Empty> : null}
               </div>
             </section>
             <section aria-labelledby="waf-top-origins">
               <h2 id="waf-top-origins" className="mb-3 font-semibold">
-                Сайты-источники (Origin){' '}
-                <span className="text-sm font-normal text-muted">· с какого сайта пришёл браузерный запрос</span>
+                {t('waf_origins_title')}{' '}
+                <span className="text-sm font-normal text-muted">{t('waf_origins_hint')}</span>
               </h2>
               <div className="table-wrap">
                 <table className="table">
                   <thead>
                     <tr>
-                      <th>Сайт</th>
-                      <th className="text-right">Запросов</th>
-                      <th className="text-right">Блок.</th>
+                      <th>{t('waf_site')}</th>
+                      <th className="text-right">{t('requests')}</th>
+                      <th className="text-right">{t('blocked_short')}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -233,7 +239,7 @@ export function WafOverview() {
                     ))}
                   </tbody>
                 </table>
-                {!o.topOrigins?.length ? <Empty>Нет запросов с Origin/Referer</Empty> : null}
+                {!o.topOrigins?.length ? <Empty>{t('waf_no_origin')}</Empty> : null}
               </div>
             </section>
           </div>
@@ -241,15 +247,15 @@ export function WafOverview() {
           <div className="grid gap-6 lg:grid-cols-2">
             <section aria-labelledby="waf-top-paths">
               <h2 id="waf-top-paths" className="mb-3 font-semibold">
-                Топ путей
+                {t('waf_top_paths')}
               </h2>
               <div className="table-wrap">
                 <table className="table">
                   <thead>
                     <tr>
-                      <th>Путь</th>
-                      <th className="text-right">Запросов</th>
-                      <th className="text-right">Ошибок</th>
+                      <th>{t('waf_path')}</th>
+                      <th className="text-right">{t('requests')}</th>
+                      <th className="text-right">{t('errors_col')}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -270,21 +276,21 @@ export function WafOverview() {
                     ))}
                   </tbody>
                 </table>
-                {!o.topPaths?.length ? <Empty>Нет данных</Empty> : null}
+                {!o.topPaths?.length ? <Empty>{t('no_data')}</Empty> : null}
               </div>
             </section>
             <section aria-labelledby="waf-top-hosts">
               <h2 id="waf-top-hosts" className="mb-3 font-semibold">
-                Домены запросов (Host){' '}
-                <span className="text-sm font-normal text-muted">· на какой адрес сервера обращались</span>
+                {t('waf_hosts_title')}{' '}
+                <span className="text-sm font-normal text-muted">{t('waf_hosts_hint')}</span>
               </h2>
               <div className="table-wrap">
                 <table className="table">
                   <thead>
                     <tr>
-                      <th>Хост</th>
-                      <th className="text-right">Запросов</th>
-                      <th className="text-right">Блок.</th>
+                      <th>{t('waf_host')}</th>
+                      <th className="text-right">{t('requests')}</th>
+                      <th className="text-right">{t('blocked_short')}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -300,8 +306,8 @@ export function WafOverview() {
                               {r.host}
                             </Link>
                           ) : (
-                            <span className="text-xs text-muted" title="Запросы без заголовка Host">
-                              без Host
+                            <span className="text-xs text-muted" title={t('waf_no_host_title')}>
+                              {t('waf_no_host')}
                             </span>
                           )}
                         </td>
@@ -311,7 +317,7 @@ export function WafOverview() {
                     ))}
                   </tbody>
                 </table>
-                {!o.topHosts?.length ? <Empty>Нет данных</Empty> : null}
+                {!o.topHosts?.length ? <Empty>{t('no_data')}</Empty> : null}
               </div>
             </section>
           </div>

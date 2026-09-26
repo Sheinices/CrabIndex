@@ -8,6 +8,7 @@ import { useResult } from '../components/ResultDrawer.jsx'
 import { useConfirm } from '../components/Confirm.jsx'
 import { Modal } from '../components/Modal.jsx'
 import { PageHeader, Spinner, StatusDot } from '../components/ui.jsx'
+import { useT } from '../lang/index.jsx'
 
 function Section({ icon: Icon, title, description, children, id }) {
   return (
@@ -27,6 +28,7 @@ function Section({ icon: Icon, title, description, children, id }) {
 }
 
 function ParamsModal({ item, onClose, onSubmit }) {
+  const t = useT()
   const [values, setValues] = useState({})
   const formId = useId()
   const missing = (item.params || []).some((p) => p.required && !String(values[p.name] ?? '').trim())
@@ -40,10 +42,10 @@ function ParamsModal({ item, onClose, onSubmit }) {
       footer={
         <>
           <button type="button" className="btn" onClick={onClose}>
-            Отмена
+            {t('cancel')}
           </button>
           <button type="submit" form={formId} className={`btn ${item.destructive ? 'btn-danger' : 'btn-primary'}`} disabled={missing}>
-            <Play className="size-4" aria-hidden="true" /> Выполнить
+            <Play className="size-4" aria-hidden="true" /> {t('execute')}
           </button>
         </>
       }
@@ -74,13 +76,14 @@ function ParamsModal({ item, onClose, onSubmit }) {
             />
           </div>
         ))}
-        {item.destructive ? <p className="text-sm text-danger">Операция изменяет базу данных. Сделайте резервную копию Data/fdb.</p> : null}
+        {item.destructive ? <p className="text-sm text-danger">{t('mt_backup_note')}</p> : null}
       </form>
     </Modal>
   )
 }
 
 export function MaintenancePage() {
+  const t = useT()
   const { run } = useResult()
   const confirm = useConfirm()
   const [busy, setBusy] = useState(null)
@@ -99,19 +102,19 @@ export function MaintenancePage() {
     const m = CHECK_MODES.find((x) => x.id === mode)
     if (m.destructive) {
       const ok = await confirm({
-        title: `Проверка FileDB: ${m.label}`,
+        title: t('mt_check_confirm_title', { mode: m.label }),
         message: (
           <>
             <p>{m.description}</p>
-            <p className="text-muted">Режим {m.id} изменяет базу. Рекомендуется резервная копия Data/fdb.</p>
+            <p className="text-muted">{t('mt_check_mode_warns', { id: m.id })}</p>
           </>
         ),
         danger: true,
-        confirmLabel: 'Запустить',
+        confirmLabel: t('run'),
       })
       if (!ok) return
     }
-    await exec('check', `Проверка FileDB (${m.id})`, 'cron/maintenance/check', { mode })
+    await exec('check', t('mt_check_exec_title', { id: m.id }), 'cron/maintenance/check', { mode })
     status.reload()
   }
 
@@ -125,13 +128,11 @@ export function MaintenancePage() {
       message: (
         <>
           <p>{item.description}</p>
-          <p className="text-muted">
-            Операция проходит по всей базе и изменяет записи (<code className="font-mono">{item.path}</code>). Отменить её нельзя.
-          </p>
+          <p className="text-muted">{t('mt_mig_confirm_body', { path: item.path })}</p>
         </>
       ),
       danger: true,
-      confirmLabel: 'Выполнить',
+      confirmLabel: t('execute'),
     })
     if (ok) exec(item.path, item.label, item.path)
   }
@@ -142,14 +143,9 @@ export function MaintenancePage() {
     if (item.destructive) {
       const ok = await confirm({
         title: item.label,
-        message: (
-          <p>
-            Выполнить <code className="font-mono">{item.path}</code> с параметрами{' '}
-            <code className="font-mono">{new URLSearchParams(query).toString() || '-'}</code>?
-          </p>
-        ),
+        message: <p>{t('mt_params_confirm', { path: item.path, query: new URLSearchParams(query).toString() || '-' })}</p>,
         danger: true,
-        confirmLabel: 'Выполнить',
+        confirmLabel: t('execute'),
       })
       if (!ok) return
     }
@@ -158,11 +154,11 @@ export function MaintenancePage() {
 
   return (
     <>
-      <PageHeader title="Обслуживание" description="Проверка базы, диагностика и миграции данных" />
+      <PageHeader title={t('nav_maintenance')} description={t('mt_desc')} />
       <div className="grid gap-6 xl:grid-cols-2">
-        <Section id="mt-check" icon={Stethoscope} title="Проверка FileDB" description="cron/maintenance/check">
+        <Section id="mt-check" icon={Stethoscope} title={t('mt_check_title')} description="cron/maintenance/check">
           <fieldset className="space-y-2">
-            <legend className="sr-only">Режим проверки</legend>
+            <legend className="sr-only">{t('mt_check_mode')}</legend>
             {CHECK_MODES.map((m) => (
               <label key={m.id} className={`flex cursor-pointer gap-3 rounded-lg border p-3 ${mode === m.id ? 'border-brand bg-brand/5' : 'border-border'}`}>
                 <input type="radio" name="check-mode" value={m.id} checked={mode === m.id} onChange={() => setMode(m.id)} className="mt-1 accent-[#e85d24]" />
@@ -178,33 +174,33 @@ export function MaintenancePage() {
           <div className="mt-4 flex flex-wrap items-center gap-3">
             <button type="button" className={`btn ${mode === 'report' ? 'btn-primary' : 'btn-danger'}`} onClick={runCheck} disabled={busy === 'check' || checkRunning}>
               {busy === 'check' ? <Spinner /> : <Play className="size-4" aria-hidden="true" />}
-              Запустить проверку
+              {t('mt_check_run')}
             </button>
-            <button type="button" className="btn" onClick={() => exec('status', 'Статус проверки', 'cron/maintenance/status')}>
-              Статус
+            <button type="button" className="btn" onClick={() => exec('status', t('mt_check_title_status'), 'cron/maintenance/status')}>
+              {t('status')}
             </button>
             <span className="text-sm text-muted" aria-live="polite">
-              <StatusDot tone={checkRunning ? 'brand' : 'muted'} label={checkRunning ? 'проверка выполняется' : 'не выполняется'} />
+              <StatusDot tone={checkRunning ? 'brand' : 'muted'} label={checkRunning ? t('mt_check_running') : t('mt_check_idle')} />
             </span>
           </div>
         </Section>
 
         <div className="space-y-6">
-          <Section id="mt-db" icon={Database} title="База данных" description="Сброс изменений на диск">
-            <button type="button" className="btn" onClick={() => exec('jsondb', 'Сохранение БД', 'jsondb/save')} disabled={busy === 'jsondb'}>
+          <Section id="mt-db" icon={Database} title={t('mt_db_title')} description={t('mt_db_desc')}>
+            <button type="button" className="btn" onClick={() => exec('jsondb', t('mt_db_save_title'), 'jsondb/save')} disabled={busy === 'jsondb'}>
               {busy === 'jsondb' ? <Spinner /> : <HardDriveDownload className="size-4" aria-hidden="true" />}
-              Сохранить БД (jsondb/save)
+              {t('mt_db_save_btn')}
             </button>
           </Section>
-          <Section id="mt-cf" icon={CloudLightning} title="Cloudflare" description="Прогрев сессии FlareSolverr">
-            <button type="button" className="btn" onClick={() => exec('cf', 'Прогрев Cloudflare', 'cron/cloudflare/warmup')} disabled={busy === 'cf'}>
+          <Section id="mt-cf" icon={CloudLightning} title={t('mt_cf_title')} description={t('mt_cf_desc')}>
+            <button type="button" className="btn" onClick={() => exec('cf', t('mt_cf_warmup_title'), 'cron/cloudflare/warmup')} disabled={busy === 'cf'}>
               {busy === 'cf' ? <Spinner /> : <CloudLightning className="size-4" aria-hidden="true" />}
-              Прогреть (warmup)
+              {t('mt_cf_warmup_btn')}
             </button>
           </Section>
         </div>
 
-        <Section id="mt-diag" icon={Search} title="Диагностика" description="Только чтение, базу не изменяет">
+        <Section id="mt-diag" icon={Search} title={t('mt_diag_title')} description={t('mt_diag_desc')}>
           <ul className="divide-y divide-border">
             {DIAGNOSTICS.map((d) => (
               <li key={d.path} className="flex flex-wrap items-center justify-between gap-3 py-3 first:pt-0 last:pb-0">
@@ -214,14 +210,14 @@ export function MaintenancePage() {
                 </div>
                 <button type="button" className="btn btn-sm" onClick={() => setParamsFor(d)} disabled={busy === d.path}>
                   {busy === d.path ? <Spinner className="size-3.5" /> : null}
-                  Запустить
+                  {t('run')}
                 </button>
               </li>
             ))}
           </ul>
         </Section>
 
-        <Section id="mt-mig" icon={ShieldAlert} title="Миграции и исправления" description="Изменяют данные - перед запуском сделайте резервную копию">
+        <Section id="mt-mig" icon={ShieldAlert} title={t('mt_mig_title')} description={t('mt_mig_desc')}>
           <ul className="divide-y divide-border">
             {MIGRATIONS.map((m) => (
               <li key={m.path} className="flex flex-wrap items-center justify-between gap-3 py-3 first:pt-0 last:pb-0">
@@ -233,7 +229,7 @@ export function MaintenancePage() {
                 </div>
                 <button type="button" className="btn btn-sm border-danger/40 text-danger" onClick={() => runMigration(m)} disabled={busy === m.path}>
                   {busy === m.path ? <Spinner className="size-3.5" /> : null}
-                  Выполнить
+                  {t('execute')}
                 </button>
               </li>
             ))}

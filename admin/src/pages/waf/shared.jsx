@@ -19,6 +19,7 @@ import {
   validateBotRule,
 } from '../../lib/waf.js'
 import { formatDate } from '../../lib/format.js'
+import { useT } from '../../lang/index.jsx'
 
 export const SETTINGS_WAF = '/settings?group=waf'
 
@@ -40,21 +41,23 @@ export function ReasonBadge({ reason }) {
 }
 
 export function IpStateBadge({ state, banExpires }) {
+  const t = useT()
   const meta = IP_STATES[state] || IP_STATES.normal
-  const text = state === 'banned' && banExpires ? `забанен до ${formatDate(banExpires)}` : meta.label
+  const text = state === 'banned' && banExpires ? t('waf_banned_until', { date: formatDate(banExpires) }) : meta.label
   return <Badge tone={meta.tone}>{text}</Badge>
 }
 
 export function DisabledNotice() {
+  const t = useT()
   return (
     <div role="status" className="card mb-6 flex flex-wrap items-center gap-3 border-warn/40 bg-warn/10 p-4 text-sm">
       <ShieldOff className="size-5 shrink-0 text-warn" aria-hidden="true" />
       <div className="min-w-0 flex-1">
-        <p className="font-medium">WAF выключен</p>
-        <p className="text-muted">Запросы не фильтруются и статистика не собирается. Включите его в настройках (waf.enable).</p>
+        <p className="font-medium">{t('waf_disabled')}</p>
+        <p className="text-muted">{t('waf_disabled_desc')}</p>
       </div>
       <Link to={SETTINGS_WAF} className="btn btn-sm">
-        Открыть настройки WAF
+        {t('waf_open_settings')}
       </Link>
     </div>
   )
@@ -65,6 +68,7 @@ export function DisabledNotice() {
  * text (`{ok:false,error}` or HTTP error) otherwise. Returns true on success.
  */
 export function useWafAction() {
+  const t = useT()
   const toast = useToast()
   return useCallback(
     async (fn, success, after) => {
@@ -74,21 +78,22 @@ export function useWafAction() {
         await after?.()
         return true
       } catch (e) {
-        if (e?.status !== 401) toast.error('Ошибка WAF', e?.message || String(e))
+        if (e?.status !== 401) toast.error(t('waf_err_title'), e?.message || String(e))
         return false
       }
     },
-    [toast],
+    [toast, t],
   )
 }
 
+// i18n keys; rendered with t() inside RuleDialog.
 export const EXPIRY_OPTIONS = [
-  { value: '', label: 'Бессрочно' },
-  { value: '60', label: '1 час' },
-  { value: '1440', label: '24 часа' },
-  { value: '10080', label: '7 дней' },
-  { value: '43200', label: '30 дней' },
-  { value: 'custom', label: 'Свой срок…' },
+  { value: '', labelKey: 'waf_exp_forever' },
+  { value: '60', labelKey: 'waf_exp_1h' },
+  { value: '1440', labelKey: 'waf_exp_24h' },
+  { value: '10080', labelKey: 'waf_exp_7d' },
+  { value: '43200', labelKey: 'waf_exp_30d' },
+  { value: 'custom', labelKey: 'waf_exp_custom' },
 ]
 
 /** Parse the minutes input; returns a positive integer or null. */
@@ -97,17 +102,8 @@ export function parseMinutes(v) {
   return Number.isInteger(n) && n > 0 ? n : null
 }
 
-const DIALOG_TEXT = {
-  blacklist: { title: 'Добавить в чёрный список', description: 'Запросы с адреса будут получать 403.' },
-  whitelist: { title: 'Добавить в белый список', description: 'Адрес не будет ограничиваться и баниться.' },
-  domainBlacklist: { title: 'Заблокировать домен', description: 'Запросы с Origin/Referer этого домена и его поддоменов будут получать 403.' },
-  domainWhitelist: {
-    title: 'Разрешить домен',
-    description: 'Запросы с этого домена и его поддоменов не проверяются лимитом, ловушками и фильтром User-Agent.',
-  },
-  botBlocked: { title: 'Заблокировать бота', description: 'Запросы с таким User-Agent будут получать 403. IP не банится.' },
-  botAllowed: { title: 'Разрешить бота', description: 'Запросы с таким User-Agent не блокируются правилами ботов, даже если заблокирована вся категория.' },
-}
+// i18n key pairs per list: `waf_dlg_<list>_t` (title) / `waf_dlg_<list>_d` (description).
+const DIALOG_LISTS = ['blacklist', 'whitelist', 'domainBlacklist', 'domainWhitelist', 'botBlocked', 'botAllowed']
 
 /**
  * Add-to-list form (IP, domain or bot blacklist / whitelist). `onSubmit({list, value,
@@ -115,6 +111,7 @@ const DIALOG_TEXT = {
  * `builtinDomains` is used to reject builtin conflicts before the request.
  */
 export function RuleDialog({ open, onClose, list, initialValue = '', you, onSubmit, lockValue = false, builtinDomains = [] }) {
+  const t = useT()
   const ids = useId()
   const [value, setValue] = useState(initialValue)
   const [comment, setComment] = useState('')
@@ -136,7 +133,7 @@ export function RuleDialog({ open, onClose, list, initialValue = '', you, onSubm
   const domain = isDomainList(list)
   const bot = isBotList(list)
   const black = list === 'blacklist' || list === 'domainBlacklist' || list === 'botBlocked'
-  const text = DIALOG_TEXT[list] || DIALOG_TEXT.blacklist
+  const dlg = DIALOG_LISTS.includes(list) ? list : 'blacklist'
   const submit = async (e) => {
     e.preventDefault()
     const v = domain ? normalizeDomain(value) : value.trim()
@@ -149,7 +146,7 @@ export function RuleDialog({ open, onClose, list, initialValue = '', you, onSubm
     let expiresMinutes
     if (expiry === 'custom') {
       expiresMinutes = parseMinutes(custom)
-      if (!expiresMinutes) return setError('Срок: целое число минут больше нуля')
+      if (!expiresMinutes) return setError(t('waf_custom_minutes_err'))
     } else if (expiry) expiresMinutes = Number(expiry)
     setError(null)
     setBusy(true)
@@ -165,14 +162,14 @@ export function RuleDialog({ open, onClose, list, initialValue = '', you, onSubm
     <Modal
       open={open}
       onClose={onClose}
-      title={text.title}
-      description={text.description}
+      title={t(`waf_dlg_${dlg}_t`)}
+      description={t(`waf_dlg_${dlg}_d`)}
       size="sm"
     >
       <form id={`${ids}-form`} onSubmit={submit} className="space-y-4" noValidate>
         <div>
           <label className="label" htmlFor={`${ids}-v`}>
-            {bot ? 'Имя бота или часть User-Agent' : domain ? 'Домен' : 'IP-адрес или CIDR'}
+            {bot ? t('waf_label_bot') : domain ? t('domain') : t('waf_label_ip')}
           </label>
           <input
             id={`${ids}-v`}
@@ -180,7 +177,7 @@ export function RuleDialog({ open, onClose, list, initialValue = '', you, onSubm
             value={value}
             readOnly={lockValue}
             onChange={(e) => setValue(e.target.value)}
-            placeholder={bot ? 'AhrefsBot или MyScraper/1.0' : domain ? 'example.com' : '203.0.113.7 или 198.51.100.0/24'}
+            placeholder={bot ? t('waf_ph_bot') : domain ? 'example.com' : t('waf_ph_ip')}
             aria-invalid={!!error}
             aria-describedby={error ? `${ids}-err` : undefined}
             data-autofocus={lockValue ? undefined : true}
@@ -190,19 +187,19 @@ export function RuleDialog({ open, onClose, list, initialValue = '', you, onSubm
         </div>
         <div>
           <label className="label" htmlFor={`${ids}-c`}>
-            Комментарий (необязательно)
+            {t('waf_comment_opt')}
           </label>
           <input id={`${ids}-c`} className="input" value={comment} onChange={(e) => setComment(e.target.value)} maxLength={200} />
         </div>
         <div className="grid gap-3 sm:grid-cols-2">
           <div>
             <label className="label" htmlFor={`${ids}-e`}>
-              Срок действия
+              {t('waf_expiry')}
             </label>
             <select id={`${ids}-e`} className="input" value={expiry} onChange={(e) => setExpiry(e.target.value)}>
               {EXPIRY_OPTIONS.map((o) => (
                 <option key={o.value} value={o.value}>
-                  {o.label}
+                  {t(o.labelKey)}
                 </option>
               ))}
             </select>
@@ -210,16 +207,14 @@ export function RuleDialog({ open, onClose, list, initialValue = '', you, onSubm
           {expiry === 'custom' ? (
             <div>
               <label className="label" htmlFor={`${ids}-m`}>
-                Минут
+                {t('waf_minutes')}
               </label>
               <input id={`${ids}-m`} className="input" inputMode="numeric" value={custom} onChange={(e) => setCustom(e.target.value)} placeholder="90" />
             </div>
           ) : null}
         </div>
-        {domain ? <p className="text-xs text-muted">Поддомены входят автоматически. Можно вставить адрес целиком: схема, порт, путь и «*.» отбрасываются.</p> : null}
-        {bot ? (
-          <p className="text-xs text-muted">Имя из каталога или любая часть заголовка User-Agent, от 3 символов. Регистр не важен.</p>
-        ) : null}
+        {domain ? <p className="text-xs text-muted">{t('waf_domain_hint')}</p> : null}
+        {bot ? <p className="text-xs text-muted">{t('waf_bot_hint')}</p> : null}
         {error ? (
           <p id={`${ids}-err`} role="alert" className="text-sm text-danger">
             {error}
@@ -227,10 +222,10 @@ export function RuleDialog({ open, onClose, list, initialValue = '', you, onSubm
         ) : null}
         <div className="flex justify-end gap-2 pt-1">
           <button type="button" className="btn" onClick={onClose}>
-            Отмена
+            {t('cancel')}
           </button>
           <button type="submit" className={`btn ${black ? 'btn-danger' : 'btn-primary'}`} disabled={busy}>
-            {black ? 'Заблокировать' : 'Добавить'}
+            {black ? t('block') : t('add')}
           </button>
         </div>
       </form>
@@ -240,6 +235,7 @@ export function RuleDialog({ open, onClose, list, initialValue = '', you, onSubm
 
 /** Temporary ban with a custom duration. */
 export function BanDialog({ open, onClose, ip, you, onSubmit }) {
+  const t = useT()
   const ids = useId()
   const [minutes, setMinutes] = useState('120')
   const [error, setError] = useState(null)
@@ -255,7 +251,7 @@ export function BanDialog({ open, onClose, ip, you, onSubmit }) {
   const submit = async (e) => {
     e.preventDefault()
     const m = parseMinutes(minutes)
-    if (!m) return setError('Укажите целое число минут больше нуля')
+    if (!m) return setError(t('waf_ban_minutes_err'))
     const self = selfBlockError(ip, you)
     if (self) return setError(self)
     setBusy(true)
@@ -265,15 +261,15 @@ export function BanDialog({ open, onClose, ip, you, onSubmit }) {
   }
 
   return (
-    <Modal open={open} onClose={onClose} title="Бан на свой срок" description={ip} size="sm">
+    <Modal open={open} onClose={onClose} title={t('waf_ban_custom_title')} description={ip} size="sm">
       <form onSubmit={submit} className="space-y-4" noValidate>
         <div>
           <label className="label" htmlFor={`${ids}-m`}>
-            Длительность, минут
+            {t('waf_ban_duration')}
           </label>
           <input id={`${ids}-m`} className="input" inputMode="numeric" value={minutes} onChange={(e) => setMinutes(e.target.value)} data-autofocus />
           <div className="mt-2 flex flex-wrap gap-1.5">
-            {[...BAN_PRESETS, { minutes: 10080, label: '7 д' }].map((p) => (
+            {[...BAN_PRESETS, { minutes: 10080, label: t('waf_7d') }].map((p) => (
               <button key={p.minutes} type="button" className="btn btn-sm" onClick={() => setMinutes(String(p.minutes))}>
                 {p.label}
               </button>
@@ -287,10 +283,10 @@ export function BanDialog({ open, onClose, ip, you, onSubmit }) {
         ) : null}
         <div className="flex justify-end gap-2">
           <button type="button" className="btn" onClick={onClose}>
-            Отмена
+            {t('cancel')}
           </button>
           <button type="submit" className="btn btn-danger" disabled={busy}>
-            Забанить
+            {t('waf_ban_btn')}
           </button>
         </div>
       </form>

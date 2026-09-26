@@ -19,6 +19,7 @@ import { useTheme } from '../../hooks/useTheme.js'
 import { formatDate } from '../../lib/format.js'
 import { SettingsField } from './SettingsField.jsx'
 import { ACCESS_LABELS, DiffDialog } from './DiffDialog.jsx'
+import { useT } from '../../lang/index.jsx'
 
 const CodeEditor = lazy(() => import('./CodeEditor.jsx'))
 
@@ -34,30 +35,29 @@ function FieldGrid({ fields, data, onChange, prefix }) {
 }
 
 function TrackersGroup({ group, data, onChange }) {
+  const t = useT()
   const [q, setQ] = useState('')
-  const list = (group.trackers || []).filter((t) => {
+  const list = (group.trackers || []).filter((tr) => {
     const s = q.trim().toLowerCase()
     if (!s) return true
-    return t.title.toLowerCase().includes(s) || String(getByPath(data, `${t.id}.host`) ?? '').toLowerCase().includes(s)
+    return tr.title.toLowerCase().includes(s) || String(getByPath(data, `${tr.id}.host`) ?? '').toLowerCase().includes(s)
   })
   return (
     <div className="space-y-3">
       <div className="relative max-w-sm">
         <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted" aria-hidden="true" />
-        <input type="search" className="input pl-9" placeholder="Поиск трекера или хоста" aria-label="Поиск трекера" value={q} onChange={(e) => setQ(e.target.value)} />
+        <input type="search" className="input pl-9" placeholder={t('st_search_tracker_host')} aria-label={t('tr_search')} value={q} onChange={(e) => setQ(e.target.value)} />
       </div>
-      <p className="text-xs text-muted">
-        Показано {list.length} из {(group.trackers || []).length}
-      </p>
-      {list.map((t) => (
-        <details key={t.id} className="group rounded-xl border border-border">
+      <p className="text-xs text-muted">{t('st_shown_of', { shown: list.length, total: (group.trackers || []).length })}</p>
+      {list.map((tr) => (
+        <details key={tr.id} className="group rounded-xl border border-border">
           <summary className="flex cursor-pointer list-none items-center gap-3 px-4 py-3 [&::-webkit-details-marker]:hidden">
-            <span className="font-medium">{t.title}</span>
-            <span className="truncate font-mono text-xs text-muted">{String(getByPath(data, `${t.id}.host`) ?? '')}</span>
+            <span className="font-medium">{tr.title}</span>
+            <span className="truncate font-mono text-xs text-muted">{String(getByPath(data, `${tr.id}.host`) ?? '')}</span>
             <ChevronDown className="ml-auto size-4 shrink-0 transition-transform group-open:rotate-180" aria-hidden="true" />
           </summary>
           <div className="border-t border-border p-4">
-            <FieldGrid fields={t.fields} data={data} onChange={onChange} prefix={t.id} />
+            <FieldGrid fields={tr.fields} data={data} onChange={onChange} prefix={tr.id} />
           </div>
         </details>
       ))}
@@ -66,14 +66,15 @@ function TrackersGroup({ group, data, onChange }) {
 }
 
 function SavedAccessDialog({ info, onClose }) {
+  const t = useT()
   const toast = useToast()
   if (!info) return null
   const copy = async () => {
     try {
       await navigator.clipboard.writeText(info.url)
-      toast.info('Адрес скопирован')
+      toast.info(t('st_addr_copied'))
     } catch {
-      toast.error('Не удалось скопировать')
+      toast.error(t('copy_failed'))
     }
   }
   const urlChanged = info.changes.some((k) => k === 'admin.path' || k === 'admin.token')
@@ -81,16 +82,16 @@ function SavedAccessDialog({ info, onClose }) {
     <Modal
       open
       onClose={onClose}
-      title="Доступ к админ-панели изменён"
-      description="Конфигурация сохранена."
+      title={t('st_access_changed_title')}
+      description={t('st_config_saved')}
       footer={
         <>
           <button type="button" className="btn" onClick={onClose}>
-            Закрыть
+            {t('close')}
           </button>
           {urlChanged && info.enabled ? (
             <a className="btn btn-primary" href={info.url}>
-              <ExternalLink className="size-4" aria-hidden="true" /> Перейти по новому адресу
+              <ExternalLink className="size-4" aria-hidden="true" /> {t('st_go_new_addr')}
             </a>
           ) : null}
         </>
@@ -99,28 +100,31 @@ function SavedAccessDialog({ info, onClose }) {
       <div className="space-y-3 text-sm">
         <ul className="list-disc pl-5 text-muted">
           {info.changes.map((k) => (
-            <li key={k}>{ACCESS_LABELS[k] || k}</li>
+            <li key={k}>{t(ACCESS_LABELS[k] || k)}</li>
           ))}
         </ul>
-        {!info.enabled ? <p className="text-danger">Админ-панель отключена (admin.enable = false). После применения конфигурации она станет недоступна.</p> : null}
+        {!info.enabled ? <p className="text-danger">{t('st_admin_disabled_note')}</p> : null}
         <div>
-          <p className="label">Адрес входа</p>
+          <p className="label">{t('st_entry_addr')}</p>
           <div className="flex gap-2">
             <code className="input overflow-x-auto font-mono text-xs whitespace-nowrap">{info.url}</code>
-            <button type="button" className="btn" onClick={copy} aria-label="Скопировать адрес">
+            <button type="button" className="btn" onClick={copy} aria-label={t('st_copy_addr')}>
               <Copy className="size-4" aria-hidden="true" />
             </button>
           </div>
         </div>
-        {urlChanged ? <p>Текущая сессия привязана к старому адресу - сохраните новый адрес, старый перестанет открываться.</p> : null}
-        {info.changes.includes('devkey') ? <p>Для следующего входа используйте новый dev-ключ (devkey).</p> : null}
-        <p className="text-xs text-muted">Адрес и ключ также выводит команда <code className="font-mono">crabindex admin</code>.</p>
+        {urlChanged ? <p>{t('st_session_old_addr')}</p> : null}
+        {info.changes.includes('devkey') ? <p>{t('st_use_new_devkey')}</p> : null}
+        <p className="text-xs text-muted">
+          {t('st_cmd_note_prefix')} <code className="font-mono">crabindex admin</code>.
+        </p>
       </div>
     </Modal>
   )
 }
 
 export default function SettingsPage() {
+  const t = useT()
   const toast = useToast()
   const confirm = useConfirm()
   const { theme } = useTheme()
@@ -150,7 +154,7 @@ export default function SettingsPage() {
     setLoadError(null)
     try {
       const res = await apiClient.getConfig(fmt)
-      if (res?.ok === false) throw new Error(res.error || 'Не удалось загрузить конфигурацию')
+      if (res?.ok === false) throw new Error(res.error || t('st_err_load'))
       let sch = res.schema
       if (!sch) sch = (await apiClient.getConfigSchema())?.schema
       const s = withAdminGroup(sch || { groups: [] })
@@ -170,7 +174,7 @@ export default function SettingsPage() {
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [t])
 
   useEffect(() => {
     load()
@@ -190,12 +194,12 @@ export default function SettingsPage() {
   useEffect(() => {
     if (blocker.state !== 'blocked') return
     confirm({
-      title: 'Несохранённые изменения',
-      message: <p>Уйти со страницы? Изменения конфигурации будут потеряны.</p>,
-      confirmLabel: 'Уйти',
+      title: t('st_unsaved_title'),
+      message: <p>{t('st_unsaved_msg')}</p>,
+      confirmLabel: t('st_leave'),
       danger: true,
     }).then((ok) => (ok ? blocker.proceed() : blocker.reset()))
-  }, [blocker, confirm])
+  }, [blocker, confirm, t])
 
   const onFieldChange = useCallback((path, value) => {
     setFormData((d) => setByPath(d, path, value))
@@ -206,7 +210,7 @@ export default function SettingsPage() {
   const payload = async () => {
     if (mode === 'form') return { data: deepClone(formData), format }
     const parsed = await apiClient.parseConfig({ content: raw, format })
-    if (!parsed?.ok || !parsed.data) throw new Error(parsed?.error || 'Не удалось разобрать конфигурацию')
+    if (!parsed?.ok || !parsed.data) throw new Error(parsed?.error || t('st_err_parse'))
     return { data: parsed.data, format }
   }
 
@@ -215,7 +219,7 @@ export default function SettingsPage() {
     try {
       await fn()
     } catch (e) {
-      if (e?.status !== 401) toast.error('Ошибка', e?.message || String(e))
+      if (e?.status !== 401) toast.error(t('error'), e?.message || String(e))
     } finally {
       setBusy(false)
     }
@@ -226,11 +230,11 @@ export default function SettingsPage() {
       if (next === mode) return
       if (next === 'raw') {
         const r = await apiClient.renderConfig({ data: formData, format })
-        if (!r?.ok) throw new Error(r?.error || 'Не удалось сформировать текст')
+        if (!r?.ok) throw new Error(r?.error || t('st_err_render'))
         setRaw(r.content || '')
       } else {
         const p = await apiClient.parseConfig({ content: raw, format })
-        if (!p?.ok || !p.data) throw new Error(p?.error || 'Не удалось разобрать конфигурацию')
+        if (!p?.ok || !p.data) throw new Error(p?.error || t('st_err_parse'))
         setFormData(p.data)
         setRev((x) => x + 1)
       }
@@ -243,7 +247,7 @@ export default function SettingsPage() {
       if (mode === 'raw') {
         const { data } = await payload()
         const r = await apiClient.renderConfig({ data, format: next })
-        if (!r?.ok) throw new Error(r?.error || 'Не удалось сформировать текст')
+        if (!r?.ok) throw new Error(r?.error || t('st_err_render'))
         setRaw(r.content || '')
       }
       setFormat(next)
@@ -257,22 +261,22 @@ export default function SettingsPage() {
       const adminErrors = validateAdminSection(p.data)
       const merged = { ...res, errors: [...(res?.errors || []), ...adminErrors], ok: res?.ok !== false && adminErrors.length === 0 }
       setValidation(merged)
-      if (merged.ok && !merged.warnings?.length) toast.success('Конфигурация корректна')
-      else if (merged.ok) toast.info('Корректна, есть предупреждения')
-      else toast.error('В конфигурации есть ошибки')
+      if (merged.ok && !merged.warnings?.length) toast.success(t('st_valid_ok'))
+      else if (merged.ok) toast.info(t('st_valid_warn'))
+      else toast.error(t('st_valid_err'))
     })
 
   const formatDoc = () =>
     guard(async () => {
       const p = await payload()
       const res = await apiClient.formatConfig(p)
-      if (!res?.ok) throw new Error(res?.error || 'Не удалось отформатировать')
+      if (!res?.ok) throw new Error(res?.error || t('st_err_format'))
       if (res.data) setFormData(res.data)
       setRaw(res.content || '')
       setMode('raw')
       setDirty(true)
       setRev((x) => x + 1)
-      toast.success('Отформатировано')
+      toast.success(t('st_formatted'))
     })
 
   const prepareSave = () =>
@@ -287,9 +291,9 @@ export default function SettingsPage() {
     guard(async () => {
       const { payload: p, access } = pending
       const res = await apiClient.saveConfig(p)
-      if (!res?.ok) throw new Error(res?.error || res?.message || 'Не удалось сохранить')
+      if (!res?.ok) throw new Error(res?.error || res?.message || t('st_err_save'))
       setPending(null)
-      toast.success('Сохранено', res.message)
+      toast.success(t('st_saved'), res.message)
       if (access.length) {
         setAccessInfo({ changes: access, url: adminEntryUrl(p.data), enabled: getByPath(p.data, 'admin.enable') !== false })
       }
@@ -299,7 +303,7 @@ export default function SettingsPage() {
 
   const reload = async () => {
     if (dirty) {
-      const ok = await confirm({ title: 'Перезагрузить конфигурацию?', message: <p>Несохранённые изменения будут потеряны.</p>, danger: true, confirmLabel: 'Перезагрузить' })
+      const ok = await confirm({ title: t('st_reload_title'), message: <p>{t('st_reload_msg')}</p>, danger: true, confirmLabel: t('st_reload') })
       if (!ok) return
     }
     load(format)
@@ -308,32 +312,32 @@ export default function SettingsPage() {
   const groups = useMemo(() => schema?.groups || [], [schema])
   const group = groups.find((g) => g.id === activeGroup) || groups[0]
 
-  if (loading && !schema) return <Spinner className="size-5" label="Загрузка конфигурации…" />
+  if (loading && !schema) return <Spinner className="size-5" label={t('st_loading_config')} />
 
   return (
     <>
       <PageHeader
-        title="Настройки"
+        title={t('nav_settings')}
         description={
           <>
             <span className="font-mono">{meta.path || 'init.yaml'}</span>
-            {meta.lastModifiedUtc ? ` · изменён ${formatDate(meta.lastModifiedUtc)}` : ''}
-            {dirty ? <span className="ml-2 font-medium text-warn">· есть несохранённые изменения</span> : null}
+            {meta.lastModifiedUtc ? t('st_modified', { date: formatDate(meta.lastModifiedUtc) }) : ''}
+            {dirty ? <span className="ml-2 font-medium text-warn">{t('st_dirty')}</span> : null}
           </>
         }
         actions={
           <>
             <button type="button" className="btn btn-sm" onClick={reload} disabled={busy}>
-              <RefreshCw className="size-4" aria-hidden="true" /> Перезагрузить
+              <RefreshCw className="size-4" aria-hidden="true" /> {t('st_reload')}
             </button>
             <button type="button" className="btn btn-sm" onClick={formatDoc} disabled={busy}>
-              <Sparkles className="size-4" aria-hidden="true" /> Форматировать
+              <Sparkles className="size-4" aria-hidden="true" /> {t('st_format')}
             </button>
             <button type="button" className="btn btn-sm" onClick={validate} disabled={busy}>
-              <FileCheck2 className="size-4" aria-hidden="true" /> Проверить
+              <FileCheck2 className="size-4" aria-hidden="true" /> {t('st_validate')}
             </button>
             <button type="button" className="btn btn-primary btn-sm" onClick={prepareSave} disabled={busy}>
-              {busy ? <Spinner /> : <Save className="size-4" aria-hidden="true" />} Сохранить…
+              {busy ? <Spinner /> : <Save className="size-4" aria-hidden="true" />} {t('st_save_ellipsis')}
             </button>
           </>
         }
@@ -341,10 +345,10 @@ export default function SettingsPage() {
       <ErrorBox error={loadError} onRetry={() => load(format)} />
 
       <div className="mb-4 flex flex-wrap items-center gap-3">
-        <div role="group" aria-label="Режим редактора" className="inline-flex rounded-lg border border-border p-0.5">
+        <div role="group" aria-label={t('st_editor_mode')} className="inline-flex rounded-lg border border-border p-0.5">
           {[
-            { id: 'form', label: 'Форма', icon: ListTree },
-            { id: 'raw', label: 'Текст', icon: Code2 },
+            { id: 'form', label: t('st_mode_form'), icon: ListTree },
+            { id: 'raw', label: t('st_mode_raw'), icon: Code2 },
           ].map(({ id, label, icon: Icon }) => (
             <button
               key={id}
@@ -359,7 +363,7 @@ export default function SettingsPage() {
           ))}
         </div>
         <label className="flex items-center gap-2 text-sm">
-          <span className="text-muted">Формат</span>
+          <span className="text-muted">{t('st_format_label')}</span>
           <select className="input w-auto py-1.5" value={format} onChange={(e) => changeFormat(e.target.value)} disabled={busy}>
             <option value="yaml">YAML</option>
             <option value="json">JSON</option>
@@ -367,7 +371,8 @@ export default function SettingsPage() {
         </label>
         <p className="flex items-center gap-1.5 text-xs text-muted">
           <KeyRound className="size-3.5 text-accent" aria-hidden="true" />
-          Изменение <code className="font-mono">admin.path</code>, <code className="font-mono">admin.token</code> или <code className="font-mono">devkey</code> меняет адрес входа или ключ.
+          {t('st_key_note_prefix')} <code className="font-mono">admin.path</code>, <code className="font-mono">admin.token</code> {t('or')}{' '}
+          <code className="font-mono">devkey</code> {t('st_key_note_suffix')}
         </p>
       </div>
 
@@ -378,7 +383,7 @@ export default function SettingsPage() {
         >
           <p className="flex items-center gap-2 font-medium">
             {validation.ok ? <CheckCircle2 className="size-4 text-ok" aria-hidden="true" /> : null}
-            {validation.ok ? 'Конфигурация корректна' : 'Ошибки валидации'}
+            {validation.ok ? t('st_valid_ok') : t('st_valid_errors')}
           </p>
           {[...(validation.errors || []), ...(validation.warnings || []).map((w) => `⚠ ${w}`)].length ? (
             <ul className="mt-1 list-disc pl-5">
@@ -396,12 +401,12 @@ export default function SettingsPage() {
       ) : null}
 
       {mode === 'raw' ? (
-        <Suspense fallback={<Spinner label="Загрузка редактора…" />}>
+        <Suspense fallback={<Spinner label={t('st_loading_editor')} />}>
           <CodeEditor
             value={raw}
             format={format}
             theme={theme}
-            label="Конфигурация"
+            label={t('st_config_label')}
             onChange={(v) => {
               setRaw(v)
               setDirty(true)
@@ -410,9 +415,9 @@ export default function SettingsPage() {
         </Suspense>
       ) : (
         <div className="grid gap-6 lg:grid-cols-[14rem_1fr]">
-          <nav aria-label="Группы настроек">
+          <nav aria-label={t('st_groups')}>
             <label className="lg:hidden">
-              <span className="sr-only">Группа</span>
+              <span className="sr-only">{t('st_group')}</span>
               <select className="input" value={group?.id || ''} onChange={(e) => setActiveGroup(e.target.value)}>
                 {groups.map((g) => (
                   <option key={g.id} value={g.id}>
@@ -445,9 +450,9 @@ export default function SettingsPage() {
               {group.description ? <p className="mt-1 mb-4 text-sm text-muted">{group.description}</p> : <div className="mb-4" />}
               {group.id === 'admin' ? (
                 <div className="mb-4 rounded-lg border border-brand/40 bg-brand/10 px-3 py-2 text-sm">
-                  Текущий адрес входа: <code className="font-mono text-xs break-all">{adminEntryUrl(original).replace(/\?.*$/, (m) => (m.length > 1 ? '?••••••' : ''))}</code>
+                  {t('st_current_entry')} <code className="font-mono text-xs break-all">{adminEntryUrl(original).replace(/\?.*$/, (m) => (m.length > 1 ? '?••••••' : ''))}</code>
                   <br />
-                  <span className="text-muted">После изменения пути или токена откроется только новый адрес.</span>
+                  <span className="text-muted">{t('st_after_change_note')}</span>
                 </div>
               ) : null}
               {group.trackers ? (
@@ -457,7 +462,7 @@ export default function SettingsPage() {
               )}
             </section>
           ) : (
-            <p className="text-sm text-muted">Схема конфигурации пуста.</p>
+            <p className="text-sm text-muted">{t('st_schema_empty')}</p>
           )}
         </div>
       )}

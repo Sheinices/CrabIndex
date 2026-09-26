@@ -2,18 +2,21 @@ import { AlertTriangle, KeyRound, Save } from 'lucide-react'
 import { Modal } from '../../components/Modal.jsx'
 import { Spinner } from '../../components/ui.jsx'
 import { maskDiffEntry } from '../../lib/config.js'
+import { useT } from '../../lang/index.jsx'
 
-const CHANGE_LABEL = { added: 'добавлено', removed: 'удалено', modified: 'изменено' }
+// i18n keys (see lang/*.js); render with `t(MAP[k] || k)` so unknown values fall through as-is.
+const CHANGE_LABEL = { added: 'change_added', removed: 'change_removed', modified: 'change_modified' }
 const CHANGE_TONE = { added: 'text-ok', removed: 'text-danger', modified: 'text-warn' }
 
 export const ACCESS_LABELS = {
-  'admin.enable': 'admin.enable - включение панели',
-  'admin.path': 'admin.path - адрес панели',
-  'admin.token': 'admin.token - токен в адресе входа',
-  devkey: 'devkey - ключ входа',
+  'admin.enable': 'access_admin_enable',
+  'admin.path': 'access_admin_path',
+  'admin.token': 'access_admin_token',
+  devkey: 'access_devkey',
 }
 
 export function DiffDialog({ open, diff, extraErrors = [], accessChanges = [], sensitiveFields, busy, onClose, onConfirm }) {
+  const t = useT()
   const entries = (diff?.diffs || []).map((d) => maskDiffEntry(d, sensitiveFields))
   const validation = diff?.validation
   const errors = [...(validation?.errors || []), ...extraErrors]
@@ -26,16 +29,16 @@ export function DiffDialog({ open, diff, extraErrors = [], accessChanges = [], s
       open={open}
       onClose={onClose}
       size="lg"
-      title="Предпросмотр изменений"
-      description={count ? `Изменений: ${count}. Секретные значения скрыты.` : 'Изменений нет.'}
+      title={t('dd_title')}
+      description={count ? t('dd_desc_count', { n: count }) : t('dd_no_changes')}
       footer={
         <>
           <button type="button" className="btn" onClick={onClose}>
-            Отмена
+            {t('cancel')}
           </button>
           <button type="button" className="btn btn-primary" onClick={onConfirm} disabled={!canSave || busy}>
             {busy ? <Spinner /> : <Save className="size-4" aria-hidden="true" />}
-            Сохранить
+            {t('save')}
           </button>
         </>
       }
@@ -43,7 +46,7 @@ export function DiffDialog({ open, diff, extraErrors = [], accessChanges = [], s
       <div className="space-y-4">
         {errors.length ? (
           <div role="alert" className="rounded-lg border border-danger/40 bg-danger/10 px-3 py-2 text-sm text-danger">
-            <p className="font-medium">Ошибки - сохранение невозможно:</p>
+            <p className="font-medium">{t('dd_errors')}</p>
             <ul className="mt-1 list-disc pl-5">
               {errors.map((e) => (
                 <li key={e}>{e}</li>
@@ -53,7 +56,7 @@ export function DiffDialog({ open, diff, extraErrors = [], accessChanges = [], s
         ) : null}
         {validation?.warnings?.length ? (
           <div className="rounded-lg border border-warn/40 bg-warn/10 px-3 py-2 text-sm text-warn">
-            <p className="font-medium">Предупреждения:</p>
+            <p className="font-medium">{t('dd_warnings')}</p>
             <ul className="mt-1 list-disc pl-5">
               {validation.warnings.map((w) => (
                 <li key={w}>{w}</li>
@@ -65,13 +68,13 @@ export function DiffDialog({ open, diff, extraErrors = [], accessChanges = [], s
           <div className="flex gap-3 rounded-lg border border-brand/50 bg-brand/10 px-3 py-2 text-sm">
             <KeyRound className="mt-0.5 size-4 shrink-0 text-accent" aria-hidden="true" />
             <div>
-              <p className="font-medium">Меняется доступ к админ-панели</p>
+              <p className="font-medium">{t('dd_access_changing')}</p>
               <ul className="mt-1 list-disc pl-5 text-muted">
                 {accessChanges.map((k) => (
-                  <li key={k}>{ACCESS_LABELS[k] || k}</li>
+                  <li key={k}>{t(ACCESS_LABELS[k] || k)}</li>
                 ))}
               </ul>
-              <p className="mt-1 text-muted">После сохранения будет показан новый адрес входа. Сохраните его - старый перестанет работать.</p>
+              <p className="mt-1 text-muted">{t('dd_access_note')}</p>
             </div>
           </div>
         ) : null}
@@ -80,9 +83,9 @@ export function DiffDialog({ open, diff, extraErrors = [], accessChanges = [], s
             <table className="table text-xs">
               <thead>
                 <tr>
-                  <th scope="col">Ключ</th>
-                  <th scope="col">Было</th>
-                  <th scope="col">Стало</th>
+                  <th scope="col">{t('dd_col_key')}</th>
+                  <th scope="col">{t('dd_col_old')}</th>
+                  <th scope="col">{t('dd_col_new')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -90,8 +93,8 @@ export function DiffDialog({ open, diff, extraErrors = [], accessChanges = [], s
                   <tr key={e.path}>
                     <td className="font-mono break-all">
                       {e.path}
-                      <span className={`ml-2 whitespace-nowrap ${CHANGE_TONE[e.change] || 'text-muted'}`}>{CHANGE_LABEL[e.change] || e.change}</span>
-                      {e.sensitive ? <AlertTriangle className="ml-1 inline size-3 text-warn" aria-label="секретное значение" /> : null}
+                      <span className={`ml-2 whitespace-nowrap ${CHANGE_TONE[e.change] || 'text-muted'}`}>{t(CHANGE_LABEL[e.change] || e.change)}</span>
+                      {e.sensitive ? <AlertTriangle className="ml-1 inline size-3 text-warn" aria-label={t('dd_secret')} /> : null}
                     </td>
                     <td className="max-w-56 font-mono break-all text-muted">{e.oldText}</td>
                     <td className="max-w-56 font-mono break-all">{e.newText}</td>
@@ -101,7 +104,7 @@ export function DiffDialog({ open, diff, extraErrors = [], accessChanges = [], s
             </table>
           </div>
         ) : (
-          <p className="text-sm text-muted">Конфигурация совпадает с сохранённой.</p>
+          <p className="text-sm text-muted">{t('dd_same')}</p>
         )}
       </div>
     </Modal>

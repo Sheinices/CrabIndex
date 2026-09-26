@@ -72,45 +72,37 @@ pub async fn search_combined(req: &mut IndexerSearchRequest) -> Vec<Result> {
     let category = build_category_dict(&req.categories);
     let is_serial = req.is_serial;
 
+    // `search_results` is synchronous and heavy: it opens and inflates gzip shards from disk and
+    // scans them on the calling thread. Run it under `block_in_place` so a slow disk (stats
+    // recount, index save, sync) stalls only this request instead of parking a tokio worker and
+    // starving every other request on the API.
     if req.card_mode {
-        let card = jackett_service::search_results(
-            req.api_key.as_deref(),
-            query.as_deref(),
-            title_ru.as_deref(),
-            title_en.as_deref(),
-            req.year,
-            category.as_ref(),
-            is_serial,
-            req.rq_num,
-        );
+        let card = tokio::task::block_in_place(|| {
+            jackett_service::search_results(
+                req.api_key.as_deref(),
+                query.as_deref(),
+                title_ru.as_deref(),
+                title_en.as_deref(),
+                req.year,
+                category.as_ref(),
+                is_serial,
+                req.rq_num,
+            )
+        });
         let empty = card.is_empty();
         batches.push(card);
         if empty {
             for variant in build_query_variants(query.as_deref(), title_ru.as_deref(), title_en.as_deref(), &settings) {
-                batches.push(jackett_service::search_results(
-                    req.api_key.as_deref(),
-                    Some(&variant),
-                    None,
-                    None,
-                    0,
-                    None,
-                    is_serial,
-                    req.rq_num,
-                ));
+                batches.push(tokio::task::block_in_place(|| {
+                    jackett_service::search_results(req.api_key.as_deref(), Some(&variant), None, None, 0, None, is_serial, req.rq_num)
+                }));
             }
         }
     } else {
         for variant in build_query_variants(query.as_deref(), title_ru.as_deref(), title_en.as_deref(), &settings) {
-            batches.push(jackett_service::search_results(
-                req.api_key.as_deref(),
-                Some(&variant),
-                None,
-                None,
-                0,
-                None,
-                is_serial,
-                req.rq_num,
-            ));
+            batches.push(tokio::task::block_in_place(|| {
+                jackett_service::search_results(req.api_key.as_deref(), Some(&variant), None, None, 0, None, is_serial, req.rq_num)
+            }));
         }
     }
 

@@ -9,10 +9,12 @@ import { formatDate, formatNumber, formatRelative } from '../../lib/format.js'
 import { BOT_STATUS, botCategoryWarning, botRuleOf } from '../../lib/waf.js'
 import { Badge, Empty, RuleDialog, useWafAction } from './shared.jsx'
 import { ListSection } from './WafRules.jsx'
+import { useT } from '../../lang/index.jsx'
 
 const arr = (v) => (Array.isArray(v) ? v : [])
 
 function CategoryCard({ category, names, onToggle }) {
+  const t = useT()
   const c = category
   const warning = botCategoryWarning(c.id)
   const headingId = `waf-bots-cat-${c.id}`
@@ -25,19 +27,19 @@ function CategoryCard({ category, names, onToggle }) {
           </h3>
           <p className="text-xs text-muted">{c.description}</p>
         </div>
-        {c.blockedCategory ? <Badge tone="danger">блокируется</Badge> : null}
+        {c.blockedCategory ? <Badge tone="danger">{t('waf_bot_blocking')}</Badge> : null}
       </div>
       <dl className="grid grid-cols-3 gap-2 text-sm">
         <div>
-          <dt className="text-xs text-muted">Запросов</dt>
+          <dt className="text-xs text-muted">{t('requests')}</dt>
           <dd className="tabular-nums">{formatNumber(c.requests)}</dd>
         </div>
         <div>
-          <dt className="text-xs text-muted">Блок.</dt>
+          <dt className="text-xs text-muted">{t('blocked_short')}</dt>
           <dd className={`tabular-nums ${c.blocked ? 'text-danger' : 'text-muted'}`}>{formatNumber(c.blocked)}</dd>
         </div>
         <div>
-          <dt className="text-xs text-muted">Ботов</dt>
+          <dt className="text-xs text-muted">{t('waf_bots_count')}</dt>
           <dd className="tabular-nums">{formatNumber(c.botCount)}</dd>
         </div>
       </dl>
@@ -49,18 +51,19 @@ function CategoryCard({ category, names, onToggle }) {
       ) : null}
       {names.length ? (
         <details className="text-xs">
-          <summary className="cursor-pointer text-muted hover:text-fg">Сигнатуры каталога · {names.length}</summary>
+          <summary className="cursor-pointer text-muted hover:text-fg">{t('waf_catalog_sigs')} · {names.length}</summary>
           <p className="mt-1 font-mono break-words text-muted">{names.join(', ')}</p>
         </details>
       ) : null}
       <div className="mt-auto pt-1">
-        <Toggle id={`waf-bots-block-${c.id}`} checked={!!c.blockedCategory} onChange={(v) => onToggle(c, v)} label="Блокировать всю категорию" />
+        <Toggle id={`waf-bots-block-${c.id}`} checked={!!c.blockedCategory} onChange={(v) => onToggle(c, v)} label={t('waf_block_category')} />
       </div>
     </section>
   )
 }
 
 export function WafBots() {
+  const t = useT()
   const confirm = useConfirm()
   const run = useWafAction()
   const [adding, setAdding] = useState(null)
@@ -76,43 +79,44 @@ export function WafBots() {
   const toggleCategory = async (c, block) => {
     const warning = block ? botCategoryWarning(c.id) : null
     const ok = await confirm({
-      title: block ? `Блокировать категорию «${c.label}»?` : `Снять блокировку категории «${c.label}»?`,
+      title: block ? t('waf_block_cat_q', { label: c.label }) : t('waf_unblock_cat_q', { label: c.label }),
       message: (
         <>
-          <p>
-            {block
-              ? 'Все запросы от ботов этой категории будут получать 403 (IP не банится). Исключения можно добавить в список разрешённых ботов.'
-              : 'Боты этой категории снова смогут обращаться к серверу, кроме заблокированных отдельными правилами.'}
-          </p>
+          <p>{block ? t('waf_block_cat_msg') : t('waf_unblock_cat_msg')}</p>
           {warning ? <p className="font-medium text-warn">{warning}</p> : null}
         </>
       ),
-      confirmLabel: block ? 'Блокировать' : 'Снять блокировку',
+      confirmLabel: block ? t('waf_block_btn') : t('waf_unblock_btn'),
       danger: block,
     })
-    if (ok) await run(() => setWafBotCategory(c.id, block), block ? `Категория заблокирована: ${c.label}` : `Блокировка снята: ${c.label}`, reload)
+    if (ok)
+      await run(
+        () => setWafBotCategory(c.id, block),
+        block ? t('waf_cat_blocked', { label: c.label }) : t('waf_cat_unblocked', { label: c.label }),
+        reload,
+      )
   }
 
-  const setRobots = (v) => run(() => setWafRobots(v), v ? 'robots.txt: индексация запрещена' : 'robots.txt: как раньше', reload)
+  const setRobots = (v) => run(() => setWafRobots(v), v ? t('waf_robots_on') : t('waf_robots_off'), reload)
 
   const quickRule = (list, name) =>
-    run(() => addWafBotRule({ list, value: name }), list === 'botBlocked' ? `Бот заблокирован: ${name}` : `Бот разрешён: ${name}`, reload)
+    run(() => addWafBotRule({ list, value: name }), list === 'botBlocked' ? t('waf_bot_blocked_t', { name }) : t('waf_bot_allowed_t', { name }), reload)
 
   const removeRule = async (list, value) => {
     const ok = await confirm({
-      title: 'Снять правило?',
+      title: t('waf_remove_rule_q'),
       message: (
         <p>
-          <span className="font-mono">{value}</span> будет удалён из списка «{list === 'botBlocked' ? 'Заблокированные боты' : 'Разрешённые боты'}».
+          <span className="font-mono">{value}</span> {t('waf_delete_rule_msg', { list: t(`waf_list_${list}_t`) })}
         </p>
       ),
-      confirmLabel: 'Снять правило',
+      confirmLabel: t('waf_remove_rule_btn'),
       danger: list === 'botAllowed',
     })
-    if (ok) await run(() => deleteWafBotRule(list, value), `Правило снято: ${value}`, reload)
+    if (ok) await run(() => deleteWafBotRule(list, value), t('waf_rule_removed', { value }), reload)
   }
 
-  if (loading && !data) return <Spinner className="size-5" label="Загрузка…" />
+  if (loading && !data) return <Spinner className="size-5" label={t('loading')} />
 
   return (
     <div className="space-y-6">
@@ -120,14 +124,8 @@ export function WafBots() {
       <div role="note" className="card flex gap-3 p-4 text-sm">
         <Bot className="mt-0.5 size-5 shrink-0 text-muted" aria-hidden="true" />
         <div className="space-y-1">
-          <p>
-            Боты - автоматические клиенты: поисковые роботы, AI-краулеры, SEO-сервисы, превью ссылок, мониторинг, сканеры и скрипты. WAF узнаёт их по заголовку User-Agent
-            по встроенному каталогу сигнатур и считает статистику.
-          </p>
-          <p className="text-muted">
-            Блокировка отвечает 403 без бана IP и проверяется после чёрных списков IP и доменов. На белый список IP, локальную сеть и белый список доменов она не действует. По
-            умолчанию ничего не блокируется. Клиенты синхронизации (CrabIndex, Jackett, Prowlarr, Prisma) в каталог не входят.
-          </p>
+          <p>{t('waf_bots_intro1')}</p>
+          <p className="text-muted">{t('waf_bots_intro2')}</p>
         </div>
       </div>
 
@@ -136,21 +134,17 @@ export function WafBots() {
           <h2 id="waf-robots" className="font-semibold">
             robots.txt
           </h2>
-          <p className="text-xs text-muted">
-            {rules.robotsDisallow
-              ? 'На /robots.txt отдаётся «User-agent: * / Disallow: /» - вежливые краулеры перестают заходить. Заблокированные боты тоже получают этот файл.'
-              : 'Сейчас /robots.txt отдаётся как обычно (файл веб-интерфейса, если он включён).'}
-          </p>
+          <p className="text-xs text-muted">{rules.robotsDisallow ? t('waf_robots_on_desc') : t('waf_robots_off_desc')}</p>
         </div>
-        <Toggle id="waf-robots-toggle" checked={!!rules.robotsDisallow} onChange={setRobots} label="robots.txt: запретить индексацию" />
+        <Toggle id="waf-robots-toggle" checked={!!rules.robotsDisallow} onChange={setRobots} label={t('waf_robots_toggle')} />
       </section>
 
       <section aria-labelledby="waf-bot-cats" className="space-y-3">
         <div className="flex items-center justify-between gap-2">
           <h2 id="waf-bot-cats" className="font-semibold">
-            Категории
+            {t('waf_categories')}
           </h2>
-          <button type="button" className="btn btn-sm" onClick={reload} aria-label="Обновить">
+          <button type="button" className="btn btn-sm" onClick={reload} aria-label={t('refresh')}>
             <RefreshCw className={`size-4 ${loading ? 'animate-spin' : ''}`} aria-hidden="true" />
           </button>
         </div>
@@ -163,22 +157,22 @@ export function WafBots() {
 
       <section aria-labelledby="waf-bots-seen">
         <h2 id="waf-bots-seen" className="mb-3 font-semibold">
-          Замеченные боты <span className="text-sm font-normal text-muted">· {rows.length}</span>
+          {t('waf_bots_seen')} <span className="text-sm font-normal text-muted">· {rows.length}</span>
         </h2>
         <div className="table-wrap">
           <table className="table">
             <thead>
               <tr>
-                <th>Бот</th>
-                <th>Категория</th>
-                <th className="text-right">Запросов</th>
-                <th className="text-right">Блок.</th>
+                <th>{t('waf_bot')}</th>
+                <th>{t('waf_category')}</th>
+                <th className="text-right">{t('requests')}</th>
+                <th className="text-right">{t('blocked_short')}</th>
                 <th className="text-right">IP</th>
-                <th>Последний</th>
-                <th>Пути</th>
-                <th>Статус</th>
+                <th>{t('last_seen')}</th>
+                <th>{t('waf_paths')}</th>
+                <th>{t('status')}</th>
                 <th>
-                  <span className="sr-only">Действия</span>
+                  <span className="sr-only">{t('actions')}</span>
                 </th>
               </tr>
             </thead>
@@ -221,19 +215,19 @@ export function WafBots() {
                     </td>
                     <td className="text-right whitespace-nowrap">
                       {rule ? (
-                        <button type="button" className="btn btn-sm" onClick={() => removeRule(rule.list, rule.entry.value)} aria-label={`Снять правило для ${b.name}`}>
-                          <Undo2 className="size-4" aria-hidden="true" /> Снять правило
+                        <button type="button" className="btn btn-sm" onClick={() => removeRule(rule.list, rule.entry.value)} aria-label={t('waf_remove_rule_for', { name: b.name })}>
+                          <Undo2 className="size-4" aria-hidden="true" /> {t('waf_remove_rule_btn')}
                         </button>
                       ) : (
                         <span className="inline-flex gap-1">
                           {b.status !== 'blocked' ? (
-                            <button type="button" className="btn btn-sm btn-danger" onClick={() => quickRule('botBlocked', b.name)} aria-label={`Блокировать ${b.name}`}>
-                              <ShieldBan className="size-4" aria-hidden="true" /> Блокировать
+                            <button type="button" className="btn btn-sm btn-danger" onClick={() => quickRule('botBlocked', b.name)} aria-label={t('waf_block_name', { name: b.name })}>
+                              <ShieldBan className="size-4" aria-hidden="true" /> {t('waf_block_btn')}
                             </button>
                           ) : null}
                           {b.status !== 'allowed' ? (
-                            <button type="button" className="btn btn-sm" onClick={() => quickRule('botAllowed', b.name)} aria-label={`Разрешить ${b.name}`}>
-                              <Check className="size-4" aria-hidden="true" /> Разрешить
+                            <button type="button" className="btn btn-sm" onClick={() => quickRule('botAllowed', b.name)} aria-label={t('waf_allow_name', { name: b.name })}>
+                              <Check className="size-4" aria-hidden="true" /> {t('allow')}
                             </button>
                           ) : null}
                         </span>
@@ -244,19 +238,16 @@ export function WafBots() {
               })}
             </tbody>
           </table>
-          {!rows.length ? <Empty>Ботов пока не было (или журнал запросов выключен)</Empty> : null}
+          {!rows.length ? <Empty>{t('waf_no_bots')}</Empty> : null}
         </div>
       </section>
 
       <section aria-labelledby="waf-bot-rules" className="space-y-3">
         <div>
           <h2 id="waf-bot-rules" className="font-semibold">
-            Свои правила
+            {t('waf_own_rules')}
           </h2>
-          <p className="text-xs text-muted">
-            Значение - имя бота из каталога или любая часть User-Agent (от 3 символов, регистр не важен). Разрешённые боты важнее заблокированных и заблокированных
-            категорий. Библиотеки вроде curl и python-requests используют и легитимные скрипты - блокируйте их осознанно.
-          </p>
+          <p className="text-xs text-muted">{t('waf_own_rules_desc')}</p>
         </div>
         <div className="grid gap-6 lg:grid-cols-2">
           {['botBlocked', 'botAllowed'].map((list) => (
@@ -276,7 +267,7 @@ export function WafBots() {
         open={!!adding}
         list={adding || 'botBlocked'}
         onClose={() => setAdding(null)}
-        onSubmit={(payload) => run(() => addWafBotRule(payload), `Добавлено: ${payload.value}`, reload)}
+        onSubmit={(payload) => run(() => addWafBotRule(payload), t('waf_added', { value: payload.value }), reload)}
       />
     </div>
   )

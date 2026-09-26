@@ -26,6 +26,12 @@ import { LangProvider, useT } from './lang/index.jsx'
 // The settings editor pulls in CodeMirror - load it on demand.
 const SettingsPage = lazy(() => import('./pages/settings/Settings.jsx'))
 
+/** Suspense fallback for the lazily-loaded settings editor (a component so it can use useT). */
+function EditorFallback() {
+  const t = useT()
+  return <Spinner className="size-5" label={t('st_loading_editor')} />
+}
+
 function Gate() {
   const { status, error, refresh } = useAuth()
   const t = useT()
@@ -67,7 +73,7 @@ export function createAppRouter(basename = getBase()) {
           {
             path: 'settings',
             element: (
-              <Suspense fallback={<Spinner className="size-5" label="Загрузка редактора…" />}>
+              <Suspense fallback={<EditorFallback />}>
                 <SettingsPage />
               </Suspense>
             ),

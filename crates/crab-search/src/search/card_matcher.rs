@@ -53,6 +53,39 @@ fn shard_rows(key: &str) -> Vec<TorrentDetails> {
         .collect()
 }
 
+/// Type of content to match, from the client's `is_serial` and the first `Category[]` value.
+///
+/// `is_serial == 0` (unknown) is derived from the category as before. An explicit `1` (movie)
+/// or `2` (serial) is normally trusted - except when it contradicts the category family
+/// (`20xx` = movies, `50xx` = serials): then the two signals came from different card fields
+/// and one of them is wrong, so we search both types (`0`) rather than return the wrong half.
+/// Clients derive them differently (Prisma: `is_serial` from `original_name`, `Category[]` from
+/// `number_of_seasons`), and cards from non-TMDB sources routinely have only one of those set -
+/// with a strict `1` such a series card got a handful of results instead of hundreds.
+pub fn effective_is_serial(is_serial: i32, category: Option<&str>) -> i32 {
+    let Some(cat) = category else { return is_serial };
+    match is_serial {
+        0 => {
+            if cat.contains("5020") || cat.contains("2010") {
+                3
+            } else if cat.contains("5080") {
+                4
+            } else if cat.contains("5070") {
+                5
+            } else if cat.starts_with("20") {
+                1
+            } else if cat.starts_with("50") {
+                2
+            } else {
+                0
+            }
+        }
+        1 if cat.starts_with("50") => 0,
+        2 if cat.starts_with("20") => 0,
+        other => other,
+    }
+}
+
 #[allow(clippy::too_many_arguments)]
 pub fn search(
     query: Option<&str>,
@@ -87,21 +120,7 @@ pub fn search(
         }
     }
 
-    if is_serial == 0 {
-        if let Some(cat) = category.and_then(|c| c.values().next()) {
-            if cat.contains("5020") || cat.contains("2010") {
-                is_serial = 3;
-            } else if cat.contains("5080") {
-                is_serial = 4;
-            } else if cat.contains("5070") {
-                is_serial = 5;
-            } else if cat.starts_with("20") {
-                is_serial = 1;
-            } else if cat.starts_with("50") {
-                is_serial = 2;
-            }
-        }
-    }
+    is_serial = effective_is_serial(is_serial, category.and_then(|c| c.values().next()).map(String::as_str));
 
     if nb(title.as_deref()) || nb(title_original.as_deref()) {
         // exact search
@@ -242,4 +261,43 @@ pub fn search(
     }
 
     torrents
+}
+
+#[cfg(test)]
+mod tests {
+    use super::effective_is_serial;
+
+    #[test]
+    fn unknown_type_is_derived_from_category() {
+        assert_eq!(effective_is_serial(0, Some("2000")), 1);
+        assert_eq!(effective_is_serial(0, Some("5000")), 2);
+        assert_eq!(effective_is_serial(0, Some("5020")), 3);
+        assert_eq!(effective_is_serial(0, Some("2010")), 3);
+        assert_eq!(effective_is_serial(0, Some("5080")), 4);
+        assert_eq!(effective_is_serial(0, Some("2000,5070")), 5);
+        assert_eq!(effective_is_serial(0, Some("8000")), 0);
+        assert_eq!(effective_is_serial(0, None), 0);
+    }
+
+    #[test]
+    fn explicit_type_is_trusted_when_it_agrees_with_category() {
+        assert_eq!(effective_is_serial(1, Some("2000")), 1);
+        assert_eq!(effective_is_serial(1, Some("2000,5070")), 1);
+        assert_eq!(effective_is_serial(2, Some("5000")), 2);
+        assert_eq!(effective_is_serial(2, Some("5000,5070")), 2);
+        assert_eq!(effective_is_serial(1, None), 1);
+        assert_eq!(effective_is_serial(2, None), 2);
+        assert_eq!(effective_is_serial(-1, Some("5000")), -1);
+    }
+
+    #[test]
+    fn conflicting_type_and_category_widen_to_any() {
+        // Prisma: series card without `original_name` → is_serial=1 but Category[]=5000.
+        assert_eq!(effective_is_serial(1, Some("5000")), 0);
+        // Film card with `original_name` set → is_serial=2 but Category[]=2000.
+        assert_eq!(effective_is_serial(2, Some("2000")), 0);
+        // Sub-types never come with an explicit 1/2 from clients; leave them alone.
+        assert_eq!(effective_is_serial(3, Some("2000")), 3);
+        assert_eq!(effective_is_serial(5, Some("2000")), 5);
+    }
 }

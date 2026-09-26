@@ -9,6 +9,7 @@ import { useConfirm } from '../components/Confirm.jsx'
 import { Modal } from '../components/Modal.jsx'
 import { ErrorBox, PageHeader, ProgressBar, Spinner, StatusDot } from '../components/ui.jsx'
 import { formatNumber } from '../lib/format.js'
+import { useT } from '../lang/index.jsx'
 
 export function parseAllProgress(pa) {
   if (!pa) return null
@@ -19,6 +20,7 @@ export function parseAllProgress(pa) {
 }
 
 function ParamsDialog({ state, onClose, onRun }) {
+  const t = useT()
   const [values, setValues] = useState({})
   const formId = useId()
   if (!state) return null
@@ -33,10 +35,10 @@ function ParamsDialog({ state, onClose, onRun }) {
       footer={
         <>
           <button type="button" className="btn" onClick={onClose}>
-            Отмена
+            {t('cancel')}
           </button>
           <button type="submit" form={formId} className="btn btn-primary">
-            <Play className="size-4" aria-hidden="true" /> Запустить
+            <Play className="size-4" aria-hidden="true" /> {t('run')}
           </button>
         </>
       }
@@ -66,13 +68,14 @@ function ParamsDialog({ state, onClose, onRun }) {
             />
           </div>
         ))}
-        <p className="text-xs text-muted">Пустые поля - значения сервера по умолчанию.</p>
+        <p className="text-xs text-muted">{t('tr_empty_defaults')}</p>
       </form>
     </Modal>
   )
 }
 
 export function TrackersPage() {
+  const t = useT()
   const { data, error, loading, reload } = usePolling(() => getOverview(), 15_000)
   const { run } = useResult()
   const confirm = useConfirm()
@@ -106,8 +109,8 @@ export function TrackersPage() {
     if (action.heavy) {
       const ok = await confirm({
         title: `${action.label} - ${tracker.name || tracker.slug}`,
-        message: <p>{action.description}. Задача может занять несколько часов и нагружает трекер. Запустить?</p>,
-        confirmLabel: 'Запустить',
+        message: <p>{t('tr_heavy_confirm', { desc: action.description })}</p>,
+        confirmLabel: t('run'),
       })
       if (!ok) return
     }
@@ -117,11 +120,11 @@ export function TrackersPage() {
   return (
     <>
       <PageHeader
-        title="Трекеры"
-        description="Ручной запуск парсеров. Ответ сервера показывается во всплывающем окне."
+        title={t('nav_trackers')}
+        description={t('tr_desc')}
         actions={
           <button type="button" className="btn btn-sm" onClick={reload}>
-            <RefreshCw className="size-4" aria-hidden="true" /> Обновить
+            <RefreshCw className="size-4" aria-hidden="true" /> {t('refresh')}
           </button>
         }
       />
@@ -131,47 +134,47 @@ export function TrackersPage() {
         <input
           type="search"
           className="input pl-9"
-          placeholder="Поиск трекера"
-          aria-label="Поиск трекера"
+          placeholder={t('tr_search')}
+          aria-label={t('tr_search')}
           value={query}
           onChange={(e) => setQuery(e.target.value)}
         />
       </div>
       {loading && !data ? (
-        <Spinner className="size-5" label="Загрузка…" />
+        <Spinner className="size-5" label={t('loading')} />
       ) : (
         <div className="table-wrap">
           <table className="table">
             <thead>
               <tr>
-                <th scope="col">Трекер</th>
-                <th scope="col">Статус</th>
+                <th scope="col">{t('tr_col_tracker')}</th>
+                <th scope="col">{t('status')}</th>
                 <th scope="col" className="min-w-44">
                   ParseAll
                 </th>
-                <th scope="col">Действия</th>
+                <th scope="col">{t('tr_col_actions')}</th>
               </tr>
             </thead>
             <tbody>
-              {trackers.map((t) => {
-                const pa = t.parseAll
+              {trackers.map((tr) => {
+                const pa = tr.parseAll
                 const pct = parseAllProgress(pa)
                 return (
-                  <tr key={t.slug}>
+                  <tr key={tr.slug}>
                     <td>
-                      <div className="font-medium">{t.name || t.slug}</div>
-                      <div className="font-mono text-xs text-muted">{t.slug}</div>
+                      <div className="font-medium">{tr.name || tr.slug}</div>
+                      <div className="font-mono text-xs text-muted">{tr.slug}</div>
                     </td>
                     <td className="text-sm whitespace-nowrap">
-                      <StatusDot tone={t.enabled === false ? 'muted' : 'ok'} label={t.enabled === false ? 'выключен' : 'включён'} />
+                      <StatusDot tone={tr.enabled === false ? 'muted' : 'ok'} label={tr.enabled === false ? t('tr_off') : t('tr_on')} />
                     </td>
                     <td>
-                      {hasParseAll(t.slug) && pa ? (
+                      {hasParseAll(tr.slug) && pa ? (
                         <div className="space-y-1">
-                          <ProgressBar value={pa.running && pct == null ? null : (pct ?? 0)} label={`ParseAll ${t.slug}`} />
+                          <ProgressBar value={pa.running && pct == null ? null : (pct ?? 0)} label={`ParseAll ${tr.slug}`} />
                           <p className="text-xs text-muted tabular-nums">
-                            {pa.running ? 'идёт · ' : ''}
-                            осталось {formatNumber(pa.pending)} из {formatNumber(pa.mapCount)}
+                            {pa.running ? t('tr_running_prefix') : ''}
+                            {t('tr_remaining', { pending: formatNumber(pa.pending), total: formatNumber(pa.mapCount) })}
                           </p>
                         </div>
                       ) : (
@@ -180,21 +183,21 @@ export function TrackersPage() {
                     </td>
                     <td>
                       <div className="flex flex-wrap gap-1.5">
-                        {actionsFor(t.slug).map((a) => (
+                        {actionsFor(tr.slug).map((a) => (
                           <button
                             key={a.id}
                             type="button"
                             className="btn btn-sm"
                             title={a.description}
-                            disabled={busy === `${t.slug}:${a.id}`}
-                            onClick={() => start(t, a)}
+                            disabled={busy === `${tr.slug}:${a.id}`}
+                            onClick={() => start(tr, a)}
                           >
-                            {busy === `${t.slug}:${a.id}` ? <Spinner className="size-3.5" /> : null}
+                            {busy === `${tr.slug}:${a.id}` ? <Spinner className="size-3.5" /> : null}
                             {a.label}
                           </button>
                         ))}
-                        <Link to={`/logs?name=${encodeURIComponent(trackerLogName(t.slug))}`} className="btn btn-sm btn-ghost" aria-label={`Лог ${t.slug}`}>
-                          <FileText className="size-3.5" aria-hidden="true" /> Лог
+                        <Link to={`/logs?name=${encodeURIComponent(trackerLogName(tr.slug))}`} className="btn btn-sm btn-ghost" aria-label={t('tr_log_of', { slug: tr.slug })}>
+                          <FileText className="size-3.5" aria-hidden="true" /> {t('tr_log')}
                         </Link>
                       </div>
                     </td>

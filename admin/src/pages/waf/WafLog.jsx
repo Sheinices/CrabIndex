@@ -7,9 +7,11 @@ import { ErrorBox, Spinner, Toggle } from '../../components/ui.jsx'
 import { buildRequestsQuery, formatTime } from '../../lib/waf.js'
 import { formatDate } from '../../lib/format.js'
 import { Empty, ReasonBadge, StatusBadge } from './shared.jsx'
+import { useT } from '../../lang/index.jsx'
 
+// The first option's label is an i18n key (resolved in the component); the rest are literal codes.
 const STATUS_OPTIONS = [
-  ['', 'Все статусы'],
+  ['', 'waf_all_statuses'],
   ['2xx', '2xx'],
   ['3xx', '3xx'],
   ['4xx', '4xx'],
@@ -33,6 +35,7 @@ function readFilters(params) {
 }
 
 export function WafLog() {
+  const t = useT()
   const [params, setParams] = useSearchParams()
   const filters = useMemo(() => readFilters(params), [params])
   const [draft, setDraft] = useState({ ip: filters.ip, path: filters.path, origin: filters.origin, host: filters.host })
@@ -69,7 +72,7 @@ export function WafLog() {
     <div className="space-y-4">
       <form
         className="card flex flex-wrap items-end gap-3 p-4"
-        aria-label="Фильтры журнала"
+        aria-label={t('waf_filters')}
         onSubmit={(e) => {
           e.preventDefault()
           update({ ip: draft.ip.trim(), path: draft.path.trim(), origin: draft.origin.trim(), host: draft.host.trim() })
@@ -83,13 +86,13 @@ export function WafLog() {
         </div>
         <div className="min-w-48 flex-1">
           <label className="label" htmlFor="waf-f-path">
-            Путь (содержит)
+            {t('waf_path_contains')}
           </label>
           <input id="waf-f-path" className="input font-mono" value={draft.path} onChange={(e) => setDraft((d) => ({ ...d, path: e.target.value }))} placeholder="/api/v2.0/indexers" spellCheck={false} />
         </div>
         <div className="w-full sm:w-44">
           <label className="label" htmlFor="waf-f-origin">
-            Домен (Origin)
+            {t('waf_domain_origin')}
           </label>
           <input
             id="waf-f-origin"
@@ -102,7 +105,7 @@ export function WafLog() {
         </div>
         <div className="w-full sm:w-44">
           <label className="label" htmlFor="waf-f-host">
-            Хост (Host)
+            {t('waf_host_host')}
           </label>
           <input
             id="waf-f-host"
@@ -115,19 +118,19 @@ export function WafLog() {
         </div>
         <div className="w-full sm:w-36">
           <label className="label" htmlFor="waf-f-status">
-            Статус
+            {t('status')}
           </label>
           <select id="waf-f-status" className="input" value={filters.status} onChange={(e) => update({ status: e.target.value })}>
             {STATUS_OPTIONS.map(([v, l]) => (
               <option key={v} value={v}>
-                {l}
+                {v === '' ? t(l) : l}
               </option>
             ))}
           </select>
         </div>
         <div className="w-full sm:w-28">
           <label className="label" htmlFor="waf-f-limit">
-            Строк
+            {t('logs_lines')}
           </label>
           <select id="waf-f-limit" className="input" value={filters.limit} onChange={(e) => update({ limit: Number(e.target.value) })}>
             {LIMITS.map((n) => (
@@ -138,15 +141,15 @@ export function WafLog() {
           </select>
         </div>
         <div className="pb-2">
-          <Toggle id="waf-f-blocked" checked={filters.blocked} onChange={(v) => update({ blocked: v })} label="Только заблокированные" />
+          <Toggle id="waf-f-blocked" checked={filters.blocked} onChange={(v) => update({ blocked: v })} label={t('only_blocked')} />
         </div>
         <div className="flex gap-2">
           <button type="submit" className="btn btn-primary">
-            <Filter className="size-4" aria-hidden="true" /> Применить
+            <Filter className="size-4" aria-hidden="true" /> {t('apply')}
           </button>
           {active ? (
             <button type="button" className="btn" onClick={() => setParams(new URLSearchParams())}>
-              <X className="size-4" aria-hidden="true" /> Сбросить
+              <X className="size-4" aria-hidden="true" /> {t('reset')}
             </button>
           ) : null}
         </div>
@@ -154,15 +157,15 @@ export function WafLog() {
 
       <div className="flex flex-wrap items-center gap-3">
         <p className="text-sm text-muted" aria-live="polite">
-          {loading && !data ? 'Загрузка…' : `Показано ${rows.length} · новые сверху`}
-          {paused ? ' · на паузе' : ' · обновление каждые 5 с'}
+          {loading && !data ? t('loading') : t('waf_shown_newest', { n: rows.length })}
+          {paused ? t('waf_paused') : t('waf_every5')}
         </p>
         <div className="ml-auto flex gap-2">
           <button type="button" className="btn btn-sm" onClick={() => setPaused((p) => !p)} aria-pressed={paused}>
             {paused ? <Play className="size-4" aria-hidden="true" /> : <Pause className="size-4" aria-hidden="true" />}
-            {paused ? 'Продолжить' : 'Пауза'}
+            {paused ? t('resume') : t('pause')}
           </button>
-          <button type="button" className="btn btn-sm" onClick={reload} aria-label="Обновить журнал">
+          <button type="button" className="btn btn-sm" onClick={reload} aria-label={t('waf_refresh_log')}>
             <RefreshCw className={`size-4 ${loading ? 'animate-spin' : ''}`} aria-hidden="true" />
           </button>
         </div>
@@ -170,20 +173,20 @@ export function WafLog() {
 
       <ErrorBox error={error} onRetry={reload} />
       {loading && !data ? (
-        <Spinner className="size-5" label="Загрузка…" />
+        <Spinner className="size-5" label={t('loading')} />
       ) : (
         <div className="table-wrap">
           <table className="table">
             <thead>
               <tr>
-                <th>Время</th>
+                <th>{t('waf_time')}</th>
                 <th>IP</th>
-                <th>Хост</th>
-                <th>Запрос</th>
+                <th>{t('waf_host')}</th>
+                <th>{t('waf_request')}</th>
                 <th>Origin</th>
-                <th>Статус</th>
-                <th className="text-right">мс</th>
-                <th>Блокировка</th>
+                <th>{t('status')}</th>
+                <th className="text-right">{t('waf_ms')}</th>
+                <th>{t('waf_block_col')}</th>
                 <th>User-Agent</th>
               </tr>
             </thead>
@@ -198,7 +201,7 @@ export function WafLog() {
                       type="button"
                       className="font-mono text-xs text-accent hover:underline"
                       onClick={() => update({ ip: r.ip })}
-                      title="Показать запросы этого IP"
+                      title={t('waf_show_ip_reqs')}
                     >
                       {r.ip}
                     </button>
@@ -209,7 +212,7 @@ export function WafLog() {
                         type="button"
                         className="block max-w-full truncate font-mono text-xs text-accent hover:underline"
                         onClick={() => update({ host: r.host })}
-                        title={`Показать запросы к ${r.host}`}
+                        title={t('waf_show_host_reqs', { host: r.host })}
                       >
                         {r.host}
                       </button>
@@ -227,7 +230,7 @@ export function WafLog() {
                         type="button"
                         className="block max-w-full truncate font-mono text-xs text-accent hover:underline"
                         onClick={() => update({ origin: r.origin })}
-                        title={`Показать запросы с ${r.origin}`}
+                        title={t('waf_show_origin_reqs', { origin: r.origin })}
                       >
                         {r.origin}
                       </button>
@@ -249,7 +252,7 @@ export function WafLog() {
               ))}
             </tbody>
           </table>
-          {!rows.length ? <Empty>{active ? 'Нет запросов по фильтру' : 'Журнал пуст'}</Empty> : null}
+          {!rows.length ? <Empty>{active ? t('waf_no_filtered') : t('waf_log_empty')}</Empty> : null}
         </div>
       )}
     </div>

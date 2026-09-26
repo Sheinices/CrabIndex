@@ -212,10 +212,10 @@ export function CloudflarePage() {
                             </div>
                           </td>
                           <td className="text-right tabular-nums">{avgSeconds(h) ?? '-'}</td>
-                          <td className="text-right tabular-nums" title="создано / пересоздано / закрыто по простою">
+                          <td className="text-right tabular-nums" title={t('cf_sessions_col_tip')}>
                             {h.sessionsCreated} / {h.sessionsRecycled} / {h.sessionsClosedIdle}
                           </td>
-                          <td className="text-right tabular-nums" title="быстрый путь: сработал / нет, обновлений cookie">
+                          <td className="text-right tabular-nums" title={t('cf_fast_col_tip')}>
                             {formatNumber(h.fastOk)} / {formatNumber(h.fastFailed)}
                           </td>
                           <td className="max-w-xs">
