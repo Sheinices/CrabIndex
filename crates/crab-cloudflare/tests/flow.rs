@@ -14,6 +14,8 @@ enum FsMode {
     OkWithCookies,
     BrowserTimeout,
     Challenge,
+    /// `request.post` answers "tab crashed" until the session is destroyed and re-created.
+    PostTabCrashed,
 }
 
 #[derive(Clone, Copy, PartialEq)]
@@ -28,18 +30,33 @@ struct Mock {
     cf: CfMode,
     fs_calls: Vec<String>,
     cf_calls: Vec<Value>,
+    /// Sessions whose crashed tab was dropped by `sessions.destroy` (PostTabCrashed mode).
+    recreated: Vec<String>,
 }
 
-static MOCK: Lazy<PMutex<Mock>> = Lazy::new(|| PMutex::new(Mock { fs: FsMode::Ok, cf: CfMode::Error, fs_calls: vec![], cf_calls: vec![] }));
+static MOCK: Lazy<PMutex<Mock>> =
+    Lazy::new(|| PMutex::new(Mock { fs: FsMode::Ok, cf: CfMode::Error, fs_calls: vec![], cf_calls: vec![], recreated: vec![] }));
 static SERIAL: Lazy<tokio::sync::Mutex<()>> = Lazy::new(|| tokio::sync::Mutex::new(()));
 
 async fn fs_handler(Json(v): Json<Value>) -> Json<Value> {
     let cmd = v["cmd"].as_str().unwrap_or_default().to_string();
-    let mode = {
+    let session = v["session"].as_str().unwrap_or_default().to_string();
+    let (mode, recreated) = {
         let mut m = MOCK.lock();
-        m.fs_calls.push(format!("{cmd}:{}", v["session"].as_str().unwrap_or_default()));
-        m.fs
+        m.fs_calls.push(format!("{cmd}:{session}"));
+        if cmd == "sessions.destroy" {
+            m.recreated.push(session.clone());
+        }
+        (m.fs, m.recreated.contains(&session))
     };
+    if cmd == "request.post" {
+        return Json(if mode == FsMode::PostTabCrashed && !recreated {
+            json!({"status":"error","message":"Error: Error solving the challenge. Message: tab crashed\n  (Session info: chrome=152.0.7977.82)"})
+        } else {
+            json!({"status":"ok","solution":{"status":200,"response":"<html>logged in</html>",
+                "cookies":[{"name":"PHPSESSID","value":"s1"}]}})
+        });
+    }
     if cmd != "request.get" {
         return Json(json!({"status": "ok", "message": ""}));
     }
@@ -49,6 +66,7 @@ async fn fs_handler(Json(v): Json<Value>) -> Json<Value> {
             "cookies":[{"name":"cf_clearance","value":"xyz"},{"name":"","value":"skip"}],"userAgent":"UA-FS"}}),
         FsMode::BrowserTimeout => json!({"status":"error","message":"Error: Error solving the challenge. Timeout after 60.0 seconds."}),
         FsMode::Challenge => json!({"status":"ok","solution":{"status":200,"response":"<title>Just a moment...</title>"}}),
+        FsMode::PostTabCrashed => json!({"status":"ok","solution":{"status":200,"response":"<html>browser page</html>","cookies":[]}}),
     })
 }
 
@@ -90,6 +108,7 @@ fn configure(fs_url: &str, cf_url: &str, cffetch_enabled: bool, crawl_url: &str)
     let mut m = MOCK.lock();
     m.fs_calls.clear();
     m.cf_calls.clear();
+    m.recreated.clear();
 }
 
 fn set_modes(fs: FsMode, cf: CfMode) {
@@ -187,6 +206,28 @@ async fn interstitial_solution_is_page_failure() {
     // the interstitial), then the fetch fails.
     assert_eq!(fs_calls().len(), 4);
     assert!(fs_calls()[1..].iter().all(|c| c == "request.get:crabindex-chl_test"), "{:?}", fs_calls());
+}
+
+#[tokio::test]
+async fn crashed_tab_on_login_post_is_recycled_and_retried() {
+    let _s = SERIAL.lock().await;
+    let (fs, cf) = start().await;
+    configure(&fs, &cf, false, "");
+    set_modes(FsMode::PostTabCrashed, CfMode::Error);
+
+    let r = crab_cloudflare::clearance::post_form_async("https://login.test/", "login=a&pass=b").await.expect("login page");
+    assert_eq!(r.body, "<html>logged in</html>");
+    assert_eq!(r.cookies, vec![("PHPSESSID".to_string(), "s1".to_string())]);
+    assert_eq!(
+        fs_calls(),
+        vec![
+            "sessions.create:crabindex-login_test",
+            "request.post:crabindex-login_test",
+            "sessions.destroy:crabindex-login_test",
+            "sessions.create:crabindex-login_test",
+            "request.post:crabindex-login_test",
+        ]
+    );
 }
 
 #[tokio::test]

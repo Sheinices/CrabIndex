@@ -529,12 +529,19 @@ pub(crate) fn is_browser_timeout_message(message: &str) -> bool {
     l.contains("read timed out") || l.contains("httpconnectionpool") || l.contains("timeout after")
 }
 
+/// The browser behind the session is gone: crashed tab, deleted or unknown session. The only
+/// recovery is `sessions.destroy` + `sessions.create` - `sessions.create` alone answers
+/// "already exists" and hands back the same dead tab.
 pub(crate) fn is_session_broken_message(message: &str) -> bool {
     if message.is_empty() {
         return false;
     }
+    let l = message.to_lowercase();
+    if l.contains("tab crashed") || l.contains("page crash") || l.contains("invalid session id") || l.contains("chrome not reachable") {
+        return true;
+    }
     // "Session not found" / "Session timeout" - not to be confused with request timeout.
-    message.to_lowercase().contains("session") && !is_browser_timeout_message(message)
+    l.contains("session") && !is_browser_timeout_message(message)
 }
 
 fn parse_cookies(cookie: Option<&str>) -> Vec<Value> {
@@ -758,6 +765,46 @@ async fn call(url: &str, payload: Value, timeout_ms: i64) -> Option<Value> {
     }
 }
 
+enum PostOutcome {
+    Ok(Value),
+    /// Request refused; the session is still usable.
+    Failed,
+    /// The browser behind the session is dead (crashed tab, unknown session).
+    SessionBroken,
+}
+
+/// One `request.post` on the session; records stats and marks a dead session.
+async fn post_once(v: &View, session: &BrowserSession, host: &str, url: &str, form: &str) -> PostOutcome {
+    let payload = json!({
+        "cmd": "request.post",
+        "session": session.name,
+        "url": url,
+        "postData": form,
+        "maxTimeout": v.max_timeout_ms,
+    });
+    let started = std::time::Instant::now();
+    let root = call(&v.url, payload, v.max_timeout_ms as i64 + 30_000).await;
+    let ms = started.elapsed().as_millis() as u64;
+    touch_session(v, session);
+    let Some(root) = root else {
+        stats::browser(host, ms, Some("login POST: empty response / unreachable"));
+        session.set_alive(false);
+        return PostOutcome::Failed;
+    };
+    if !val_str(root.get("status")).map(|s| s.eq_ignore_ascii_case("ok")).unwrap_or(false) {
+        let message = val_str(root.get("message")).unwrap_or_default();
+        stats::browser(host, ms, Some(&message));
+        log::error(cat::HOST, format!("{host}: FlareSolverr POST отказал: {message}"));
+        if is_session_broken_message(&message) {
+            session.set_alive(false);
+            return PostOutcome::SessionBroken;
+        }
+        return PostOutcome::Failed;
+    }
+    stats::browser(host, ms, None);
+    PostOutcome::Ok(root)
+}
+
 /// Form POST from the host's browser session (FlareSolverr `request.post`), for logins behind
 /// Cloudflare where a plain client gets 403. Returns the page after redirects and the
 /// browser's cookie jar (it includes the cookies the login just set).
@@ -770,33 +817,24 @@ pub async fn post_form_async(url: &str, form: &str) -> Option<cf::BrowserPost> {
     if !session.alive() && !create_session(&v, &session).await {
         return None;
     }
-    let payload = json!({
-        "cmd": "request.post",
-        "session": session.name,
-        "url": url,
-        "postData": form,
-        "maxTimeout": v.max_timeout_ms,
-    });
-    let started = std::time::Instant::now();
-    let root = call(&v.url, payload, v.max_timeout_ms as i64 + 30_000).await;
-    let ms = started.elapsed().as_millis() as u64;
-    touch_session(&v, &session);
-    let Some(root) = root else {
-        stats::browser(&host, ms, Some("login POST: empty response / unreachable"));
-        session.set_alive(false);
-        return None;
-    };
-    if !val_str(root.get("status")).map(|s| s.eq_ignore_ascii_case("ok")).unwrap_or(false) {
-        let message = val_str(root.get("message")).unwrap_or_default();
-        stats::browser(&host, ms, Some(&message));
-        log::error(cat::HOST, format!("{host}: FlareSolverr POST отказал: {message}"));
-        if is_session_broken_message(&message) {
-            session.set_alive(false);
+    let root = match post_once(&v, &session, &host, url, form).await {
+        PostOutcome::Ok(root) => root,
+        PostOutcome::Failed => return None,
+        PostOutcome::SessionBroken => {
+            // A crashed tab stays crashed: every later call fails instantly. Recycle the
+            // session and submit the form once more.
+            log::warn(cat::HOST, format!("{host}: FlareSolverr session recycle after POST failure"));
+            destroy_session(&v, &session).await;
+            if !create_session(&v, &session).await {
+                return None;
+            }
+            match post_once(&v, &session, &host, url, form).await {
+                PostOutcome::Ok(root) => root,
+                _ => return None,
+            }
         }
-        return None;
-    }
+    };
 
-    stats::browser(&host, ms, None);
     let solution = root.get("solution").filter(|s| s.is_object())?;
     let status = val_i32(solution.get("status")).unwrap_or(0).clamp(0, u16::MAX as i32) as u16;
     let body = val_str(solution.get("response")).unwrap_or_default();
@@ -846,6 +884,9 @@ mod tests {
         assert!(is_browser_timeout_message("HTTPConnectionPool(host='localhost'): Read timed out."));
         assert!(!is_session_broken_message("Session timeout after 60 s"));
         assert!(is_session_broken_message("Session not found"));
+        assert!(is_session_broken_message("Error: Error solving the challenge. Message: tab crashed\n  (Session info: chrome=152.0.7977.82)"));
+        assert!(is_session_broken_message("unknown error: session deleted because of page crash"));
+        assert!(!is_session_broken_message("challenge html in solution"));
         assert!(!is_browser_timeout_message(""));
     }
 
