@@ -51,6 +51,7 @@ simple!(fix_selezen_domain_duplicates, migrations::domain_dups::fix_selezen);
 simple!(fix_ultradox_domain_duplicates, migrations::domain_dups::fix_ultradox);
 simple!(fix_serial_types, migrations::serial_types::fix_serial_types);
 simple!(fix_rutracker_names, migrations::rutracker_names::fix_rutracker_names);
+simple!(fix_slug_duplicates, migrations::slug_dups::fix_slug_duplicates);
 
 async fn find_corrupt(q: Q) -> Response {
     let n = Params::from_query(q).i32("samplesize", 20);
@@ -102,4 +103,5 @@ pub fn router() -> Router {
         .route("/dev/fixultradoxdomainduplicates", any(fix_ultradox_domain_duplicates))
         .route("/dev/fixserialtypes", any(fix_serial_types))
         .route("/dev/fixrutrackernames", any(fix_rutracker_names))
+        .route("/dev/fixslugduplicates", any(fix_slug_duplicates))
 }

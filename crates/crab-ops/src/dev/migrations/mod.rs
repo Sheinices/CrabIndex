@@ -8,6 +8,7 @@ pub mod names;
 pub mod parsers;
 pub mod rutracker_names;
 pub mod serial_types;
+pub mod slug_dups;
 
 use crab_core::fdb;
 use crab_core::models::TorrentDetails;
