@@ -82,10 +82,26 @@ pub fn spawn_workers(shutdown: CancellationToken) {
     tokio::spawn(cron::run_worker(shutdown));
 }
 
+/// Trackers whose rows this host serves: `synctrackers` when set, else every built-in slug,
+/// minus `disable_trackers`. Clients treat a served tracker's rows in a bucket as complete and
+/// drop local rows of that tracker the bucket no longer contains.
+pub fn served_trackers() -> Vec<String> {
+    let c = conf();
+    let disabled: Vec<String> = c.disable_trackers.iter().map(|d| d.to_lowercase()).collect();
+    let source: Vec<String> = match c.synctrackers.as_ref() {
+        Some(list) => list.iter().map(|s| s.trim().to_lowercase()).collect(),
+        None => crab_core::config::TRACKER_SLUGS.iter().map(|s| s.to_string()).collect(),
+    };
+    let mut out: Vec<String> = source.into_iter().filter(|s| !s.is_empty() && !disabled.contains(s)).collect();
+    out.sort();
+    out.dedup();
+    out
+}
+
 async fn sync_conf() -> axum::Json<serde_json::Value> {
     // `count` lets a client show how full its copy is versus this host (admin progress only).
     let count = crab_core::index::current_len().unwrap_or(0);
-    axum::Json(json!({ "fbd": true, "spidr": true, "version": 2, "count": count }))
+    axum::Json(json!({ "fbd": true, "spidr": true, "version": 2, "count": count, "trackers": served_trackers() }))
 }
 
 #[derive(Serialize)]

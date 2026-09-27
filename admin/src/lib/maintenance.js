@@ -41,6 +41,7 @@ export const MIGRATIONS = [
   { path: 'dev/fixultradoxdomainduplicates', label: 'ultradox: дубли доменов', description: 'Сводит записи со старых доменов к текущему host.' },
   { path: 'dev/fixrutrackerdomainduplicates', label: 'rutracker: дубли доменов', description: 'Сводит записи с rutracker.net и зеркал к текущему host, объединяя сиды и размер.' },
   { path: 'dev/fixselezendomainduplicates', label: 'selezen: дубли доменов', description: 'Сводит записи с selezen.org и use.selezen.club к текущему host по id релиза.' },
+  { path: 'dev/fixrutrackernames', label: 'rutracker: имена и год', description: 'Заново разбирает заголовки rutracker с вложенными скобками: originalname, name, relased.' },
   { path: 'dev/fixzerosizes', label: 'Пустой размер раздачи', description: 'Пересчитывает size там, где он 0, а sizeName читается (метки с неразрывным пробелом).' },
   {
     path: 'dev/fixserialtypes',

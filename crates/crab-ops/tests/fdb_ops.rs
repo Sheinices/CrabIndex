@@ -72,7 +72,11 @@ async fn fdb_operations_end_to_end() {
 
     // ---- sync API ----
     let conf = get_json("/sync/conf").await;
-    assert_eq!(serde_json::to_string(&conf).unwrap(), r#"{"fbd":true,"spidr":true,"version":2,"count":0}"#);
+    assert_eq!((conf["fbd"].as_bool(), conf["spidr"].as_bool(), conf["version"].as_i64(), conf["count"].as_i64()), (Some(true), Some(true), Some(2), Some(0)));
+    // every built-in tracker is served when `synctrackers` is unset and nothing is disabled
+    let served: Vec<&str> = conf["trackers"].as_array().expect("trackers").iter().filter_map(|v| v.as_str()).collect();
+    assert_eq!(served.len(), crab_core::config::TRACKER_SLUGS.len());
+    assert!(served.contains(&"rutor") && served.windows(2).all(|w| w[0] < w[1]));
 
     let empty = get_json("/sync/fdb/torrents?time=0").await;
     assert_eq!(serde_json::to_string(&empty).unwrap(), r#"{"nextread":false,"collections":[]}"#);

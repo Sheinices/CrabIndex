@@ -2,7 +2,7 @@
 
 use chrono::{DateTime, Utc};
 use crab_core::models::{TaskParse, TorrentDetails};
-use crab_core::parsing::tparse;
+use crab_core::parsing::{rutracker_title, tparse};
 use crab_core::{conf, rx, time, util};
 
 use super::categories::{self, TitleKind};
@@ -175,93 +175,12 @@ fn try_parse_row_fields(row: &str) -> Option<(String, String, String, String, St
 
 type Names = (Option<String>, Option<String>, i32, bool);
 
+/// `(name, originalname, relased, skip_row)` from the topic title; see [`rutracker_title`].
 fn parse_title_names(kind: TitleKind, title: &str) -> Names {
-    match kind {
-        TitleKind::Movie => parse_movie_title(title),
-        TitleKind::Serial => parse_serial_title(title),
-        TitleKind::NonStandard => parse_non_standard_title(title),
-    }
-}
-
-fn nb(s: &str) -> bool {
-    !util::is_blank(s)
-}
-
-/// Try `pattern`; when groups `n`, `o` (0 = none) and `y` are non-blank return them.
-fn try_names(title: &str, pattern: &str, n: usize, o: usize, y: usize) -> Option<(String, Option<String>, i32)> {
-    let g = rx::groups(title, pattern);
-    let get = |i: usize| g.get(i).cloned().unwrap_or_default();
-    let (name, orig, year) = (get(n), if o > 0 { get(o) } else { String::new() }, get(y));
-    if nb(&name) && (o == 0 || nb(&orig)) && nb(&year) {
-        Some((name, if o > 0 { Some(orig) } else { None }, year.parse().unwrap_or(0)))
-    } else {
-        None
-    }
-}
-
-fn parse_movie_title(title: &str) -> Names {
-    let patterns: [(&str, usize, usize, usize); 3] = [
-        // Ниже нуля / Bajocero / Below Zero (Йуис Килес / Lluís Quílez) [2021, Испания, ...]
-        (r"^([^/\(\[]+) / [^/\(\[]+ / ([^/\(\[]+) \([^\)]+\) \[([0-9]+), ", 1, 2, 3),
-        // Белый тигр / The White Tiger (Рамин Бахрани / Ramin Bahrani) [2021, Индия, ...]
-        (r"^([^/\(\[]+) / ([^/\(\[]+) \([^\)]+\) \[([0-9]+), ", 1, 2, 3),
-        // Дневной дозор (Тимур Бекмамбетов) [2006, Россия, ...]
-        (r"^([^/\(\[]+) \([^\)]+\) \[([0-9]+), ", 1, 0, 2),
-    ];
-    let mut res = (None, None, 0);
-    for (p, n, o, y) in patterns {
-        if let Some((name, orig, year)) = try_names(title, p, n, o, y) {
-            res = (Some(name), orig, year);
-            break;
-        }
-    }
-    let name = res.0.map(|n| n.replace("в 3Д", "").trim().to_string());
-    let orig = res.1.map(|o| o.replace(" in 3D", "").replace(" 3D", "").trim().to_string());
-    (name, orig, res.2, false)
-}
-
-fn parse_serial_title(title: &str) -> Names {
-    if !rx::is_match_i(title, "(Сезон|Серии)") {
-        return (None, None, 0, false);
-    }
-    let patterns: Vec<(&str, usize, usize, usize)> = if title.contains("Сезон:") {
-        vec![
-            // Голяк / Без гроша / Без денег / Brassic / Сезон: 4 / Серии: 1-8 из 8 (...) [2022, ...]
-            (r"^([^/\(\[]+) / [^/\(\[]+ / [^/\(\[]+ / ([^/\(\[]+) / Сезон: [^/]+ / [^\(\[]+ \([^\)]+\) \[([0-9]+)(,|-)", 1, 2, 3),
-            // Уравнитель / Великий уравнитель / The Equalizer / Сезон: 1 / Серии: 1-3 из 4 (...) [2021, ...]
-            (r"^([^/\(\[]+) / [^/\(\[]+ / ([^/\(\[]+) / Сезон: [^/]+ / [^\(\[]+ \([^\)]+\) \[([0-9]+)(,|-)", 1, 2, 3),
-            // 911 служба спасения / 9-1-1 / Сезон: 4 / Серии: 1-6 из 9 (...) [2021, ...]
-            (r"^([^/\(\[]+) / ([^/\(\[]+) / Сезон: [^/]+ / [^\(\[]+ \([^\)]+\) \[([0-9]+)(,|-)", 1, 2, 3),
-            // Петербургский роман / Сезон: 1 / Серии: 1-8 из 8 (Александр Муратов) [2018, ...]
-            (r"^([^/\(\[]+) / Сезон: [^/]+ / [^\(\[]+ \([^\)]+\) \[([0-9]+)(,|-)", 1, 0, 2),
-        ]
-    } else {
-        vec![
-            // Уравнитель / Великий уравнитель / The Equalizer / Серии: 1-3 из 4 (...) [2021, ...]
-            (r"^([^/\(\[]+) / [^/\(\[]+ / ([^/\(\[]+) / [^\(\[]+ \([^\)]+\) \[([0-9]+)(,|-)", 1, 2, 3),
-            // 911 служба спасения / 9-1-1 / Серии: 1-6 из 9 (...) [2021, ...]
-            (r"^([^/\(\[]+) / ([^/\(\[]+) / [^\(\[]+ \([^\)]+\) \[([0-9]+)(,|-)", 1, 2, 3),
-            // Петербургский роман / Серии: 1-8 из 8 (Александр Муратов) [2018, ...]
-            (r"^([^/\(\[]+) / [^\(\[]+ \([^\)]+\) \[([0-9]+)(,|-)", 1, 0, 2),
-        ]
+    let k = match kind {
+        TitleKind::Movie => rutracker_title::Kind::Movie,
+        TitleKind::Serial => rutracker_title::Kind::Serial,
+        TitleKind::NonStandard => rutracker_title::Kind::NonStandard,
     };
-    let mut res: (Option<String>, Option<String>, i32) = (None, None, 0);
-    for (p, n, o, y) in patterns {
-        if let Some((name, orig, year)) = try_names(title, p, n, o, y) {
-            res = (Some(name), orig, year);
-            break;
-        }
-    }
-    let bad = |s: &Option<String>| rx::is_match_i(s.as_deref().unwrap_or(""), "(Сезон|Серии)");
-    if bad(&res.0) || bad(&res.1) {
-        return (None, None, 0, false);
-    }
-    (res.0, res.1, res.2, false)
-}
-
-fn parse_non_standard_title(title: &str) -> Names {
-    let name = rx::group(title, r"^([^/\(\[]+) ", 1);
-    let relased = rx::group(title, r" \[([0-9]{4})(,|-) ", 1).parse().unwrap_or(0);
-    let skip = rx::is_match_i(&name, "(Сезон|Серии)");
-    (Some(name), None, relased, skip)
+    rutracker_title::parse(k, title)
 }

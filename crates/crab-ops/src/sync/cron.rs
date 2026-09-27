@@ -7,6 +7,11 @@
 //!
 //! While `nextread` is true masterDb + lastsync are saved every `saveCheckpointEveryNBatches`
 //! batches or at least every 5 minutes.
+//!
+//! Deletions: a page carries whole buckets, so for every tracker the host says it serves
+//! (`trackers` in `/sync/conf`) the bucket content is authoritative - local rows of such a
+//! tracker that the incoming bucket no longer has (removed, merged as duplicates, moved to
+//! another bucket by a rename) are dropped after the import.
 
 use anyhow::anyhow;
 use chrono::{Local, TimeZone};
@@ -20,6 +25,7 @@ use crab_core::{conf, time, util};
 use indexmap::IndexMap;
 use rand::Rng;
 use serde::Deserialize;
+use std::collections::HashSet;
 use std::sync::atomic::{AtomicI64, Ordering};
 use std::time::{Duration, Instant};
 use tokio_util::sync::CancellationToken;
@@ -140,6 +146,64 @@ async fn save_master() {
     let _ = tokio::task::spawn_blocking(fdb::save_changes_to_file).await;
 }
 
+/// Trackers a `/sync/conf` answer says the host serves (lowercase); `None` for hosts that
+/// predate the field - then nothing is ever dropped.
+fn served_from_conf(v: Option<&serde_json::Value>) -> Option<HashSet<String>> {
+    let list = v?.get("trackers")?.as_array()?;
+    Some(list.iter().filter_map(|x| x.as_str()).map(|s| s.trim().to_lowercase()).filter(|s| !s.is_empty()).collect())
+}
+
+/// Local rows of bucket `key` to drop: tracker served by the host and allowed here, url absent
+/// from the incoming bucket. Rows of trackers this client parses itself (not served) stay.
+pub fn prune_plan(local: &fdb::ShardMap, incoming_urls: &HashSet<String>, served: &HashSet<String>, c: &AppOptions) -> Vec<String> {
+    local
+        .iter()
+        .filter(|(url, t)| {
+            let tracker = t.trackerName.to_lowercase();
+            served.contains(&tracker)
+                && c.synctrackers.as_ref().map(|st| st.iter().any(|x| x.eq_ignore_ascii_case(&tracker))).unwrap_or(true)
+                && !c.disable_trackers.iter().any(|d| d.eq_ignore_ascii_case(&tracker))
+                && !incoming_urls.contains(url.as_str())
+        })
+        .map(|(url, _)| url.clone())
+        .collect()
+}
+
+/// Apply [`prune_plan`] to every bucket of a page; returns the number of dropped rows.
+async fn prune_missing(cols: &[CollectionIn], served: Option<&HashSet<String>>, c: &AppOptions) -> usize {
+    let Some(served) = served else { return 0 };
+    let mut buckets: Vec<(String, HashSet<String>)> = Vec::new();
+    for col in cols {
+        let Some(torrents) = col.Value.as_ref().and_then(|v| v.torrents.as_ref()) else { continue };
+        if col.Key.is_empty() || torrents.is_empty() {
+            continue;
+        }
+        buckets.push((col.Key.clone(), torrents.keys().cloned().collect()));
+    }
+    if buckets.is_empty() {
+        return 0;
+    }
+    let served = served.clone();
+    let c = c.clone();
+    tokio::task::spawn_blocking(move || {
+        let mut removed = 0usize;
+        for (key, urls) in buckets {
+            if !fdb::MASTER_DB.contains_key(&key) {
+                continue;
+            }
+            let plan = prune_plan(&fdb::open_read(&key, false, false), &urls, &served, &c);
+            if plan.is_empty() {
+                continue;
+            }
+            let drop: HashSet<String> = plan.into_iter().collect();
+            removed += fdb::retain_rows(&key, |t| !drop.contains(&t.url));
+        }
+        removed
+    })
+    .await
+    .unwrap_or(0)
+}
+
 async fn import(torrents: Vec<TorrentDetails>) {
     if torrents.is_empty() {
         return;
@@ -150,13 +214,6 @@ async fn import(torrents: Vec<TorrentDetails>) {
 async fn fetch_page(url: &str, ct: &CancellationToken) -> Option<RootIn> {
     let req = Req::new().timeout(300).max_size(100_000_000).cancel(ct);
     net::get_json::<RootIn>(url, &req).await
-}
-
-/// `Some(flag)` from the remote `/sync/conf`, `None` when the host did not answer (down,
-/// restarting, 5xx, network) - that is not the same as an old host without the flag.
-async fn remote_conf_flag(syncapi: &str, flag: &str) -> Option<bool> {
-    let v = remote_conf(syncapi).await?;
-    Some(v.get(flag).and_then(|x| x.as_bool()).unwrap_or(false))
 }
 
 /// The whole remote `/sync/conf` JSON, or `None` when the host did not answer.
@@ -208,6 +265,7 @@ fn save_torrents_checkpoint(st: &SyncState) {
 async fn torrents_cycle(c: &AppOptions, syncapi: &str, st: &mut SyncState, ct: &CancellationToken) -> anyhow::Result<CycleEnd> {
     let cycle_start = Instant::now();
     let mut cycle_total = 0usize;
+    let mut cycle_dropped = 0usize;
     let mut end = CycleEnd::Done;
     log::info(cat::SYNC, format!("start / {}", now_str()));
 
@@ -222,6 +280,7 @@ async fn torrents_cycle(c: &AppOptions, syncapi: &str, st: &mut SyncState, ct: &
             REMOTE_TORRENTS.store(n, Ordering::Relaxed);
         }
     }
+    let served = served_from_conf(conf_json.as_ref());
     let fbd = conf_json.as_ref().map(|v| v.get("fbd").and_then(|x| x.as_bool()).unwrap_or(false));
     if fbd.is_none() {
         log::warn(cat::SYNC, format!("{syncapi} is not answering (/sync/conf) - will retry in a few minutes"));
@@ -281,10 +340,12 @@ async fn torrents_cycle(c: &AppOptions, syncapi: &str, st: &mut SyncState, ct: &
                 let n = torrents.len();
                 import(torrents).await;
                 cycle_total += n;
+                let dropped = prune_missing(root.collections.as_deref().unwrap_or(&[]), served.as_ref(), c).await;
+                cycle_dropped += dropped;
                 log::info(
                     cat::SYNC,
                     format!(
-                        "[{batch_index}] time={} ({}) | {n} torrents, nextread={}, {}",
+                        "[{batch_index}] time={} ({}) | {n} torrents, dropped {dropped}, nextread={}, {}",
                         st.lastsync,
                         format_file_time(st.lastsync),
                         if root.nextread { "True" } else { "False" },
@@ -316,7 +377,7 @@ async fn torrents_cycle(c: &AppOptions, syncapi: &str, st: &mut SyncState, ct: &
     write_checkpoint(LAST_SYNC_PATH, st.lastsync);
     log::info(
         cat::SYNC,
-        format!("end / {} (cycle added {cycle_total} torrents in {})", now_str(), format_elapsed(cycle_start.elapsed())),
+        format!("end / {} (cycle added {cycle_total} torrents, dropped {cycle_dropped} in {})", now_str(), format_elapsed(cycle_start.elapsed())),
     );
     Ok(end)
 }
@@ -376,9 +437,12 @@ pub async fn torrents(ct: CancellationToken) {
 
 async fn spidr_cycle(syncapi: &str, c: &AppOptions, ct: &CancellationToken) -> anyhow::Result<()> {
     let mut lastsync_spidr: i64 = -1;
-    if remote_conf_flag(syncapi, "spidr").await != Some(true) {
+    let conf_json = remote_conf(syncapi).await;
+    if conf_json.as_ref().and_then(|v| v.get("spidr")).and_then(|x| x.as_bool()) != Some(true) {
         return Ok(());
     }
+    let served = served_from_conf(conf_json.as_ref());
+    let mut cycle_dropped = 0usize;
     let cycle_start = Instant::now();
     let mut cycle_total = 0usize;
     let mut batch_index = 0i32;
@@ -401,12 +465,14 @@ async fn spidr_cycle(syncapi: &str, c: &AppOptions, ct: &CancellationToken) -> a
         let rows: Vec<TorrentDetails> =
             cols.iter().filter_map(|c| c.Value.as_ref().and_then(|v| v.torrents.as_ref())).flat_map(|t| t.values().cloned()).collect();
         import(rows).await;
+        let dropped = prune_missing(cols, served.as_ref(), c).await;
+        cycle_dropped += dropped;
 
         cycle_total += batch_count;
         log::info(
             cat::SYNC_SPIDR,
             format!(
-                "[{batch_index}] time={lastsync_spidr} ({}) | {} collections, {batch_count} torrents, nextread={}, {}",
+                "[{batch_index}] time={lastsync_spidr} ({}) | {} collections, {batch_count} torrents, dropped {dropped}, nextread={}, {}",
                 format_file_time(lastsync_spidr),
                 cols.len(),
                 if root.nextread { "True" } else { "False" },
@@ -429,7 +495,7 @@ async fn spidr_cycle(syncapi: &str, c: &AppOptions, ct: &CancellationToken) -> a
     save_master().await;
     log::info(
         cat::SYNC_SPIDR,
-        format!("end / {} (cycle added {cycle_total} torrents in {})", now_str(), format_elapsed(cycle_start.elapsed())),
+        format!("end / {} (cycle added {cycle_total} torrents, dropped {cycle_dropped} in {})", now_str(), format_elapsed(cycle_start.elapsed())),
     );
     Ok(())
 }
@@ -468,6 +534,37 @@ pub async fn run_worker(ct: CancellationToken) {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    fn row(tracker: &str, url: &str) -> TorrentDetails {
+        TorrentDetails { trackerName: tracker.into(), url: url.into(), ..Default::default() }
+    }
+
+    #[test]
+    fn prune_plan_drops_only_served_rows_missing_from_bucket() {
+        let mut local = fdb::ShardMap::new();
+        local.insert("r1".into(), row("rutor", "r1"));
+        local.insert("r2".into(), row("rutor", "r2"));
+        local.insert("k1".into(), row("kinozal", "k1"));
+        local.insert("own".into(), row("lostfilm", "own"));
+        let incoming: HashSet<String> = ["r1".to_string()].into_iter().collect();
+        let served: HashSet<String> = ["rutor".to_string(), "kinozal".to_string()].into_iter().collect();
+
+        let mut c = AppOptions::default();
+        let mut plan = prune_plan(&local, &incoming, &served, &c);
+        plan.sort();
+        assert_eq!(plan, vec!["k1".to_string(), "r2".to_string()]);
+
+        c.synctrackers = Some(vec!["rutor".into()]);
+        assert_eq!(prune_plan(&local, &incoming, &served, &c), vec!["r2".to_string()]);
+
+        c.synctrackers = None;
+        c.disable_trackers = vec!["KINOZAL".into()];
+        assert_eq!(prune_plan(&local, &incoming, &served, &c), vec!["r2".to_string()]);
+
+        assert!(served_from_conf(Some(&serde_json::json!({"fbd": true}))).is_none());
+        let s = served_from_conf(Some(&serde_json::json!({"trackers": ["Rutor", " kinozal "]}))).expect("list");
+        assert!(s.contains("rutor") && s.contains("kinozal") && s.len() == 2);
+    }
 
     #[test]
     fn retry_delay_backs_off_and_caps() {

@@ -6,6 +6,7 @@ pub mod cleanup;
 pub mod domain_dups;
 pub mod names;
 pub mod parsers;
+pub mod rutracker_names;
 pub mod serial_types;
 
 use crab_core::fdb;

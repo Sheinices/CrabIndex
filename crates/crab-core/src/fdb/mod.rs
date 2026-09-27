@@ -502,6 +502,25 @@ pub fn open_read(key: &str, update_lastread: bool, cache: bool) -> ShardMap {
 }
 
 /// Write handle to a shard (shared, refcounted).
+/// Drop every row of shard `key` for which `keep` is false; returns how many were removed.
+/// A shard left empty is unregistered from masterDb.
+pub fn retain_rows(key: &str, keep: impl Fn(&TorrentDetails) -> bool) -> usize {
+    let w = open_write(key);
+    let mut removed = 0usize;
+    let mut now_empty = false;
+    w.modify(|db| {
+        let before = db.len();
+        db.retain(|_, t| keep(t));
+        removed = before - db.len();
+        now_empty = db.is_empty();
+        removed > 0
+    });
+    if removed > 0 && now_empty {
+        remove_key_from_master_db(key);
+    }
+    removed
+}
+
 pub fn open_write(key: &str) -> WriteGuard {
     loop {
         if let Some(existing) = OPEN_WRITE_TASK.get(key).map(|e| e.clone()) {
