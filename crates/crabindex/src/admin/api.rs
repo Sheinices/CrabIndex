@@ -133,6 +133,8 @@ pub fn overview(c: &AppOptions) -> Value {
             "remoteTorrents": remote_torrents,
         },
         "config": { "path": info.path, "format": info.format },
+        // Settings that slow this host down (see config::performance_hints); the panel warns.
+        "hints": config::performance_hints(c),
     })
 }
 

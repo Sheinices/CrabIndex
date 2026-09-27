@@ -134,14 +134,17 @@ tracksinterval:
   task0: 180 # Интервал запуска всех остальных задач, мин
 tsuri:
   - http://127.0.0.1:8090
-timeStatsUpdate: 15
+timeStatsUpdate: 90 # Пересчёт статистики читает всю базу с диска; чаще 90 мин не нужно (дома можно 360)
 timeSync: 120
 timeSyncSpidr: 360
 saveCheckpointEveryNBatches: 5
+# Кеш бакетов FileDB в памяти. Без него каждый поиск распаковывает шарды с диска и под
+# нагрузкой упирается в него. validHour: 1 - прочитанные бакеты живут час; 0 - вся база в RAM
+# (нужно много памяти). maxOpenWriteTask - сколько бакетов держать открытыми.
 evercache:
-  enable: false
+  enable: true
   validHour: 1
-  maxOpenWriteTask: 200
+  maxOpenWriteTask: 2000
   dropCacheTake: 200
 
 # Combined search (Prisma/Lampa Jackett JSON, Torznab XML - shared pipeline)

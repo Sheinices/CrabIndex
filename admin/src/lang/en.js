@@ -69,6 +69,13 @@ export default {
   ov_all_jobs: 'All jobs',
   ov_quick_links: 'Quick links',
 
+  // Performance hints on Overview (ids come from the server: config::performance_hints)
+  hint_evercache_off_title: 'FileDB cache (evercache) is off',
+  hint_evercache_off_text: 'Every search inflates shards from disk and stalls on it under load. Enable evercache.enable (validHour: 1).',
+  hint_stats_too_frequent_title: 'Statistics are recounted every {minutes} min',
+  hint_stats_too_frequent_text: 'Each recount reads the whole database from disk. Set timeStatsUpdate to 90 or more.',
+  hint_open_settings: 'Open settings',
+
   // Background jobs list (shared with Jobs page)
   jobs_empty: 'No active jobs',
   jobs_empty_hint:

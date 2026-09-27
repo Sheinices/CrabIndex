@@ -947,6 +947,58 @@ pub fn on_change(cb: impl Fn(&AppOptions) + Send + Sync + 'static) {
     CALLBACKS.lock().push(Box::new(cb));
 }
 
+/// A setting that makes this host noticeably slower than it needs to be. Shown on the admin
+/// Overview and logged at startup / config reload: installs made from the old
+/// `Data/example.yaml` carry these (evercache off, stats every 15 min), and updates keep the
+/// user's config, so the template fix alone never reaches them.
+#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize)]
+pub struct PerformanceHint {
+    /// `evercache_off` or `stats_too_frequent`; the panel maps it to text.
+    pub id: &'static str,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub minutes: Option<i32>,
+}
+
+pub fn performance_hints(c: &AppOptions) -> Vec<PerformanceHint> {
+    let mut v = Vec::new();
+    if !c.evercache.enable {
+        v.push(PerformanceHint { id: "evercache_off", minutes: None });
+    }
+    // -1 pauses the stats job; that is a deliberate choice, not a hint.
+    if c.timeStatsUpdate > 0 && c.timeStatsUpdate < 60 {
+        v.push(PerformanceHint { id: "stats_too_frequent", minutes: Some(c.timeStatsUpdate) });
+    }
+    v
+}
+
+#[cfg(test)]
+mod performance_hint_tests {
+    use super::*;
+
+    #[test]
+    fn defaults_produce_no_hints() {
+        assert!(performance_hints(&AppOptions::default()).is_empty());
+    }
+
+    #[test]
+    fn old_template_values_are_flagged() {
+        let mut c = AppOptions::default();
+        c.evercache.enable = false;
+        c.timeStatsUpdate = 15;
+        let ids: Vec<_> = performance_hints(&c).iter().map(|h| (h.id, h.minutes)).collect();
+        assert_eq!(ids, [("evercache_off", None), ("stats_too_frequent", Some(15))]);
+    }
+
+    #[test]
+    fn paused_stats_and_hourly_are_fine() {
+        let mut c = AppOptions::default();
+        c.timeStatsUpdate = -1;
+        assert!(performance_hints(&c).is_empty());
+        c.timeStatsUpdate = 60;
+        assert!(performance_hints(&c).is_empty());
+    }
+}
+
 fn notify_change(c: &AppOptions) {
     for cb in CALLBACKS.lock().iter() {
         cb(c);

@@ -1,5 +1,6 @@
 import { Link } from "react-router";
 import {
+  AlertTriangle,
   BookOpen,
   Braces,
   Clock,
@@ -167,6 +168,25 @@ export function OverviewPage() {
         }
       />
       <ErrorBox error={error} onRetry={reload} />
+      {(o.hints || []).length ? (
+        <div role="status" className="mb-6 space-y-2">
+          {o.hints.map((h) => (
+            <div
+              key={h.id}
+              className="flex flex-wrap items-start gap-3 rounded-xl border border-warn/40 bg-warn/10 px-4 py-3 text-sm"
+            >
+              <AlertTriangle className="mt-0.5 size-4 shrink-0 text-warn" aria-hidden="true" />
+              <div className="min-w-0 flex-1">
+                <p className="font-medium">{t(`hint_${h.id}_title`, { minutes: h.minutes })}</p>
+                <p className="text-muted">{t(`hint_${h.id}_text`, { minutes: h.minutes })}</p>
+              </div>
+              <Link to="/settings" className="btn btn-sm shrink-0">
+                {t("hint_open_settings")}
+              </Link>
+            </div>
+          ))}
+        </div>
+      ) : null}
       {loading && !data ? (
         <Spinner className="size-5" label={t("loading")} />
       ) : (

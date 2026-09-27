@@ -279,6 +279,7 @@ async fn api_paths_map_to_existing_handlers() {
     assert_eq!(v["trackers"][0]["slug"], "anibelka");
     assert_eq!(v["trackers"][0]["name"], "Anibelka");
     assert!(v["sync"].is_object() && v["config"].is_object());
+    assert!(v["hints"].is_array(), "performance hints array");
 
     let r = Req::get("/admin/api/logs").session(&s).send().await;
     assert_eq!(r.status(), StatusCode::OK);

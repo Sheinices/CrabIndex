@@ -147,6 +147,7 @@ function overview() {
     })),
     sync: { enabled: !!config.syncapi, syncapi: config.syncapi, lastsync: null, starsync: null, torrents: 3_342_561, remoteTorrents: 3_620_842 },
     config: { path: 'init.yaml', format: 'yaml' },
+    hints: [{ id: 'evercache_off' }, { id: 'stats_too_frequent', minutes: 15 }],
   }
 }
 

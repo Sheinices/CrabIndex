@@ -68,11 +68,8 @@
 | `syncapi` | не задан | `https://sync.crab.rip` |
 | `synctrackers` | не задан (все трекеры) | список из 25 трекеров |
 | `maxreadfile` | `200` | `250` |
-| `timeStatsUpdate` | `90` | `15` |
 | `timeSync` | `60` | `120` |
 | `timeSyncSpidr` | `60` | `360` |
-| `evercache.enable` | `true` | `false` |
-| `evercache.maxOpenWriteTask` | `2000` | `200` |
 | `flaresolverr.crawlUrl` | пусто | `http://127.0.0.1:8193/v1` |
 | `cffetch.proxy` | пусто | `socks5://127.0.0.1:20001` |
 | `alloha.timeoutSeconds` | `8` | `10` |
@@ -88,7 +85,7 @@
 | `fdbPathLevels` | `2` | Раскладка каталогов `Data/fdb`. Не меняйте после наполнения базы. См. [FileDB](../concepts/filedb.md) |
 | `maxreadfile` | `200` | Максимум бакетов, читаемых одним нечётким поиском |
 | `evercache.*` | см. [FileDB](../concepts/filedb.md) | Кеш открытых бакетов |
-| `logFdb`, `logFdbRetentionDays`, `logFdbMaxSizeMb`, `logFdbMaxFiles` | `true`, `7`, `0`, `0` | Журнал изменений FileDB |
+| `logFdb`, `logFdbRetentionDays`, `logFdbMaxSizeMb`, `logFdbMaxFiles` | `false`, `7`, `1024`, `0` | Журнал изменений FileDB |
 | `syncapi` | не задан | URL сервера синхронизации |
 | `synctrackers` | не задан | Какие трекеры принимать при синхронизации; также список трекеров в `/api/v1.0/trackers` и Torznab |
 | `syncsport` | `true` | Принимать спортивные раздачи при синхронизации |

@@ -72,6 +72,13 @@ export default {
   ov_all_jobs: 'Все задачи',
   ov_quick_links: 'Быстрые ссылки',
 
+  // Performance hints on Overview (ids come from the server: config::performance_hints)
+  hint_evercache_off_title: 'Кеш FileDB (evercache) выключен',
+  hint_evercache_off_text: 'Каждый поиск распаковывает шарды с диска и под нагрузкой упирается в него. Включите evercache.enable (validHour: 1).',
+  hint_stats_too_frequent_title: 'Статистика пересчитывается каждые {minutes} мин',
+  hint_stats_too_frequent_text: 'Каждый пересчёт читает всю базу с диска. Поставьте timeStatsUpdate: 90 или больше.',
+  hint_open_settings: 'Открыть настройки',
+
   // Background jobs list (shared with Jobs page)
   jobs_empty: 'Нет активных задач',
   jobs_empty_hint:

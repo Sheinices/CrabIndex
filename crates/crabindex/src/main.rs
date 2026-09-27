@@ -52,6 +52,11 @@ fn main() {
     // Loads init.yaml / init.conf and applies logging settings.
     let conf = crate::conf();
 
+    // Installs made from the old Data/example.yaml carry settings that make search slow; say so
+    // in the log at startup and whenever the config is reloaded (the panel shows the same hints).
+    log_performance_hints(&conf);
+    crab_core::config::on_change(log_performance_hints);
+
     // masterDb must be fully loaded before the listener accepts requests.
     crab_core::fdb::init_master_db();
 
@@ -113,6 +118,22 @@ fn init_modules() {
     crab_search::init();
     crab_tracks::init();
     crab_ops::init();
+}
+
+fn log_performance_hints(c: &crab_core::config::AppOptions) {
+    for h in crab_core::config::performance_hints(c) {
+        let msg = match h.id {
+            "evercache_off" => {
+                "evercache.enable: false - каждый поиск распаковывает шарды с диска; включите evercache (validHour: 1), см. docs/configuration/overview.md".to_string()
+            }
+            "stats_too_frequent" => format!(
+                "timeStatsUpdate: {} мин - каждый пересчёт статистики читает всю базу с диска; рекомендуется 90 и больше",
+                h.minutes.unwrap_or(0)
+            ),
+            other => other.to_string(),
+        };
+        log::warn(cat::HOST, msg);
+    }
 }
 
 fn spawn_workers(ct: &CancellationToken) {
