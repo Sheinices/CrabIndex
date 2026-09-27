@@ -22,11 +22,14 @@ pub fn ukr_voices() -> &'static [&'static str] {
     voices::UKR_VOICES
 }
 
-fn size_from_name(size_name: &str) -> i64 {
+/// Bytes from a size label like `1,5 GB` / `700 МБ` (0 when unknown). Tracker pages often put
+/// a non-breaking space (`&nbsp;`, U+00A0) between the number and the unit.
+pub fn size_from_name(size_name: &str) -> i64 {
     if size_name.trim().is_empty() {
         return 0;
     }
-    let g = rx::groups_i(size_name, r"([0-9\.,]+) (Mb|МБ|GB|ГБ|TB|ТБ)");
+    let size_name = size_name.replace("&nbsp;", " ").replace('\u{a0}', " ");
+    let g = rx::groups_i(&size_name, r"([0-9\.,]+)\s*(Mb|МБ|GB|ГБ|TB|ТБ)");
     if g[2].is_empty() {
         return 0;
     }
@@ -181,6 +184,17 @@ pub fn update_full_details(t: &mut TorrentDetails) {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn size_from_name_accepts_nbsp_and_units() {
+        assert_eq!(size_from_name("4.24 GB"), 4552665333);
+        assert_eq!(size_from_name("4.24\u{a0}GB"), 4552665333);
+        assert_eq!(size_from_name("4.24&nbsp;GB"), 4552665333);
+        assert_eq!(size_from_name("700 МБ"), 734003200);
+        assert_eq!(size_from_name("1,5 ТБ"), 1649267441664);
+        assert_eq!(size_from_name(""), 0);
+        assert_eq!(size_from_name("нет"), 0);
+    }
 
     #[test]
     fn details_from_title() {

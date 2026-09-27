@@ -2,6 +2,7 @@
 //! canonical host from config.
 //!
 //! * kinozal: grouped by `details.php?id=` (`.tv` → `.guru`); `userdetails` rows are dropped.
+//! * rutracker: grouped by `viewtopic.php?t=` (`.net` and mirrors → `.org`).
 //! * ultradox: grouped by host-independent path + `#h=` fragment (`.onl` → `.vip`, `00N.` mirrors),
 //!   so different qualities on one page stay separate rows.
 
@@ -107,6 +108,10 @@ fn process_shard(db: &mut fdb::ShardMap, spec: &Spec, c: &mut Counts) -> bool {
         let Some(canonical) = (spec.canonical_url)(gk) else { continue };
         let Some(keep_url) = pick_keep(urls, db, &spec.canonical_host) else { continue };
         let mut keep = db[&keep_url].clone();
+        if keep.size <= 0.0 && !util::is_blank(&keep.sizeName) {
+            // rows written before the size label parser accepted non-breaking spaces
+            keep.size = fdb::size_from_name(&keep.sizeName) as f64;
+        }
         let mut losers = 0;
         for u in urls {
             if u == &keep_url {
@@ -194,6 +199,25 @@ pub fn fix_kinozal() -> Value {
     })
 }
 
+fn rutracker_group_key(url: &str) -> Option<String> {
+    let id = rx::group(url, r"(?i)/viewtopic\.php\?t=(\d+)", 1);
+    id.parse::<i32>().ok().filter(|i| *i > 0).map(|i| i.to_string())
+}
+
+pub fn fix_rutracker() -> Value {
+    let host = conf().Rutracker.host.clone();
+    let canonical_host = host_of(&host).unwrap_or_else(|| "rutracker.org".into());
+    let base = base_or(&host, "https://rutracker.org");
+    let canonical_url = move |id: &str| Some(format!("{base}/forum/viewtopic.php?t={id}"));
+    run(Spec {
+        tracker: "rutracker",
+        canonical_host,
+        drop_userdetails: false,
+        group_key: &rutracker_group_key,
+        canonical_url: &canonical_url,
+    })
+}
+
 fn ultradox_group_key(url: &str) -> Option<String> {
     let k = ultradox::canonical_path_and_fragment(url);
     (!k.is_empty() && k != "/").then_some(k)
@@ -252,6 +276,34 @@ mod tests {
         assert_eq!(kept.url, new);
         let moved = &db["https://kinozal.guru/details.php?id=7"];
         assert_eq!(moved.url, "https://kinozal.guru/details.php?id=7");
+    }
+
+    #[test]
+    fn rutracker_collapses_domains_and_recomputes_size() {
+        let mut db = fdb::ShardMap::new();
+        let old = "https://rutracker.net/forum/viewtopic.php?t=6011397";
+        let new = "https://rutracker.org/forum/viewtopic.php?t=6011397";
+        let mut a = row(old, "magnet:?xt=urn:btih:aa", 21);
+        a.trackerName = "rutracker".into();
+        a.sizeName = "4.24 GB".into();
+        a.size = 4552665333.0;
+        db.insert(old.into(), a);
+        let mut b = row(new, "magnet:?xt=urn:btih:aa", 14);
+        b.trackerName = "rutracker".into();
+        b.sizeName = "4.24\u{a0}GB".into();
+        db.insert(new.into(), b);
+
+        let cu = |id: &str| Some(format!("https://rutracker.org/forum/viewtopic.php?t={id}"));
+        let spec = Spec { tracker: "rutracker", canonical_host: "rutracker.org".into(), drop_userdetails: false, group_key: &rutracker_group_key, canonical_url: &cu };
+        let mut c = Counts::default();
+        assert!(process_shard(&mut db, &spec, &mut c));
+        assert_eq!((c.scanned, c.rewritten, c.merged, c.removed), (2, 0, 1, 1));
+        assert_eq!(db.len(), 1);
+        let kept = &db[new];
+        assert_eq!(kept.sid, 21);
+        assert_eq!(kept.size, 4552665333.0);
+        assert_eq!(rutracker_group_key("https://rutracker.org/forum/viewtopic.php?t=42"), Some("42".into()));
+        assert_eq!(rutracker_group_key("https://rutracker.org/forum/viewforum.php?f=42"), None);
     }
 
     #[test]

@@ -15,7 +15,7 @@ mod jsonstream;
 mod master;
 mod url_ids;
 
-pub use details::{all_voices, rus_voices, ukr_voices, update_full_details};
+pub use details::{all_voices, rus_voices, size_from_name, ukr_voices, update_full_details};
 pub use jsonstream::{read_gz_json, write_gz_json};
 pub use master::*;
 pub use url_ids::{register_id_extractor, torrent_id_from_url, IdExtractor};

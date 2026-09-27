@@ -33,6 +33,7 @@ macro_rules! simple {
 }
 
 simple!(update_size, maintenance::update_size);
+simple!(fix_zero_sizes, maintenance::fix_zero_sizes);
 simple!(reset_check_time, maintenance::reset_check_time);
 simple!(update_details, maintenance::update_details);
 simple!(update_search_name, maintenance::update_search_name);
@@ -45,6 +46,7 @@ simple!(migrate_aniliberty_urls, migrations::aniliberty::migrate_urls);
 simple!(remove_duplicate_aniliberty, migrations::aniliberty::remove_duplicates);
 simple!(fix_animelayer_duplicates, migrations::animelayer::fix_duplicates);
 simple!(fix_kinozal_domain_duplicates, migrations::domain_dups::fix_kinozal);
+simple!(fix_rutracker_domain_duplicates, migrations::domain_dups::fix_rutracker);
 simple!(fix_ultradox_domain_duplicates, migrations::domain_dups::fix_ultradox);
 simple!(fix_serial_types, migrations::serial_types::fix_serial_types);
 
@@ -79,6 +81,7 @@ pub fn router() -> Router {
         .route("/dev/findduplicatekeys", any(find_duplicate_keys))
         .route("/dev/findemptysearchfields", any(find_empty_search_fields))
         .route("/dev/updatesize", any(update_size))
+        .route("/dev/fixzerosizes", any(fix_zero_sizes))
         .route("/dev/resetchecktime", any(reset_check_time))
         .route("/dev/updatedetails", any(update_details))
         .route("/dev/updatesearchname", any(update_search_name))
@@ -92,6 +95,7 @@ pub fn router() -> Router {
         .route("/dev/removeduplicateaniliberty", any(remove_duplicate_aniliberty))
         .route("/dev/fixanimelayerduplicates", any(fix_animelayer_duplicates))
         .route("/dev/fixkinozaldomainduplicates", any(fix_kinozal_domain_duplicates))
+        .route("/dev/fixrutrackerdomainduplicates", any(fix_rutracker_domain_duplicates))
         .route("/dev/fixultradoxdomainduplicates", any(fix_ultradox_domain_duplicates))
         .route("/dev/fixserialtypes", any(fix_serial_types))
 }

@@ -2,35 +2,13 @@
 
 use chrono::Duration;
 use crab_core::models::TorrentDetails;
-use crab_core::{fdb, rx, time, util};
+use crab_core::{fdb, time, util};
 use serde_json::{json, Value};
 
 use crate::maintenance::migration_target;
 use crate::nulls;
 
-/// Bytes from a size label like `1,5 GB` / `700 МБ` (0 when unknown).
-pub fn size_from_name(size_name: &str) -> i64 {
-    if util::is_blank(size_name) {
-        return 0;
-    }
-    let g = rx::groups(size_name, r"(?i)([0-9\.,]+) (Mb|МБ|GB|ГБ|TB|ТБ)");
-    let (num, unit) = (g.get(1).cloned().unwrap_or_default(), g.get(2).cloned().unwrap_or_default());
-    if util::is_blank(&unit) {
-        return 0;
-    }
-    let Ok(mut size) = num.replace(',', ".").parse::<f64>() else { return 0 };
-    if size == 0.0 {
-        return 0;
-    }
-    let u = unit.to_lowercase();
-    if u == "gb" || u == "гб" {
-        size *= 1024.0;
-    }
-    if u == "tb" || u == "тб" {
-        size *= 1_048_576.0;
-    }
-    (size * 1_048_576.0) as i64
-}
+pub use crab_core::fdb::size_from_name;
 
 /// Walk every bucket in `order`, apply `f` to each row, always mark the shard dirty.
 fn rewrite_all(keys: Vec<String>, mut f: impl FnMut(&str, &mut TorrentDetails)) {
@@ -59,6 +37,29 @@ pub fn update_size() -> Value {
         fdb::set_shard(key, t.updateTime);
     });
     json!({ "ok": true })
+}
+
+/// Recompute `size` only where it is 0 but `sizeName` is readable (e.g. labels with a
+/// non-breaking space that older builds could not parse). Touched rows get a fresh
+/// `updateTime`, so sync clients receive them.
+pub fn fix_zero_sizes() -> Value {
+    let mut fixed = 0i64;
+    let mut ordered = fdb::master_db_snapshot();
+    ordered.sort_by_key(|(_, s)| s.fileTime);
+    rewrite_all(ordered.into_iter().map(|(k, _)| k).collect(), |key, t| {
+        if t.size > 0.0 || util::is_blank(&t.sizeName) {
+            return;
+        }
+        let size = size_from_name(&t.sizeName);
+        if size <= 0 {
+            return;
+        }
+        t.size = size as f64;
+        t.updateTime = time::now();
+        fdb::set_shard(key, t.updateTime);
+        fixed += 1;
+    });
+    json!({ "ok": true, "fixed": fixed })
 }
 
 pub fn reset_check_time() -> Value {

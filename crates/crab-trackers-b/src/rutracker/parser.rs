@@ -163,7 +163,7 @@ fn try_parse_row_fields(row: &str) -> Option<(String, String, String, String, St
     let title = rx::replace(&title, "<[^>]+>", "");
     let sid = match_row(row, "<span class=\"seedmed\"[^>]+><b>([0-9]+)</b>");
     let pir = match_row(row, "<span class=\"leechmed\"[^>]+><b>([0-9]+)</b>");
-    let size_name = match_row(row, "dl-stub\">([^<]+)</a>").replace("&nbsp;", " ");
+    let size_name = match_row(row, "dl-stub\">([^<]+)</a>").replace("&nbsp;", " ").replace('\u{a0}', " ");
 
     if [&url, &title, &sid, &pir, &size_name].iter().any(|s| util::is_blank(s)) {
         return None;

@@ -75,6 +75,7 @@ curl --max-time 3600 -H "X-Dev-Key: YOUR_DEV_KEY" \
 | Маршрут | Что делает |
 | --- | --- |
 | `GET /dev/UpdateSize` | Пересчитывает `size` в байтах из `sizeName` (`700 MB`, `1,5 ГБ`, `2 TB`...) и обновляет `updateTime` |
+| `GET /dev/FixZeroSizes` | Пересчитывает `size` только там, где он 0, а `sizeName` читается (метки с неразрывным пробелом между числом и единицей); обновляет `updateTime` только у исправленных записей. Ответ `{ ok, fixed }` |
 | `GET /dev/ResetCheckTime` | Ставит всем записям `checkTime` на вчерашний день |
 | `GET /dev/UpdateDetails` | Пересчитывает производные поля по заголовку (`size`, `quality`, `videotype` SDR/HDR, озвучки `voices` и т. д.), очищает `languages`, обновляет `updateTime` |
 | `GET /dev/UpdateSearchName` | Заполняет пустые `name`/`originalname` из `title`, пересобирает `_sn`/`_so` и переносит записи, у которых изменился ключ бакета |
@@ -99,6 +100,7 @@ curl --max-time 3600 -H "X-Dev-Key: YOUR_DEV_KEY" \
 | `GET /dev/RemoveDuplicateAniliberty` | AniLiberty: для каждого infohash оставляет самую свежую запись | `{ ok, totalProcessed, totalRemoved, duplicatesFound, duplicates }` |
 | `GET /dev/FixAnimelayerDuplicates` | AnimeLayer: сливает дубликаты раздач | `{ ok, totalProcessed, totalFixed, totalRemoved, totalErrors, errors }` |
 | `GET /dev/FixKinozalDomainDuplicates` | Kinozal: сводит URL к домену из `Kinozal.host`, сливает дубли одной раздачи с разных доменов, удаляет ссылки на `userdetails.php` | `{ ok, scanned, rewritten, merged, removed, canonicalHost }` |
+| `GET /dev/FixRutrackerDomainDuplicates` | Rutracker: сводит URL к домену из `Rutracker.host` (`rutracker.net` и зеркала → `rutracker.org`), сливает дубли одной темы по `viewtopic.php?t=`, у оставленной записи пересчитывает нулевой `size` | `{ ok, scanned, rewritten, merged, removed, canonicalHost }` |
 | `GET /dev/FixUltradoxDomainDuplicates` | Ultradox: переписывает URL на домен из `Ultradox.host` и сливает дубли по пути и фрагменту | `{ ok, scanned, rewritten, merged, removed, canonicalHost }` |
 
 При слиянии дублей сохраняются лучшие `sid`/`pir`, самый свежий `updateTime` и магнит, если у оставляемой записи его не было.

@@ -47,7 +47,7 @@ pub fn torrent_id_from_url(tracker: &str, url: &str) -> i32 {
             // details.php?id= but not userdetails.php?id= (fallback when parser crate did not register)
             num(url, r"(?<![a-z])details\.php\?id=(\d+)", true)
         }
-        "nnmclub" | "anibelka" | "korsars" => num(url, r"viewtopic\.php\?t=(\d+)", true),
+        "nnmclub" | "anibelka" | "korsars" | "rutracker" => num(url, r"viewtopic\.php\?t=(\d+)", true),
         "anistar" | "leproduction" => num(url, r"[?&]id=(\d+)", true),
         "viruseproject" => num(url, r"[#?&]id=(\d+)", true),
         _ => 0,

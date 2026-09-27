@@ -226,7 +226,7 @@ pub fn build(torrents: &TorrentMap, apikey: Option<&str>, rqnum: bool) -> Vec<Re
             Tracker: opt(&i.trackerName),
             Details: if i.url.starts_with("http") { Some(i.url.clone()) } else { None },
             Title: opt(&i.title),
-            Size: i.size,
+            Size: if i.size > 0.0 { i.size } else { crab_core::fdb::size_from_name(&i.sizeName) as f64 },
             PublishDate: i.createTime,
             Category: Some(cats),
             CategoryDesc: desc,
