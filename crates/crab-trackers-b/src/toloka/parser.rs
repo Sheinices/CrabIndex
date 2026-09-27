@@ -109,7 +109,7 @@ fn try_parse_row_fields(row: &str) -> Option<(String, String, String, String, St
     let title = match_row(row, r#"class="topictitle">([^<]+)</a>"#);
     let sid = match_row(row, r#"<span class="seedmed"[^>]*><b>([0-9]+)</b></span>"#);
     let pir = match_row(row, r#"<span class="leechmed"[^>]*><b>([0-9]+)</b></span>"#);
-    let size_name = match_row(row, r#"<a href="(?:https?://[^"]+/)?download\.php[^"]+"[^>]*>([^<]+)</a>"#);
+    let size_name = match_row(row, r#"<a href="(?:https?://[^"]+/)?download\.php[^"]+"[^>]*>([^<]+)</a>"#).replace("&nbsp;", " ").replace('\u{a0}', " ");
 
     if [&url, &title, &sid, &pir, &size_name].iter().any(|s| util::is_blank(s))
         || size_name == "0 B"

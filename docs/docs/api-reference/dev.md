@@ -101,6 +101,7 @@ curl --max-time 3600 -H "X-Dev-Key: YOUR_DEV_KEY" \
 | `GET /dev/FixAnimelayerDuplicates` | AnimeLayer: сливает дубликаты раздач | `{ ok, totalProcessed, totalFixed, totalRemoved, totalErrors, errors }` |
 | `GET /dev/FixKinozalDomainDuplicates` | Kinozal: сводит URL к домену из `Kinozal.host`, сливает дубли одной раздачи с разных доменов, удаляет ссылки на `userdetails.php` | `{ ok, scanned, rewritten, merged, removed, canonicalHost }` |
 | `GET /dev/FixRutrackerDomainDuplicates` | Rutracker: сводит URL к домену из `Rutracker.host` (`rutracker.net` и зеркала → `rutracker.org`), сливает дубли одной темы по `viewtopic.php?t=`, у оставленной записи пересчитывает нулевой `size` | `{ ok, scanned, rewritten, merged, removed, canonicalHost }` |
+| `GET /dev/FixSelezenDomainDuplicates` | Selezen: сводит URL к домену из `Selezen.host` (`selezen.org`, `use.selezen.club` → текущий хост), сливает дубли одного релиза по id в пути, путь оставленной записи сохраняется | `{ ok, scanned, rewritten, merged, removed, canonicalHost }` |
 | `GET /dev/FixUltradoxDomainDuplicates` | Ultradox: переписывает URL на домен из `Ultradox.host` и сливает дубли по пути и фрагменту | `{ ok, scanned, rewritten, merged, removed, canonicalHost }` |
 
 При слиянии дублей сохраняются лучшие `sid`/`pir`, самый свежий `updateTime` и магнит, если у оставляемой записи его не было.

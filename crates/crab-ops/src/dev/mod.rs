@@ -47,6 +47,7 @@ simple!(remove_duplicate_aniliberty, migrations::aniliberty::remove_duplicates);
 simple!(fix_animelayer_duplicates, migrations::animelayer::fix_duplicates);
 simple!(fix_kinozal_domain_duplicates, migrations::domain_dups::fix_kinozal);
 simple!(fix_rutracker_domain_duplicates, migrations::domain_dups::fix_rutracker);
+simple!(fix_selezen_domain_duplicates, migrations::domain_dups::fix_selezen);
 simple!(fix_ultradox_domain_duplicates, migrations::domain_dups::fix_ultradox);
 simple!(fix_serial_types, migrations::serial_types::fix_serial_types);
 
@@ -96,6 +97,7 @@ pub fn router() -> Router {
         .route("/dev/fixanimelayerduplicates", any(fix_animelayer_duplicates))
         .route("/dev/fixkinozaldomainduplicates", any(fix_kinozal_domain_duplicates))
         .route("/dev/fixrutrackerdomainduplicates", any(fix_rutracker_domain_duplicates))
+        .route("/dev/fixselezendomainduplicates", any(fix_selezen_domain_duplicates))
         .route("/dev/fixultradoxdomainduplicates", any(fix_ultradox_domain_duplicates))
         .route("/dev/fixserialtypes", any(fix_serial_types))
 }

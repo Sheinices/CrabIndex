@@ -3,6 +3,8 @@
 //!
 //! * kinozal: grouped by `details.php?id=` (`.tv` → `.guru`); `userdetails` rows are dropped.
 //! * rutracker: grouped by `viewtopic.php?t=` (`.net` and mirrors → `.org`).
+//! * selezen: grouped by the release id in `/relizy-ot-selezen/{id}-…` (`selezen.org`,
+//!   `use.selezen.club` → `Selezen.host`); the kept row's path is preserved.
 //! * ultradox: grouped by host-independent path + `#h=` fragment (`.onl` → `.vip`, `00N.` mirrors),
 //!   so different qualities on one page stay separate rows.
 
@@ -35,7 +37,8 @@ struct Spec<'a> {
     canonical_host: String,
     drop_userdetails: bool,
     group_key: &'a dyn Fn(&str) -> Option<String>,
-    canonical_url: &'a dyn Fn(&str) -> Option<String>,
+    /// `(group key, kept URL)` → canonical URL.
+    canonical_url: &'a dyn Fn(&str, &str) -> Option<String>,
 }
 
 #[derive(Default)]
@@ -105,8 +108,8 @@ fn process_shard(db: &mut fdb::ShardMap, spec: &Spec, c: &mut Counts) -> bool {
 
     let mut to_write: IndexMap<String, (String, TorrentDetails)> = IndexMap::new();
     for (gk, urls) in &groups {
-        let Some(canonical) = (spec.canonical_url)(gk) else { continue };
         let Some(keep_url) = pick_keep(urls, db, &spec.canonical_host) else { continue };
+        let Some(canonical) = (spec.canonical_url)(gk, &keep_url) else { continue };
         let mut keep = db[&keep_url].clone();
         if keep.size <= 0.0 && !util::is_blank(&keep.sizeName) {
             // rows written before the size label parser accepted non-breaking spaces
@@ -189,7 +192,7 @@ fn kinozal_group_key(url: &str) -> Option<String> {
 
 pub fn fix_kinozal() -> Value {
     let (canonical_host, base) = kinozal_spec_parts();
-    let canonical_url = move |id: &str| Some(format!("{base}/details.php?id={id}"));
+    let canonical_url = move |id: &str, _: &str| Some(format!("{base}/details.php?id={id}"));
     run(Spec {
         tracker: "kinozal",
         canonical_host,
@@ -208,12 +211,37 @@ pub fn fix_rutracker() -> Value {
     let host = conf().Rutracker.host.clone();
     let canonical_host = host_of(&host).unwrap_or_else(|| "rutracker.org".into());
     let base = base_or(&host, "https://rutracker.org");
-    let canonical_url = move |id: &str| Some(format!("{base}/forum/viewtopic.php?t={id}"));
+    let canonical_url = move |id: &str, _: &str| Some(format!("{base}/forum/viewtopic.php?t={id}"));
     run(Spec {
         tracker: "rutracker",
         canonical_host,
         drop_userdetails: false,
         group_key: &rutracker_group_key,
+        canonical_url: &canonical_url,
+    })
+}
+
+fn selezen_group_key(url: &str) -> Option<String> {
+    let id = rx::group(url, r"(?i)/relizy-ot-selezen/(\d+)-", 1);
+    id.parse::<i32>().ok().filter(|i| *i > 0).map(|i| i.to_string())
+}
+
+/// Same path on the configured host (the slug is part of the URL, so it is taken from the kept row).
+fn path_on_host(base: &str, url: &str) -> Option<String> {
+    let path = rx::group(url, r"^https?://[^/]+(/.*)$", 1);
+    (!path.is_empty()).then(|| format!("{base}{path}"))
+}
+
+pub fn fix_selezen() -> Value {
+    let host = conf().Selezen.host.clone();
+    let canonical_host = host_of(&host).unwrap_or_else(|| "open.selezen.org".into());
+    let base = base_or(&host, "https://open.selezen.org");
+    let canonical_url = move |_: &str, keep_url: &str| path_on_host(&base, keep_url);
+    run(Spec {
+        tracker: "selezen",
+        canonical_host,
+        drop_userdetails: false,
+        group_key: &selezen_group_key,
         canonical_url: &canonical_url,
     })
 }
@@ -227,7 +255,7 @@ pub fn fix_ultradox() -> Value {
     let host = conf().Ultradox.host.clone();
     let canonical_host = host_of(&host).unwrap_or_else(|| "ultradox.vip".into());
     let base = base_or(&host, "https://ultradox.vip");
-    let canonical_url = move |path: &str| {
+    let canonical_url = move |path: &str, _: &str| {
         let u = ultradox::canonical_torrent_url(&base, path);
         (!u.is_empty()).then_some(u)
     };
@@ -249,7 +277,7 @@ mod tests {
         TorrentDetails { trackerName: "kinozal".into(), url: url.into(), magnet: magnet.into(), sid, ..Default::default() }
     }
 
-    fn kinozal_spec<'a>(cu: &'a dyn Fn(&str) -> Option<String>) -> Spec<'a> {
+    fn kinozal_spec<'a>(cu: &'a dyn Fn(&str, &str) -> Option<String>) -> Spec<'a> {
         Spec { tracker: "kinozal", canonical_host: "kinozal.guru".into(), drop_userdetails: true, group_key: &kinozal_group_key, canonical_url: cu }
     }
 
@@ -265,7 +293,7 @@ mod tests {
         db.insert("https://kinozal.tv/userdetails.php?id=1".into(), row("https://kinozal.tv/userdetails.php?id=1", "", 0));
         db.insert("https://kinozal.tv/details.php?id=7".into(), row("https://kinozal.tv/details.php?id=7", "m", 1));
 
-        let cu = |id: &str| Some(format!("https://kinozal.guru/details.php?id={id}"));
+        let cu = |id: &str, _: &str| Some(format!("https://kinozal.guru/details.php?id={id}"));
         let mut c = Counts::default();
         assert!(process_shard(&mut db, &kinozal_spec(&cu), &mut c));
         assert_eq!((c.scanned, c.rewritten, c.merged, c.removed), (4, 1, 1, 2));
@@ -293,7 +321,7 @@ mod tests {
         b.sizeName = "4.24\u{a0}GB".into();
         db.insert(new.into(), b);
 
-        let cu = |id: &str| Some(format!("https://rutracker.org/forum/viewtopic.php?t={id}"));
+        let cu = |id: &str, _: &str| Some(format!("https://rutracker.org/forum/viewtopic.php?t={id}"));
         let spec = Spec { tracker: "rutracker", canonical_host: "rutracker.org".into(), drop_userdetails: false, group_key: &rutracker_group_key, canonical_url: &cu };
         let mut c = Counts::default();
         assert!(process_shard(&mut db, &spec, &mut c));
@@ -304,6 +332,28 @@ mod tests {
         assert_eq!(kept.size, 4552665333.0);
         assert_eq!(rutracker_group_key("https://rutracker.org/forum/viewtopic.php?t=42"), Some("42".into()));
         assert_eq!(rutracker_group_key("https://rutracker.org/forum/viewforum.php?f=42"), None);
+    }
+
+    #[test]
+    fn selezen_collapses_domains_keeping_path() {
+        let mut db = fdb::ShardMap::new();
+        let old = "https://selezen.org/relizy-ot-selezen/254-zveropolis-zootopia-2016.html";
+        let new = "https://open.selezen.org/relizy-ot-selezen/254-zveropolis-zootopia-2016.html";
+        let lone = "https://use.selezen.club/relizy-ot-selezen/887-holodnoe-serdce.html";
+        for (u, sid) in [(old, 9), (new, 3), (lone, 1)] {
+            let mut r = row(u, "magnet:?xt=urn:btih:aa", sid);
+            r.trackerName = "selezen".into();
+            db.insert(u.into(), r);
+        }
+        let cu = |_: &str, keep: &str| path_on_host("https://open.selezen.org", keep);
+        let spec = Spec { tracker: "selezen", canonical_host: "open.selezen.org".into(), drop_userdetails: false, group_key: &selezen_group_key, canonical_url: &cu };
+        let mut c = Counts::default();
+        assert!(process_shard(&mut db, &spec, &mut c));
+        assert_eq!((c.scanned, c.rewritten, c.merged, c.removed), (3, 1, 1, 1));
+        assert_eq!(db.len(), 2);
+        assert_eq!(db[new].sid, 9);
+        let moved = "https://open.selezen.org/relizy-ot-selezen/887-holodnoe-serdce.html";
+        assert_eq!(db[moved].url, moved);
     }
 
     #[test]
