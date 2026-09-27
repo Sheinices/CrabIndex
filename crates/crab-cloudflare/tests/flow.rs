@@ -183,7 +183,10 @@ async fn interstitial_solution_is_page_failure() {
     configure(&fs, &cf, false, "");
     set_modes(FsMode::Challenge, CfMode::Error);
     assert!(fetch_async("https://chl.test/a", None, None, &[]).await.is_none());
-    assert_eq!(fs_calls().len(), 2);
+    // sessions.create + the request + 2 same-session retries (FlareSolverr keeps answering with
+    // the interstitial), then the fetch fails.
+    assert_eq!(fs_calls().len(), 4);
+    assert!(fs_calls()[1..].iter().all(|c| c == "request.get:crabindex-chl_test"), "{:?}", fs_calls());
 }
 
 #[tokio::test]

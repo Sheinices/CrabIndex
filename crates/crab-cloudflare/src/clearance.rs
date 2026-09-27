@@ -425,27 +425,46 @@ fn touch_session(v: &View, session: &BrowserSession) {
     arm_idle_timer(v);
 }
 
-/// Same-session retries on browser timeout before escalating.
+/// Same-session retries before escalating: on a browser timeout (`browserTimeoutRetries`) and
+/// when FlareSolverr reports "ok" with the interstitial still in the page ("challenge html in
+/// solution"). The latter is FlareSolverr not recognising the current Cloudflare markup and
+/// answering before the challenge auto-resolves; the same session usually returns the real page
+/// a moment later, so a couple of quick re-requests beat failing the fetch and re-guarding the host.
+const CHALLENGE_HTML_RETRIES: u32 = 2;
+const CHALLENGE_HTML_MSG: &str = "challenge html in solution";
+
 async fn request_with_timeout_retries(v: &View, session: &BrowserSession, url: &str, cookie: Option<&str>) -> (FetchOutcome, Option<String>, Option<String>) {
-    let attempts = 1 + v.browser_timeout_retries;
-    let mut last = (FetchOutcome::BrowserFailed, None, None);
-    for i in 0..attempts {
-        if i > 0 {
+    let mut timeout_left = v.browser_timeout_retries;
+    let mut challenge_left = CHALLENGE_HTML_RETRIES;
+    let mut first = true;
+    loop {
+        if !first {
             tokio::time::sleep(std::time::Duration::from_millis(1500)).await;
         }
-        last = request(v, session, url, cookie).await;
-        if last.0 != FetchOutcome::BrowserFailed {
-            return last;
-        }
+        first = false;
+        let last = request(v, session, url, cookie).await;
         let msg = last.2.as_deref().unwrap_or_default();
-        if !is_browser_timeout_message(msg) || is_session_broken_message(msg) {
-            return last;
-        }
-        if i + 1 < attempts {
-            log::warn(cat::HOST, format!("FlareSolverr browser timeout - same-session retry {}/{}", i + 1, v.browser_timeout_retries));
+        match last.0 {
+            FetchOutcome::PageFailed if msg == CHALLENGE_HTML_MSG && challenge_left > 0 => {
+                challenge_left -= 1;
+                log::warn(
+                    cat::HOST,
+                    format!(
+                        "FlareSolverr returned the challenge page as solved - same-session retry {}/{CHALLENGE_HTML_RETRIES}",
+                        CHALLENGE_HTML_RETRIES - challenge_left
+                    ),
+                );
+            }
+            FetchOutcome::BrowserFailed if is_browser_timeout_message(msg) && !is_session_broken_message(msg) && timeout_left > 0 => {
+                timeout_left -= 1;
+                log::warn(
+                    cat::HOST,
+                    format!("FlareSolverr browser timeout - same-session retry {}/{}", v.browser_timeout_retries - timeout_left, v.browser_timeout_retries),
+                );
+            }
+            _ => return last,
         }
     }
-    last
 }
 
 async fn request(v: &View, session: &BrowserSession, url: &str, cookie: Option<&str>) -> (FetchOutcome, Option<String>, Option<String>) {
