@@ -8,6 +8,11 @@
 //! While `nextread` is true masterDb + lastsync are saved every `saveCheckpointEveryNBatches`
 //! batches or at least every 5 minutes.
 //!
+//! Unknown slim rows: rows older than `start` come slim (sid/pir/url). When such a url is not
+//! in the local bucket the host renamed or moved the row after the client's last full pass and
+//! the full row never came (a slim row cannot be created locally). The bucket is then fetched
+//! in full through `/sync/fdb?key=` and imported.
+//!
 //! Deletions: a page carries whole buckets, so for every tracker the host says it serves
 //! (`trackers` in `/sync/conf`) the bucket content is authoritative - local rows of such a
 //! tracker that the incoming bucket no longer has (removed, merged as duplicates, moved to
@@ -169,6 +174,88 @@ pub fn prune_plan(local: &fdb::ShardMap, incoming_urls: &HashSet<String>, served
         .collect()
 }
 
+/// A row the host sent slim (no title/tracker): only sid, pir and url.
+fn is_slim(t: &TorrentDetails) -> bool {
+    t.title.is_empty() && t.trackerName.is_empty()
+}
+
+/// Urls of slim rows in `incoming` that the local bucket does not have.
+pub fn unknown_slim_urls(local: &fdb::ShardMap, incoming: &IndexMap<String, TorrentDetails>) -> Vec<String> {
+    incoming.iter().filter(|(u, t)| is_slim(t) && !local.contains_key(u.as_str())).map(|(u, _)| u.clone()).collect()
+}
+
+/// `synctrackers` / `syncsport` as applied by [`filter_incoming`], for one row.
+fn row_allowed(t: &TorrentDetails, c: &AppOptions) -> bool {
+    if let Some(st) = &c.synctrackers {
+        if !t.trackerName.is_empty() && !st.iter().any(|x| x == &t.trackerName) {
+            return false;
+        }
+    }
+    c.syncsport || !t.types.iter().any(|x| x == "sport")
+}
+
+/// One item of `/sync/fdb?key=`.
+#[derive(Deserialize, Default, Debug)]
+#[serde(default)]
+struct BucketIn {
+    #[serde(deserialize_with = "de::string")]
+    Key: String,
+    value: Option<IndexMap<String, TorrentDetails>>,
+}
+
+/// Buckets of a page whose slim rows include urls unknown here (checked against the local copy).
+async fn buckets_with_unknown_slim(cols: &[CollectionIn]) -> Vec<String> {
+    let pairs: Vec<(String, IndexMap<String, TorrentDetails>)> = cols
+        .iter()
+        .filter(|c| !c.Key.is_empty())
+        .filter_map(|c| c.Value.as_ref().and_then(|v| v.torrents.as_ref()).map(|t| (c.Key.clone(), t.clone())))
+        .filter(|(_, t)| t.values().any(is_slim))
+        .collect();
+    if pairs.is_empty() {
+        return Vec::new();
+    }
+    tokio::task::spawn_blocking(move || {
+        pairs
+            .into_iter()
+            .filter(|(key, incoming)| {
+                let local = if fdb::MASTER_DB.contains_key(key) { fdb::open_read(key, false, false) } else { fdb::ShardMap::new() };
+                !unknown_slim_urls(&local, incoming).is_empty()
+            })
+            .map(|(key, _)| key)
+            .collect()
+    })
+    .await
+    .unwrap_or_default()
+}
+
+/// Fetch the named buckets in full and import their rows. Returns `(buckets fetched, rows imported)`.
+async fn refetch_buckets(syncapi: &str, keys: Vec<String>, c: &AppOptions, ct: &CancellationToken) -> (usize, usize) {
+    let (mut fetched, mut rows) = (0usize, 0usize);
+    for key in keys {
+        if ct.is_cancelled() {
+            break;
+        }
+        let url = format!("{syncapi}/sync/fdb?key={}", urlencoding::encode(&key));
+        let req = Req::new().timeout(120).max_size(100_000_000).cancel(ct);
+        let Some(items) = net::get_json::<Vec<BucketIn>>(&url, &req).await else { continue };
+        let Some(item) = items.into_iter().find(|i| i.Key == key) else { continue };
+        fetched += 1;
+        let torrents: Vec<TorrentDetails> = item.value.unwrap_or_default().into_values().filter(|t| !is_slim(t) && row_allowed(t, c)).collect();
+        rows += torrents.len();
+        import(torrents).await;
+    }
+    (fetched, rows)
+}
+
+/// Heal buckets whose slim rows are unknown here; returns `(buckets, rows)` imported.
+async fn heal_unknown_slim(syncapi: &str, cols: &[CollectionIn], c: &AppOptions, ct: &CancellationToken) -> (usize, usize) {
+    let keys = buckets_with_unknown_slim(cols).await;
+    if keys.is_empty() {
+        return (0, 0);
+    }
+    refetch_buckets(syncapi, keys, c, ct).await
+}
+
 /// Apply [`prune_plan`] to every bucket of a page; returns the number of dropped rows.
 async fn prune_missing(cols: &[CollectionIn], served: Option<&HashSet<String>>, c: &AppOptions) -> usize {
     let Some(served) = served else { return 0 };
@@ -266,6 +353,7 @@ async fn torrents_cycle(c: &AppOptions, syncapi: &str, st: &mut SyncState, ct: &
     let cycle_start = Instant::now();
     let mut cycle_total = 0usize;
     let mut cycle_dropped = 0usize;
+    let mut cycle_healed = 0usize;
     let mut end = CycleEnd::Done;
     log::info(cat::SYNC, format!("start / {}", now_str()));
 
@@ -340,12 +428,15 @@ async fn torrents_cycle(c: &AppOptions, syncapi: &str, st: &mut SyncState, ct: &
                 let n = torrents.len();
                 import(torrents).await;
                 cycle_total += n;
-                let dropped = prune_missing(root.collections.as_deref().unwrap_or(&[]), served.as_ref(), c).await;
+                let cols = root.collections.as_deref().unwrap_or(&[]);
+                let (healed_b, healed_r) = heal_unknown_slim(syncapi, cols, c, ct).await;
+                cycle_healed += healed_r;
+                let dropped = prune_missing(cols, served.as_ref(), c).await;
                 cycle_dropped += dropped;
                 log::info(
                     cat::SYNC,
                     format!(
-                        "[{batch_index}] time={} ({}) | {n} torrents, dropped {dropped}, nextread={}, {}",
+                        "[{batch_index}] time={} ({}) | {n} torrents, refetched {healed_r} rows/{healed_b} buckets, dropped {dropped}, nextread={}, {}",
                         st.lastsync,
                         format_file_time(st.lastsync),
                         if root.nextread { "True" } else { "False" },
@@ -377,7 +468,7 @@ async fn torrents_cycle(c: &AppOptions, syncapi: &str, st: &mut SyncState, ct: &
     write_checkpoint(LAST_SYNC_PATH, st.lastsync);
     log::info(
         cat::SYNC,
-        format!("end / {} (cycle added {cycle_total} torrents, dropped {cycle_dropped} in {})", now_str(), format_elapsed(cycle_start.elapsed())),
+        format!("end / {} (cycle added {cycle_total} torrents, refetched {cycle_healed}, dropped {cycle_dropped} in {})", now_str(), format_elapsed(cycle_start.elapsed())),
     );
     Ok(end)
 }
@@ -443,6 +534,7 @@ async fn spidr_cycle(syncapi: &str, c: &AppOptions, ct: &CancellationToken) -> a
     }
     let served = served_from_conf(conf_json.as_ref());
     let mut cycle_dropped = 0usize;
+    let mut cycle_healed = 0usize;
     let cycle_start = Instant::now();
     let mut cycle_total = 0usize;
     let mut batch_index = 0i32;
@@ -465,6 +557,8 @@ async fn spidr_cycle(syncapi: &str, c: &AppOptions, ct: &CancellationToken) -> a
         let rows: Vec<TorrentDetails> =
             cols.iter().filter_map(|c| c.Value.as_ref().and_then(|v| v.torrents.as_ref())).flat_map(|t| t.values().cloned()).collect();
         import(rows).await;
+        let (healed_b, healed_r) = heal_unknown_slim(syncapi, cols, c, ct).await;
+        cycle_healed += healed_r;
         let dropped = prune_missing(cols, served.as_ref(), c).await;
         cycle_dropped += dropped;
 
@@ -472,7 +566,7 @@ async fn spidr_cycle(syncapi: &str, c: &AppOptions, ct: &CancellationToken) -> a
         log::info(
             cat::SYNC_SPIDR,
             format!(
-                "[{batch_index}] time={lastsync_spidr} ({}) | {} collections, {batch_count} torrents, dropped {dropped}, nextread={}, {}",
+                "[{batch_index}] time={lastsync_spidr} ({}) | {} collections, {batch_count} torrents, refetched {healed_r} rows/{healed_b} buckets, dropped {dropped}, nextread={}, {}",
                 format_file_time(lastsync_spidr),
                 cols.len(),
                 if root.nextread { "True" } else { "False" },
@@ -495,7 +589,7 @@ async fn spidr_cycle(syncapi: &str, c: &AppOptions, ct: &CancellationToken) -> a
     save_master().await;
     log::info(
         cat::SYNC_SPIDR,
-        format!("end / {} (cycle added {cycle_total} torrents, dropped {cycle_dropped} in {})", now_str(), format_elapsed(cycle_start.elapsed())),
+        format!("end / {} (cycle added {cycle_total} torrents, refetched {cycle_healed}, dropped {cycle_dropped} in {})", now_str(), format_elapsed(cycle_start.elapsed())),
     );
     Ok(())
 }
@@ -537,6 +631,28 @@ mod tests {
 
     fn row(tracker: &str, url: &str) -> TorrentDetails {
         TorrentDetails { trackerName: tracker.into(), url: url.into(), ..Default::default() }
+    }
+
+    #[test]
+    fn unknown_slim_urls_only_for_slim_rows_missing_locally() {
+        let mut local = fdb::ShardMap::new();
+        local.insert("known".into(), row("rutor", "known"));
+        let mut incoming: IndexMap<String, TorrentDetails> = IndexMap::new();
+        incoming.insert("known".into(), TorrentDetails { url: "known".into(), sid: 1, ..Default::default() });
+        incoming.insert("moved".into(), TorrentDetails { url: "moved".into(), sid: 2, ..Default::default() });
+        let mut full = row("rutor", "full-new");
+        full.title = "t".into();
+        incoming.insert("full-new".into(), full);
+        assert_eq!(unknown_slim_urls(&local, &incoming), vec!["moved".to_string()]);
+
+        let mut c = AppOptions::default();
+        let mut sport = row("rutor", "s");
+        sport.types = vec!["sport".into()];
+        assert!(row_allowed(&sport, &c));
+        c.syncsport = false;
+        assert!(!row_allowed(&sport, &c));
+        c.synctrackers = Some(vec!["kinozal".into()]);
+        assert!(!row_allowed(&row("rutor", "x"), &c));
     }
 
     #[test]

@@ -9,7 +9,7 @@
 //!   so different qualities on one page stay separate rows.
 
 use crab_core::models::TorrentDetails;
-use crab_core::{conf, fdb, rx, util};
+use crab_core::{conf, fdb, rx, time, util};
 use indexmap::IndexMap;
 use serde_json::{json, Value};
 use std::collections::HashSet;
@@ -136,11 +136,14 @@ fn process_shard(db: &mut fdb::ShardMap, spec: &Spec, c: &mut Counts) -> bool {
             }
             to_remove.add(&keep_url);
             keep.url = canonical.clone();
+            // A new url must reach sync clients as a full row (see fdb::add_or_update_core).
+            keep.updateTime = time::now();
             to_write.insert(canonical.to_lowercase(), (canonical, keep));
             c.rewritten += 1;
         } else {
             if losers > 0 {
                 keep.url = canonical;
+                keep.updateTime = time::now();
             }
             db.insert(keep_url.clone(), keep);
         }

@@ -239,6 +239,12 @@ fn add_or_update_core(
 
     if let Some(mut t) = existing {
         let mut update_full = false;
+        if found_by_id {
+            // The url changed (new slug or domain). Sync clients only get a full row when
+            // updateTime is newer than their cursor - a silent url change would reach them slim
+            // and could not be created there.
+            upt(&mut t, st, &mut update_full, false, true);
+        }
 
         // types
         if !torrent.types.is_empty() {

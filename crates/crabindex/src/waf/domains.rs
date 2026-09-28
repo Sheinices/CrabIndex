@@ -26,6 +26,10 @@ pub const BUILTIN_BLOCKED_DOMAINS: &[&str] = &[
     "uspeh.sbs",
     "usph.xyz",
     "xabb.ru",
+    "kinohub.uk",
+    "zoominfo.com",
+    // FreeDNS-style shared zone: only this site and its subdomains, never all of qzz.io
+    "my.lampa.qzz.io",
     // FreeDNS shared zone: only this site and its subdomains, never all of mooo.com
     "lampaua.mooo.com",
     // shared zones: only these sites and their subdomains
@@ -114,7 +118,7 @@ mod tests {
 
     #[test]
     fn builtin_list_is_lowercase_and_valid() {
-        assert_eq!(BUILTIN_BLOCKED_DOMAINS.len(), 21);
+        assert_eq!(BUILTIN_BLOCKED_DOMAINS.len(), 24);
         for d in BUILTIN_BLOCKED_DOMAINS {
             assert_eq!(parse_rule(d).as_deref(), Ok(*d));
         }
