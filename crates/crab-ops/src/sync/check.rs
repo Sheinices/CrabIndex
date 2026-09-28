@@ -176,7 +176,11 @@ async fn run_check(c: &AppOptions, syncapi: &str, ct: &CancellationToken) -> Val
 
     let to_fetch: Vec<String> = p.missing.iter().chain(p.mismatched.iter()).take(MAX_FETCH).cloned().collect();
     let planned_fetch = to_fetch.len();
+    let host_ft: HashMap<&str, i64> = digest.buckets.iter().map(|(k, ft)| (k.as_str(), *ft)).collect();
+    let stamps: Vec<(String, i64)> = to_fetch.iter().filter_map(|k| host_ft.get(k.as_str()).map(|ft| (k.clone(), *ft))).collect();
     let (fetched, rows, pruned) = cron::refetch_buckets(syncapi, to_fetch, c, ct, Some(&served)).await;
+    // Refetched buckets now equal the host's: carry its stamp so the next digest matches.
+    tokio::task::spawn_blocking(move || cron::mirror_bucket_stamps(stamps)).await.ok();
 
     let mut deleted = 0usize;
     let mut kept_local = 0usize;

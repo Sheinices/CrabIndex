@@ -106,7 +106,7 @@ Ctrl+C корректно прерывает проход.
 | --- | --- | --- |
 | Размер 0 | `size` = 0 при читаемом `sizeName` | `FixZeroSizes` |
 | Дубли по id | Лишние записи одной раздачи (один числовой id в адресе, несколько строк) у трекеров с id в URL | `FixSlugDuplicates` |
-| Чужой домен | Записи с хостом, отличным от `host` трекера в конфиге | `FixKinozalDomainDuplicates`, `FixRutrackerDomainDuplicates`, `FixSelezenDomainDuplicates`, `FixUltradoxDomainDuplicates` |
+| Чужой домен | Записи с хостом, отличным от `host` трекера в конфиге (knaben не считается: его записи по замыслу ведут на другие сайты) | `FixKinozalDomainDuplicates`, `FixRutrackerDomainDuplicates`, `FixSelezenDomainDuplicates`, `FixUltradoxDomainDuplicates` |
 | Имена | rutracker: `originalname` совпал с `name`, хотя в заголовке есть оригинал через `/` | `FixRutrackerNames` |
 
 Отчёт сохраняется в `Data/temp/datacheck.json` (`GET /dev/CheckDataStatus` отдаёт последний), суммарное число попадает в карточку **Здоровье** обзора. В `Data/crontab` проверка стоит на воскресенье 05:30, после `maintenance-check`. Число в ячейке таблицы в панели это кнопка запуска нужной миграции.

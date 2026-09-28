@@ -283,6 +283,22 @@ async fn heal_unknown_slim(syncapi: &str, cols: &[CollectionIn], c: &AppOptions,
     (b, r)
 }
 
+/// Mirror the host's bucket stamp (`fileTime`) on the local masterDb after importing a
+/// page, so the integrity check compares equal stamps instead of the local
+/// "newest row updateTime", which differs whenever the host re-stamped a bucket (migrations,
+/// deletions) without touching its rows.
+pub(super) fn mirror_bucket_stamps(stamps: Vec<(String, i64)>) {
+    for (key, ft) in stamps {
+        if ft > 0 && fdb::MASTER_DB.contains_key(&key) {
+            fdb::set_shard_raw(&key, crab_core::models::MasterDbShard { updateTime: time::from_file_time_utc(ft), fileTime: ft });
+        }
+    }
+}
+
+fn page_stamps(cols: &[CollectionIn]) -> Vec<(String, i64)> {
+    cols.iter().filter(|c| !c.Key.is_empty()).filter_map(|c| c.Value.as_ref().map(|v| (c.Key.clone(), v.fileTime))).collect()
+}
+
 /// Apply [`prune_plan`] to every bucket of a page; returns the number of dropped rows.
 async fn prune_missing(cols: &[CollectionIn], served: Option<&HashSet<String>>, c: &AppOptions) -> usize {
     let Some(served) = served else { return 0 };
@@ -465,6 +481,8 @@ async fn torrents_cycle(c: &AppOptions, syncapi: &str, st: &mut SyncState, ct: &
                 cycle_healed += healed_r;
                 let dropped = prune_missing(cols, served.as_ref(), c).await;
                 cycle_dropped += dropped;
+                let stamps = page_stamps(cols);
+                let _ = tokio::task::spawn_blocking(move || mirror_bucket_stamps(stamps)).await;
                 log::info(
                     cat::SYNC,
                     format!(
@@ -593,6 +611,8 @@ async fn spidr_cycle(syncapi: &str, c: &AppOptions, ct: &CancellationToken) -> a
         cycle_healed += healed_r;
         let dropped = prune_missing(cols, served.as_ref(), c).await;
         cycle_dropped += dropped;
+        let stamps = page_stamps(cols);
+        let _ = tokio::task::spawn_blocking(move || mirror_bucket_stamps(stamps)).await;
 
         cycle_total += batch_count;
         log::info(

@@ -39,11 +39,15 @@ impl Counts {
     }
 }
 
+/// Aggregators whose rows legitimately point at other sites (`host` is only their API).
+const NO_HOST_CHECK: [&str; 1] = ["knaben"];
+
 /// Configured host (lowercase) of every tracker, for the foreign-host check.
 fn configured_hosts() -> HashMap<String, String> {
     let c = conf();
     crab_core::config::TRACKER_SLUGS
         .iter()
+        .filter(|slug| !NO_HOST_CHECK.contains(slug))
         .filter_map(|slug| c.tracker(slug).and_then(|t| host_of(&t.host)).map(|h| (slug.to_string(), h)))
         .collect()
 }
