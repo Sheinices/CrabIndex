@@ -334,6 +334,27 @@ async fn api_request(mut req: Request, next: Next, c: &AppOptions, base: &str, s
                 Err(e) => json_response(StatusCode::OK, json!({ "ok": false, "error": e })),
             };
         }
+        ("POST", "trackers/checklogin") => {
+            let tracker = req
+                .uri()
+                .query()
+                .and_then(|q| url::form_urlencoded::parse(q.as_bytes()).find(|(k, _)| k == "tracker").map(|(_, v)| v.into_owned()))
+                .unwrap_or_default()
+                .trim()
+                .to_ascii_lowercase();
+            if tracker.is_empty() {
+                return json_response(StatusCode::BAD_REQUEST, json!({ "ok": false, "error": "tracker required" }));
+            }
+            return match crab_core::trackers::login_status::check(&tracker).await {
+                None => json_response(StatusCode::NOT_FOUND, json!({ "ok": false, "error": "no login check for this tracker" })),
+                Some(Ok(())) => json_response(StatusCode::OK, json!({ "ok": true, "tracker": tracker, "status": crab_core::trackers::login_status::get(&tracker) })),
+                Some(Err(e)) => json_response(StatusCode::OK, json!({ "ok": false, "tracker": tracker, "error": e, "status": crab_core::trackers::login_status::get(&tracker) })),
+            };
+        }
+        ("POST", "notify/test") => {
+            let errors = crate::health::send_test(c).await;
+            return json_response(StatusCode::OK, json!({ "ok": errors.is_empty(), "errors": errors }));
+        }
         ("GET", "logs/fdb") => {
             let c = crate::conf();
             let v = tokio::task::spawn_blocking(move || api::fdb_log_info(&c)).await.unwrap_or(Value::Null);

@@ -90,6 +90,10 @@ fn has_cookie() -> bool {
 }
 
 fn set_login_error(e: Option<String>) {
+    crab_core::trackers::login_status::report(TRACKER_NAME, match &e {
+        Some(err) => Err(err.clone()),
+        None => Ok(()),
+    });
     *LAST_LOGIN_ERROR.lock() = e;
 }
 
@@ -278,6 +282,23 @@ async fn take_login_browser(login_url: &str, form: &[(&str, &str); 3]) -> Option
         set_login_error(Some(e));
     }
     cookie
+}
+
+/// Admin panel "check login": drop the cached cookie and log in again.
+pub fn login_checker() -> crab_core::trackers::login_status::Checker {
+    std::sync::Arc::new(|| {
+        Box::pin(async {
+            if crab_core::util::is_blank(conf().Kinozal.login_u()) && crab_core::util::is_blank(conf().Kinozal.cookie.as_deref().unwrap_or("")) {
+                return Err("credentials not configured (login.u / login.p or cookie)".to_string());
+            }
+            *COOKIE.lock() = None;
+            if ensure_logged_in().await {
+                Ok(())
+            } else {
+                Err(LAST_LOGIN_ERROR.lock().clone().unwrap_or_else(|| "login failed".into()))
+            }
+        })
+    })
 }
 
 async fn ensure_logged_in() -> bool {

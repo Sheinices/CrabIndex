@@ -386,6 +386,44 @@ impl Stats {
         self.ips.iter().map(|r| (r.key().clone(), r.value().clone())).collect()
     }
 
+    /// Banned or rate-limited addresses that had looked like real search clients before the
+    /// block (Prisma, Lampa, Android HTTP stacks hitting the search API): one entry per IP with
+    /// the number of allowed searches seen in the log and the first block. The request log is
+    /// bounded (`historySize`), so this covers the recent past only.
+    pub fn affected_clients(&self, now: DateTime<Utc>, window_minutes: i64) -> Vec<Value> {
+        let start = now - chrono::Duration::minutes(window_minutes.max(1));
+        let log = self.log.lock();
+        let mut searches: std::collections::HashMap<String, (u64, String, String)> = std::collections::HashMap::new();
+        let mut blocked: Vec<(String, DateTime<Utc>, Reason, String)> = Vec::new();
+        for e in log.iter() {
+            if e.time < start {
+                continue;
+            }
+            let client_ua = is_client_ua(&e.ua);
+            match e.blocked {
+                None if client_ua && is_search_path(&e.path) => {
+                    let v = searches.entry(e.ip.clone()).or_insert_with(|| (0, e.ua.clone(), e.host.clone()));
+                    v.0 += 1;
+                }
+                Some(r @ (Reason::Ban | Reason::Rate | Reason::Trap | Reason::Ua)) if client_ua || is_search_path(&e.path) => {
+                    blocked.push((e.ip.clone(), e.time, r, e.host.clone()));
+                }
+                _ => {}
+            }
+        }
+        let mut seen = std::collections::HashSet::new();
+        let mut out = Vec::new();
+        for (ip, at, reason, host) in blocked {
+            let Some((n, ua, _)) = searches.get(&ip) else { continue };
+            if *n == 0 || !seen.insert(ip.clone()) {
+                continue;
+            }
+            out.push(json!({ "ip": ip, "ua": ua, "host": host, "reason": reason.as_str(), "at": at.to_rfc3339_opts(chrono::SecondsFormat::Secs, true), "searches": n }));
+        }
+        out.sort_by(|a, b| b["searches"].as_u64().cmp(&a["searches"].as_u64()));
+        out
+    }
+
     /// `GET waf/overview` payload (without `enabled`).
     pub fn overview(&self, window_minutes: i64, now: DateTime<Utc>) -> Value {
         let since = self.since();
@@ -465,6 +503,18 @@ impl Stats {
     pub fn tracked(&self) -> (usize, usize, usize) {
         (self.ips.len(), self.paths.len(), self.log.lock().len())
     }
+}
+
+/// User-Agents of the media clients that talk to the search API (never scanners or browsers
+/// on their own: a plain browser UA is ambiguous, so it only counts on a search path).
+pub fn is_client_ua(ua: &str) -> bool {
+    let u = ua.to_ascii_lowercase();
+    u.contains("lampa") || u.contains("prisma") || u.contains("okhttp") || u.contains("dalvik") || u.contains("axios") || u.contains("torrserver")
+}
+
+pub fn is_search_path(path: &str) -> bool {
+    let p = path.to_ascii_lowercase();
+    p.starts_with("/api/v2.0/indexers") || p.starts_with("/api/v1.0/torrents") || p.starts_with("/api/v2.0/torznab")
 }
 
 #[cfg(test)]
@@ -626,5 +676,19 @@ mod tests {
         // the most recent survives, the oldest is gone
         assert!(s.ips.contains_key(&format!("ip{}", MAX_IPS + EVICT_SLACK + 9)));
         assert!(!s.ips.contains_key("ip0"));
+    }
+}
+
+#[cfg(test)]
+mod affected_tests {
+    use super::*;
+
+    #[test]
+    fn client_ua_and_search_path() {
+        assert!(is_client_ua("Mozilla/5.0 (Linux; Android 9) Chrome/53 lampa_client"));
+        assert!(is_client_ua("okhttp/4.12.0"));
+        assert!(!is_client_ua("Mozilla/5.0 (compatible; PanguBot/1.0)"));
+        assert!(is_search_path("/api/v2.0/indexers/all/results?title=x"));
+        assert!(!is_search_path("/wp-admin/install.php"));
     }
 }

@@ -1,5 +1,6 @@
 //! Tracker infrastructure shared by all tracker crates.
 pub mod cycle;
+pub mod login_status;
 pub mod registry;
 pub mod sync;
 

@@ -810,6 +810,13 @@ paths:
       operationId: statsTorrents
       parameters:
         - $ref: "#/components/parameters/ApiKeyQuery"
+        - name: format
+          in: query
+          required: false
+          description: "`csv` - the same rows as text/csv (UTF-8 with BOM, attachment crabindex-trackers.csv)"
+          schema:
+            type: string
+            enum: [json, csv]
       responses:
         "200":
           description: Tracker summary array (or `[]` when openstats is false)
@@ -819,6 +826,9 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/TrackerStat"
+            text/csv:
+              schema:
+                type: string
         "401":
           $ref: "#/components/responses/Unauthorized"
 

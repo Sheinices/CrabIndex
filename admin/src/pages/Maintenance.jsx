@@ -1,6 +1,6 @@
 import { useId, useState } from 'react'
-import { CloudLightning, Database, HardDriveDownload, Play, Search, ShieldAlert, Stethoscope } from 'lucide-react'
-import { runPath } from '../lib/api.js'
+import { ClipboardCheck, CloudLightning, Database, HardDriveDownload, Play, Search, ShieldAlert, Stethoscope } from 'lucide-react'
+import { getDataCheck, runPath } from '../lib/api.js'
 import { CHECK_MODES, DIAGNOSTICS, MIGRATIONS } from '../lib/maintenance.js'
 import { cleanParams } from '../lib/actions.js'
 import { usePolling } from '../hooks/usePolling.js'
@@ -8,6 +8,7 @@ import { useResult } from '../components/ResultDrawer.jsx'
 import { useConfirm } from '../components/Confirm.jsx'
 import { Modal } from '../components/Modal.jsx'
 import { PageHeader, Spinner, StatusDot } from '../components/ui.jsx'
+import { formatDate, formatNumber, formatRelative } from '../lib/format.js'
 import { useT } from '../lang/index.jsx'
 
 function Section({ icon: Icon, title, description, children, id }) {
@@ -79,6 +80,86 @@ function ParamsModal({ item, onClose, onSubmit }) {
         {item.destructive ? <p className="text-sm text-danger">{t('mt_backup_note')}</p> : null}
       </form>
     </Modal>
+  )
+}
+
+const DATA_COLUMNS = [
+  ['zeroSize', 'mt_data_zero_size'],
+  ['dupIds', 'mt_data_dup_ids'],
+  ['foreignHost', 'mt_data_foreign_host'],
+  ['badNames', 'mt_data_bad_names'],
+]
+
+/** Last read-only data-quality report (`/dev/checkdata`, weekly cron) with fix buttons. */
+function DataCheckSection({ busy, onRun, onFix }) {
+  const t = useT()
+  const { data, reload } = usePolling(() => getDataCheck().then((r) => r.last || null), 60_000)
+  const last = data && typeof data === 'object' ? data : null
+  const fixes = last?.fixes || {}
+  const total = last?.total || {}
+  const fixFor = (col, tracker) => (col === 'foreignHost' ? fixes.foreignHost?.[tracker] : fixes[col])
+  return (
+    <Section id="mt-data" icon={ClipboardCheck} title={t('mt_data_title')} description={t('mt_data_desc')}>
+      <div className="mb-3 flex flex-wrap items-center gap-3 text-sm">
+        <button type="button" className="btn" onClick={() => { onRun(); setTimeout(reload, 2000) }} disabled={busy}>
+          {busy ? <Spinner /> : <Play className="size-4" aria-hidden="true" />}
+          {t('mt_data_run')}
+        </button>
+        {last ? (
+          <span className="text-muted" title={formatDate(last.at)}>
+            {t('mt_data_last', { when: formatRelative(last.at), took: formatNumber(last.tookSec || 0) })}
+          </span>
+        ) : (
+          <span className="text-muted">{t('mt_data_never')}</span>
+        )}
+      </div>
+      {last ? (
+        total.issues > 0 ? (
+          <div className="table-wrap">
+            <table className="table">
+              <thead>
+                <tr>
+                  <th scope="col">{t('tr_col_tracker')}</th>
+                  <th scope="col" className="text-right">{t('mt_data_rows')}</th>
+                  {DATA_COLUMNS.map(([col, key]) => (
+                    <th key={col} scope="col" className="text-right">{t(key)}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {(last.trackers || []).filter((r) => r.issues > 0).map((r) => (
+                  <tr key={r.tracker}>
+                    <td className="font-mono text-xs">{r.tracker}</td>
+                    <td className="text-right tabular-nums">{formatNumber(r.rows)}</td>
+                    {DATA_COLUMNS.map(([col]) => {
+                      const fix = r[col] > 0 ? fixFor(col, r.tracker) : null
+                      return (
+                        <td key={col} className="text-right tabular-nums">
+                          {r[col] > 0 ? (
+                            fix ? (
+                              <button type="button" className="underline decoration-dotted underline-offset-2 hover:text-accent" title={fix} onClick={() => onFix(fix)}>
+                                {formatNumber(r[col])}
+                              </button>
+                            ) : (
+                              formatNumber(r[col])
+                            )
+                          ) : (
+                            <span className="text-muted">0</span>
+                          )}
+                        </td>
+                      )
+                    })}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <p className="text-sm text-ok">{t('mt_data_clean', { rows: formatNumber(total.rows || 0) })}</p>
+        )
+      ) : null}
+      <p className="mt-3 text-xs text-muted">{t('mt_data_hint')}</p>
+    </Section>
   )
 }
 
@@ -199,6 +280,8 @@ export function MaintenancePage() {
             </button>
           </Section>
         </div>
+
+        <DataCheckSection busy={busy === 'dev/checkdata'} onRun={() => exec('dev/checkdata', t('mt_data_title'), 'dev/checkdata')} onFix={(path) => runMigration(MIGRATIONS.find((m) => m.path === path) || { path, label: path, description: '' })} />
 
         <Section id="mt-diag" icon={Search} title={t('mt_diag_title')} description={t('mt_diag_desc')}>
           <ul className="divide-y divide-border">

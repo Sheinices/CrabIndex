@@ -8,6 +8,7 @@ mod admin;
 mod app;
 mod config_api;
 mod controllers;
+mod health;
 mod normalize;
 mod openapi;
 mod security;
@@ -144,6 +145,7 @@ fn spawn_workers(ct: &CancellationToken) {
     crab_tracks::spawn_workers(ct.clone());
     crab_ops::spawn_workers(ct.clone());
     workers::spawn_update_check(ct.clone());
+    health::spawn_notifier(ct.clone());
 }
 
 async fn shutdown_signal() {

@@ -17,6 +17,7 @@ import {
   Sun,
   Wrench,
   X,
+  Users,
 } from 'lucide-react'
 import { useAuth } from './Auth.jsx'
 import { useTheme } from '../hooks/useTheme.js'
@@ -28,6 +29,7 @@ export const NAV = [
   { to: '/', labelKey: 'nav_overview', icon: LayoutDashboard, end: true },
   { to: '/trackers', labelKey: 'nav_trackers', icon: Radar },
   { to: '/jobs', labelKey: 'nav_jobs', icon: Activity },
+  { to: '/clients', labelKey: 'nav_clients', icon: Users },
   { to: '/cloudflare', labelKey: 'nav_flaresolverr', icon: Cloud },
   { to: '/settings', labelKey: 'nav_settings', icon: Settings },
   { to: '/waf', labelKey: 'nav_waf', icon: Shield },

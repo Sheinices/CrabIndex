@@ -176,8 +176,18 @@ torznab:
 logging:
   tracksConsoleDetail: false
   cronSkipFastMs: 100
+  files: true # те же строки, что в консоли, в Data/log/app.log и sync.log (видны в админке)
+  fileMaxMb: 20 # ротация в app.1.log / sync.1.log
   categories:
     parsers: None # parser detail → Data/log/{tracker}.log only
+
+# Уведомления о сигналах карточки «Здоровье» (обзор админки): sync не идёт, у трекера
+# давно нет новых раздач, FlareSolverr падает, нет логина там, где он нужен, и т. д.
+# notify:
+#   telegramToken: "123456:ABC..."   # от @BotFather
+#   telegramChatId: "-1001234567890"
+#   webhookUrl: ""                     # POST JSON {host, at, new, resolved, active}
+#   cooldownMinutes: 360
 
 # Tracker settings (optional; defaults are used if omitted)
 Rutor:

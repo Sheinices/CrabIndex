@@ -29,6 +29,27 @@ pub struct LoginSettings {
     pub p: Option<String>,
 }
 
+/// Where the health card sends its signals (see `crabindex::health`). Empty fields = off.
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
+#[serde(default)]
+pub struct NotifyOptions {
+    pub enable: bool,
+    /// Telegram bot token (`123456:ABC...`), from @BotFather.
+    pub telegramToken: String,
+    /// Chat or channel id the bot writes to.
+    pub telegramChatId: String,
+    /// POST JSON `{host, at, new, resolved, active}` to this URL.
+    pub webhookUrl: String,
+    /// Do not repeat a message about the same signal more often than this (minutes).
+    pub cooldownMinutes: i32,
+}
+
+impl Default for NotifyOptions {
+    fn default() -> Self {
+        NotifyOptions { enable: true, telegramToken: String::new(), telegramChatId: String::new(), webhookUrl: String::new(), cooldownMinutes: 360 }
+    }
+}
+
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(default)]
 pub struct TrackerSettings {
@@ -267,6 +288,10 @@ pub struct LoggingOptions {
     pub categories: Option<IndexMap<String, String>>,
     pub tracksConsoleDetail: bool,
     pub cronSkipFastMs: i32,
+    /// Also write console lines to `Data/log/app.log` (`sync.log` for the sync categories).
+    pub files: bool,
+    /// Rotate a log file (`app.log` → `app.1.log`) once it exceeds this many MB.
+    pub fileMaxMb: i32,
 }
 
 impl Default for LoggingOptions {
@@ -277,6 +302,8 @@ impl Default for LoggingOptions {
             categories: None,
             tracksConsoleDetail: false,
             cronSkipFastMs: 100,
+            files: true,
+            fileMaxMb: 20,
         }
     }
 }
@@ -495,6 +522,7 @@ pub struct AppOptions {
     pub globalproxy: Option<Vec<ProxySettings>>,
     pub admin: AdminSettings,
     pub waf: WafSettings,
+    pub notify: NotifyOptions,
 }
 
 impl Default for AppOptions {
@@ -581,6 +609,7 @@ impl Default for AppOptions {
             globalproxy: None,
             admin: AdminSettings::default(),
             waf: WafSettings::default(),
+            notify: NotifyOptions::default(),
         }
     }
 }

@@ -24,6 +24,11 @@ PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 # Sunday 05:00
 0 5 * * 0  /opt/crabindex/Data/run-job.sh maintenance-check http://127.0.0.1:9117/cron/maintenance/Check?mode=report 60
 
+# data-check -> /dev/CheckData (max_time=3600s) - read-only report: duplicates, zero sizes,
+# foreign hosts, names to re-parse. Result: Data/temp/datacheck.json, admin panel "Maintenance",
+# health card. Sunday 05:30, after maintenance-check
+30 5 * * 0  /opt/crabindex/Data/run-job.sh data-check http://127.0.0.1:9117/dev/CheckData 3600
+
 # parseall-resume -> /cron/maintenance/ResumeParseAll (max_time=60s)
 # continue incomplete cycles after restart / hung cancel; idle if pending=0
 */15 * * * *  /opt/crabindex/Data/run-job.sh parseall-resume http://127.0.0.1:9117/cron/maintenance/ResumeParseAll 60

@@ -9,6 +9,7 @@ use crab_core::fdb::ShardMap;
 use crab_core::models::TorrentDetails;
 use crab_core::net::{self, Req};
 use crab_core::parsing::parser_log;
+use crab_core::trackers::login_status;
 use crab_core::trackers::{self, ParseLock};
 use crab_core::{conf, rx, util};
 use serde::Deserialize;
@@ -67,6 +68,7 @@ async fn take_login() -> bool {
     let (u, p) = (c.Selezen.login.u.clone().unwrap_or_default(), c.Selezen.login.p.clone().unwrap_or_default());
     if util::is_blank(&u) || util::is_blank(&p) {
         parser_log::write_kv(TRACKER_NAME, "TakeLogin failed", &kv(&[("reason", "credentials not configured".into())]));
+        login_status::report(TRACKER_NAME, Err("credentials not configured (login.u / login.p)".into()));
         return false;
     }
 
@@ -77,11 +79,29 @@ async fn take_login() -> bool {
         if let Some(cookie) = take_login_browser(&host, &u, &form).await {
             common::cache_set(COOKIE_KEY, cookie, Duration::from_secs(24 * 3600));
             parser_log::write_kv(TRACKER_NAME, "TakeLogin success", &kv(&[("host", host), ("via", "browser".into())]));
+            login_status::report(TRACKER_NAME, Ok(()));
             return true;
         }
+        login_status::report(TRACKER_NAME, Err("login failed: direct POST and browser login both refused (see selezen.log)".into()));
         return false;
     }
+    login_status::report(TRACKER_NAME, Ok(()));
     true
+}
+
+/// Admin panel "check login": forget the cached session and log in again.
+pub fn login_checker() -> login_status::Checker {
+    std::sync::Arc::new(|| {
+        Box::pin(async {
+            common::cache_remove(AUTH_KEY);
+            common::cache_remove(COOKIE_KEY);
+            if take_login().await {
+                Ok(())
+            } else {
+                Err(login_status::get(TRACKER_NAME).map(|s| s.error).filter(|e| !e.is_empty()).unwrap_or_else(|| "login failed".into()))
+            }
+        })
+    })
 }
 
 /// Plain POST login. `true` = logged in (cookie cached); `false` = blocked (403/503 or network

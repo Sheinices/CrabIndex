@@ -145,6 +145,8 @@ pub fn get() -> Value {
             fd("logging.tracksConsoleDetail", "bool", "Подробный tracks в консоли", Some("false - только ошибки и итоги")),
             field("logging.cronSkipFastMs", "int", "Cron: быстрые 200 → Debug", Some("HTTP /cron/ быстрее N ms, 0 - логировать все"), min(0)),
             fd("logging.categories", "json", "Уровни по категориям", Some("JSON: tracks, sync, sync_spidr, cron, fdb, stats, parsers (None = выкл.)")),
+            fd("logging.files", "bool", "Лог в файлы", Some("Data/log/app.log и sync.log: те же строки, что в консоли, после фильтра уровней. Видны в разделе Логи")),
+            field("logging.fileMaxMb", "int", "Размер файла лога (MB)", Some("При превышении файл переименовывается в app.1.log / sync.1.log и начинается заново; 0 - без ротации"), min(0)),
         ]),
         group("tracks", "Tracks (ffprobe)", None, vec![
             fd("tracks", "bool", "Включить tracks", Some("Сбор метаданных через tsuri")),
@@ -230,6 +232,13 @@ pub fn get() -> Value {
             fd("admin.path", "string", "Путь", Some("Один сегмент [a-z0-9_-], 2-32 символа, например /admin")),
             field("admin.token", "password", "Токен входа", Some("[A-Za-z0-9], 12-64 символа; генерируется при первом запуске"), secret()),
             field("admin.sessionHours", "int", "Сессия (ч)", Some("Время жизни сессии после входа"), F { min: Some(1), max: Some(8760), ..F::default() }),
+        ]),
+        group("notify", "Уведомления", Some("Сигналы карточки «Здоровье» (обзор): Telegram и/или вебхук. Пустые поля - канал выключен"), vec![
+            fd("notify.enable", "bool", "Включить", Some("Отправлять новые и закрытые сигналы")),
+            field("notify.telegramToken", "password", "Telegram: токен бота", Some("От @BotFather, вида 123456:ABC…"), secret()),
+            fd("notify.telegramChatId", "string", "Telegram: chat id", Some("Id чата или канала, куда пишет бот (узнать: @userinfobot)")),
+            fd("notify.webhookUrl", "string", "Вебхук (URL)", Some("POST JSON {host, at, new, resolved, active}")),
+            field("notify.cooldownMinutes", "int", "Пауза повтора (мин)", Some("Один и тот же сигнал не повторяется чаще"), min(0)),
         ]),
         group("waf", "WAF", Some("Фильтр запросов: встроенные домены → whitelist → blacklist/баны → домены → User-Agent → ловушки → rate limit. Списки и баны - в разделе WAF (Data/waf.json)"), vec![
             fd("waf.enable", "bool", "Включить", Some("false - запросы не блокируются (статистика ведётся при logRequests)")),

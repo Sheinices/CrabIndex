@@ -22,6 +22,7 @@ pub const PARSE_ALL_TRACKERS: &[&str] = &["anibelka", "korsars"];
 pub fn init() {
     crab_core::trackers::register_parse_all_starter(Arc::new(anibelka::Starter));
     crab_core::trackers::register_parse_all_starter(Arc::new(korsars::Starter));
+    crab_core::trackers::login_status::register_checker("anifilm", anifilm::login_checker());
 }
 
 /// HTTP routes owned by this crate (paths registered in lowercase).

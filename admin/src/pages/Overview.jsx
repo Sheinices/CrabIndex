@@ -1,6 +1,8 @@
+import { useState } from "react";
 import { Link } from "react-router";
 import {
   AlertTriangle,
+  BellRing,
   BookOpen,
   Braces,
   Clock,
@@ -12,7 +14,7 @@ import {
   Server,
   Shield,
 } from "lucide-react";
-import { getOverview, getWafOverview } from "../lib/api.js";
+import { getOverview, getWafOverview, sendTestNotification, startSyncCheck } from "../lib/api.js";
 import { usePolling } from "../hooks/usePolling.js";
 import {
   ErrorBox,
@@ -29,6 +31,115 @@ import {
   jobPercent,
 } from "../lib/format.js";
 import { useT } from "../lang/index.jsx";
+
+/// Result of the last integrity check against syncapi plus a "check now" button.
+function SyncCheckRow({ sync, onDone }) {
+  const t = useT();
+  const [busy, setBusy] = useState(false);
+  const c = sync.check;
+  const running = sync.checkRunning || busy;
+  const start = async () => {
+    setBusy(true);
+    try {
+      await startSyncCheck();
+    } catch {
+      /* the status row shows the outcome */
+    }
+    setBusy(false);
+    onDone?.();
+  };
+  let summary;
+  if (running) summary = t("sync_check_running");
+  else if (!c) summary = sync.checkMinutes > 0 ? t("sync_check_never") : t("sync_check_off");
+  else if (c.ok === false) summary = t("sync_check_failed", { error: c.error || "" });
+  else if (c.missing + c.mismatched + c.extra === 0) summary = t("sync_check_clean");
+  else
+    summary = t("sync_check_summary", {
+      fetched: formatNumber(c.fetchedBuckets || 0),
+      deleted: formatNumber(c.deletedBuckets || 0),
+      remaining: formatNumber(c.remaining || 0),
+    });
+  return (
+    <div>
+      <div className="flex justify-between gap-3">
+        <dt className="text-muted">{t("sync_check")}</dt>
+        <dd className="text-right">
+          {c?.at ? <span title={formatDate(c.at)}>{formatRelative(c.at)}</span> : "-"}
+        </dd>
+      </div>
+      <div className="mt-1 flex items-start justify-between gap-3 text-xs">
+        <p className={c && c.ok === false ? "text-danger" : "text-muted"}>{summary}</p>
+        <button type="button" className="btn btn-sm shrink-0" onClick={start} disabled={running}>
+          <RefreshCw className={`size-3.5 ${running ? "animate-spin" : ""}`} aria-hidden="true" /> {t("sync_check_now")}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/// Health signals (see crabindex::health) with a link to the section that fixes them.
+function HealthCard({ issues, notifyConfigured }) {
+  const t = useT();
+  const [testState, setTestState] = useState(null);
+  const sendTest = async () => {
+    setTestState("busy");
+    try {
+      const r = await sendTestNotification();
+      setTestState(r?.ok ? "ok" : (r?.errors || []).join("; ") || "error");
+    } catch (e) {
+      setTestState(String(e?.message || e));
+    }
+  };
+  const testLabel =
+    testState === "busy" ? t("health_test_sending") : testState === "ok" ? t("health_test_sent") : testState ? testState : null;
+  return (
+    <section aria-labelledby="ov-health" className="mb-6">
+      <div className="mb-2 flex flex-wrap items-center gap-3">
+        <h2 id="ov-health" className="font-semibold">
+          {t("health_title")}
+        </h2>
+        {issues.length === 0 ? <StatusDot tone="ok" label={t("health_ok")} /> : <StatusDot tone={issues.some((i) => i.severity === "error") ? "danger" : "warn"} label={t("health_count", { count: issues.length })} />}
+        {notifyConfigured ? (
+          <button type="button" className="btn btn-sm btn-ghost ml-auto" onClick={sendTest} disabled={testState === "busy"}>
+            <BellRing className="size-3.5" aria-hidden="true" /> {t("health_test_notification")}
+          </button>
+        ) : (
+          <Link to="/settings" className="ml-auto text-xs text-muted hover:text-fg">
+            {t("health_notify_setup")}
+          </Link>
+        )}
+      </div>
+      {testLabel ? <p className="mb-2 text-xs text-muted">{testLabel}</p> : null}
+      {issues.length ? (
+        <ul className="space-y-2">
+          {issues.map((i) => {
+            const error = i.severity === "error";
+            const params = { ...(i.params || {}) };
+            if (typeof params.minutes === "number") params.minutes = formatNumber(params.minutes);
+            if (typeof params.remaining === "number") params.remaining = formatNumber(params.remaining);
+            return (
+              <li
+                key={`${i.id}:${i.key}`}
+                className={`flex flex-wrap items-start gap-3 rounded-xl border px-4 py-3 text-sm ${error ? "border-danger/40 bg-danger/10" : "border-warn/40 bg-warn/10"}`}
+              >
+                <AlertTriangle className={`mt-0.5 size-4 shrink-0 ${error ? "text-danger" : "text-warn"}`} aria-hidden="true" />
+                <div className="min-w-0 flex-1">
+                  <p className="font-medium">{t(`issue_${i.id}_title`, params)}</p>
+                  <p className="text-muted">{t(`issue_${i.id}_text`, params)}</p>
+                </div>
+                {i.link ? (
+                  <Link to={i.link} className="btn btn-sm">
+                    {t("issue_open")}
+                  </Link>
+                ) : null}
+              </li>
+            );
+          })}
+        </ul>
+      ) : null}
+    </section>
+  );
+}
 
 function Stat({ icon: Icon, label, value, hint }) {
   return (
@@ -168,6 +279,7 @@ export function OverviewPage() {
         }
       />
       <ErrorBox error={error} onRetry={reload} />
+      {data ? <HealthCard issues={o.issues || []} notifyConfigured={!!o.notifyConfigured} /> : null}
       {(o.hints || []).length ? (
         <div role="status" className="mb-6 space-y-2">
           {o.hints.map((h) => (
@@ -271,6 +383,9 @@ export function OverviewPage() {
                     <dt className="text-muted">{t("sync_last")}</dt>
                     <dd>{formatRelative(sync.lastsync)}</dd>
                   </div>
+                  {sync.enabled ? (
+                    <SyncCheckRow sync={sync} onDone={reload} />
+                  ) : null}
                   {syncPct !== null && (
                     <div>
                       <div className="flex justify-between gap-3">

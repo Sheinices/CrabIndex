@@ -20,6 +20,7 @@ import { WafLog } from './pages/waf/WafLog.jsx'
 import { WafIps } from './pages/waf/WafIps.jsx'
 import { WafRules } from './pages/waf/WafRules.jsx'
 import { WafBots } from './pages/waf/WafBots.jsx'
+import { ClientsPage } from './pages/Clients.jsx'
 import { getBase } from './lib/base.js'
 import { LangProvider, useT } from './lang/index.jsx'
 
@@ -69,6 +70,7 @@ export function createAppRouter(basename = getBase()) {
           { index: true, element: <OverviewPage /> },
           { path: 'trackers', element: <TrackersPage /> },
           { path: 'jobs', element: <JobsPage /> },
+          { path: 'clients', element: <ClientsPage /> },
           { path: 'cloudflare', element: <CloudflarePage /> },
           {
             path: 'settings',

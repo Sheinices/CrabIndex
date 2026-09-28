@@ -14,6 +14,7 @@ pub mod toloka;
 pub fn init() {
     crab_core::trackers::register_parse_all_starter(Arc::new(rutracker::Starter));
     crab_core::trackers::register_parse_all_starter(Arc::new(toloka::Starter));
+    crab_core::trackers::login_status::register_checker(selezen::TRACKER_NAME, selezen::login_checker());
 }
 
 /// HTTP routes owned by this crate (paths registered in lowercase).

@@ -23,6 +23,7 @@ const state = {
   session: false,
   failures: [],
   checkRunning: false,
+  syncCheckRunning: false,
 }
 
 const TRACKERS = [
@@ -125,6 +126,40 @@ function parseAllStatus() {
   }))
 }
 
+const AUTH_TRACKERS = ['kinozal', 'selezen', 'anifilm', 'mazepa', 'toloka', 'baibako', 'animelayer', 'korsars', 'rudub']
+const loginState = { kinozal: { ok: true, at: new Date(Date.now() - 3_600_000).toISOString(), error: '' }, selezen: { ok: false, at: new Date(Date.now() - 600_000).toISOString(), error: 'TakeLogin failed: no PHPSESSID (403)' } }
+function trackerLogin(slug) {
+  if (!AUTH_TRACKERS.includes(slug)) return { required: false }
+  const t = config[slug[0].toUpperCase() + slug.slice(1)] || {}
+  const configured = !!(t.cookie || (t.login && t.login.u))
+  return { required: true, configured, canCheck: ['kinozal', 'selezen', 'anifilm'].includes(slug), status: loginState[slug] || null }
+}
+
+function dataCheckReport() {
+  const row = (tracker, rows, zeroSize, dupIds, foreignHost, badNames) => ({ tracker, rows, zeroSize, dupIds, foreignHost, badNames, issues: zeroSize + dupIds + foreignHost + badNames })
+  const trackers = [row('rutracker', 928294, 505, 1214, 3, 21044), row('kinozal', 555321, 0, 651, 0, 0), row('rutor', 523139, 0, 49, 0, 0), row('toloka', 57906, 36, 0, 0, 0), row('nnmclub', 145939, 0, 0, 0, 0)]
+  const total = trackers.reduce((a, r) => ({ rows: a.rows + r.rows, zeroSize: a.zeroSize + r.zeroSize, dupIds: a.dupIds + r.dupIds, foreignHost: a.foreignHost + r.foreignHost, badNames: a.badNames + r.badNames, issues: a.issues + r.issues }), { rows: 0, zeroSize: 0, dupIds: 0, foreignHost: 0, badNames: 0, issues: 0 })
+  return {
+    ok: true,
+    at: new Date(Date.now() - 2 * 86_400_000).toISOString(),
+    tookSec: 412,
+    buckets: 599_600,
+    total,
+    trackers,
+    fixes: { zeroSize: 'dev/fixzerosizes', dupIds: 'dev/fixslugduplicates', badNames: 'dev/fixrutrackernames', foreignHost: { kinozal: 'dev/fixkinozaldomainduplicates', rutracker: 'dev/fixrutrackerdomainduplicates', selezen: 'dev/fixselezendomainduplicates', ultradox: 'dev/fixultradoxdomainduplicates' } },
+  }
+}
+
+function syncPeers() {
+  const now = Date.now()
+  const ft = (msAgo) => (BigInt(Math.floor((now - msAgo) / 1000)) + 11644473600n) * 10000000n
+  return [
+    { ip: '94.156.102.20', version: '1.1.3', firstSeen: new Date(now - 40 * 86_400_000).toISOString(), lastSeen: new Date(now - 6 * 60_000).toISOString(), requests: 48_211, lastCursor: Number(ft(9 * 60_000)), lastSpidr: new Date(now - 3 * 3_600_000).toISOString(), lastCheck: new Date(now - 20 * 3_600_000).toISOString(), lastRefetch: new Date(now - 6 * 60_000).toISOString() },
+    { ip: '2a01:4f8:c0c:1234::1', version: '1.0.8', firstSeen: new Date(now - 12 * 86_400_000).toISOString(), lastSeen: new Date(now - 5 * 3_600_000).toISOString(), requests: 3_902, lastCursor: Number(ft(5 * 3_600_000)), lastSpidr: null, lastCheck: null, lastRefetch: null },
+    { ip: '203.0.113.77', version: '', firstSeen: new Date(now - 3 * 86_400_000).toISOString(), lastSeen: new Date(now - 26 * 3_600_000).toISOString(), requests: 120, lastCursor: 0, lastSpidr: null, lastCheck: null, lastRefetch: null },
+  ]
+}
+
 function overview() {
   const pa = new Map(parseAllStatus().map((p) => [p.tracker, p]))
   const disabled = new Set(config.disable_trackers || [])
@@ -144,8 +179,25 @@ function overview() {
       name,
       enabled: !disabled.has(slug),
       parseAll: pa.get(slug) ? { running: pa.get(slug).running, pending: pa.get(slug).pending, mapCount: pa.get(slug).mapCount } : null,
+      login: trackerLogin(slug),
     })),
-    sync: { enabled: !!config.syncapi, syncapi: config.syncapi, lastsync: null, starsync: null, torrents: 3_342_561, remoteTorrents: 3_620_842 },
+    issues: [
+      { id: 'login_failed', key: 'selezen', severity: 'error', link: '/trackers', params: { tracker: 'selezen', error: 'TakeLogin failed: no PHPSESSID (403)' } },
+      { id: 'tracker_stale', key: 'baibako', severity: 'warn', link: '/trackers', params: { tracker: 'baibako', days: 385 } },
+      { id: 'sync_check_backlog', key: '', severity: 'warn', link: '/', params: { remaining: 4120 } },
+    ],
+    notifyConfigured: !!(config.notify && (config.notify.webhookUrl || config.notify.telegramToken)),
+    sync: {
+      enabled: !!config.syncapi,
+      syncapi: config.syncapi,
+      lastsync: new Date(Date.now() - 45 * 60_000).toISOString(),
+      starsync: null,
+      torrents: 3_342_561,
+      remoteTorrents: 3_620_842,
+      check: { at: new Date(Date.now() - 5 * 3_600_000).toISOString(), ok: true, tookSec: 412, hostBuckets: 603_000, localBuckets: 599_600, missing: 3_400, mismatched: 12_800, extra: 190, fetchedBuckets: 16_200, importedRows: 41_300, prunedRows: 880, deletedBuckets: 150, keptLocalBuckets: 40, remaining: 0 },
+      checkRunning: !!state.syncCheckRunning,
+      checkMinutes: 1440,
+    },
     config: { path: 'init.yaml', format: 'yaml' },
     hints: [{ id: 'evercache_off' }, { id: 'stats_too_frequent', minutes: 15 }],
   }
@@ -296,6 +348,21 @@ async function handle(req, res, path, query) {
   }
   if (path === 'update/apply') return send(res, 200, { ok: false, error: 'В режиме разработки обновление не выполняется' })
   if (path === 'health/background-jobs') return send(res, 200, { jobs: jobs() })
+  if (path === 'trackers/checklogin' && method === 'POST') {
+    const slug = (query.get('tracker') || '').toLowerCase()
+    if (!['kinozal', 'selezen', 'anifilm'].includes(slug)) return send(res, 404, { ok: false, error: 'no login check for this tracker' })
+    const ok = slug !== 'selezen'
+    loginState[slug] = { ok, at: new Date().toISOString(), error: ok ? '' : 'TakeLogin failed: no PHPSESSID (403)' }
+    return send(res, 200, ok ? { ok: true, tracker: slug, status: loginState[slug] } : { ok: false, tracker: slug, error: loginState[slug].error, status: loginState[slug] })
+  }
+  if (path === 'notify/test' && method === 'POST') return send(res, 200, { ok: false, errors: ['no channel configured (notify.telegramToken + telegramChatId or notify.webhookUrl)'] })
+  if (path === 'cron/sync/peers') return send(res, 200, { ok: true, opensync: true, peers: syncPeers() })
+  if (path === 'cron/sync/check') {
+    state.syncCheckRunning = true
+    setTimeout(() => { state.syncCheckRunning = false }, 8000)
+    return send(res, 200, 'ok', 'text/plain; charset=utf-8')
+  }
+  if (path === 'cron/sync/checkstatus') return send(res, 200, { ok: true, running: !!state.syncCheckRunning, last: overview().sync.check })
   if (path === 'cron/maintenance/parseallstatus') return send(res, 200, parseAllStatus())
   if (path === 'cron/maintenance/resumeparseall') return send(res, 200, 'resumed: kinozal (12 pending)', 'text/plain; charset=utf-8')
   if (path === 'cron/maintenance/status') return send(res, 200, { ok: true, running: state.checkRunning })
@@ -321,6 +388,8 @@ async function handle(req, res, path, query) {
   }
   if (path === 'cron/cloudflare/stats/reset') return send(res, 200, { ok: true })
   if (path === 'jsondb/save') return send(res, 200, 'work', 'text/plain; charset=utf-8')
+  if (path === 'dev/checkdatastatus') return send(res, 200, { ok: true, last: dataCheckReport() })
+  if (path === 'dev/checkdata') return send(res, 200, dataCheckReport())
   if (path.startsWith('dev/')) {
     await delay(700)
     const name = path.slice(4)

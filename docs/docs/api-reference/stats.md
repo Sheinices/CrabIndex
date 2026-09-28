@@ -28,7 +28,11 @@ timeStatsUpdate: 90 # минут между пересчётами
 
 ```bash
 curl "http://127.0.0.1:9117/stats/torrents?apikey=YOUR_API_KEY"
+# те же строки таблицей CSV (UTF-8 с BOM, открывается в Excel/Numbers)
+curl -o trackers.csv "http://127.0.0.1:9117/stats/torrents?format=csv&apikey=YOUR_API_KEY"
 ```
+
+С `format=csv` ответ приходит как `text/csv` с колонками `tracker, alltorrents, newtor, update, check, lastnewtor, tracks_wait, tracks_confirm, tracks_skip`. Ссылка **CSV** есть в шапке раздела **Трекеры** админ-панели.
 
 ```json
 [

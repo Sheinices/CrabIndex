@@ -20,6 +20,7 @@ use std::time::{Duration, Instant};
 use crab_core::net::{self, Req};
 use crab_core::parsing::{bencode, parser_log};
 use crab_core::trackers::{self, ParseLock};
+use crab_core::trackers::login_status;
 use crab_core::{conf, fdb, rx, time, util};
 
 use crate::common::{self, bool_str, cached_row, group_by_key, log_kv, q_bool, secs_f1, Counts};
@@ -276,9 +277,36 @@ async fn take_login() {
 
     log_kv(TRACKER, "Attempting login", &[("host", host.clone()), ("user", user.clone())]);
 
-    if let Err((message, kind)) = login_flow(&host, &user, &pass).await {
-        log_kv(TRACKER, "Login error", &[("message", message), ("type", kind.to_string())]);
+    match login_flow(&host, &user, &pass).await {
+        Err((message, kind)) => {
+            log_kv(TRACKER, "Login error", &[("message", message.clone()), ("type", kind.to_string())]);
+            login_status::report(TRACKER, Err(format!("{kind}: {message}")));
+        }
+        Ok(()) if cookie_header().is_some() => login_status::report(TRACKER, Ok(())),
+        Ok(()) => login_status::report(TRACKER, Err("site did not return a session (wrong login or password?)".into())),
     }
+}
+
+/// Admin panel "check login": forget the session and log in again.
+pub fn login_checker() -> login_status::Checker {
+    std::sync::Arc::new(|| {
+        Box::pin(async {
+            let c = conf();
+            if !util::is_blank(c.Anifilm.cookie.as_deref().unwrap_or("")) {
+                return Ok(());
+            }
+            if util::is_blank(c.Anifilm.login_u()) {
+                return Err("credentials not configured (cookie or login.u / login.p)".to_string());
+            }
+            invalidate_cookie();
+            take_login().await;
+            match login_status::get(TRACKER) {
+                Some(s) if s.ok => Ok(()),
+                Some(s) => Err(s.error),
+                None => Err("login did not run".to_string()),
+            }
+        })
+    })
 }
 
 /// Returns Err((message, kind)) on transport errors; logical failures are logged here.

@@ -97,11 +97,26 @@ pub fn overview(c: &AppOptions) -> Value {
             } else {
                 Value::Null
             };
+            let login = if crate::health::AUTH_TRACKERS.contains(slug) {
+                let ts = c.tracker(slug);
+                let configured = ts
+                    .map(|t| !crab_core::util::is_blank(t.cookie.as_deref().unwrap_or("")) || !crab_core::util::is_blank(t.login_u()))
+                    .unwrap_or(false);
+                json!({
+                    "required": true,
+                    "configured": configured,
+                    "canCheck": crab_core::trackers::login_status::has_checker(slug),
+                    "status": crab_core::trackers::login_status::get(slug),
+                })
+            } else {
+                json!({ "required": false })
+            };
             json!({
                 "slug": slug,
                 "name": tracker_display_name(slug),
                 "enabled": !c.is_tracker_disabled(slug),
                 "parseAll": parse_all,
+                "login": login,
             })
         })
         .collect();
@@ -131,10 +146,18 @@ pub fn overview(c: &AppOptions) -> Value {
             "starsync": fmt_sync(crab_ops::sync::cron::STAR_SYNC_PATH),
             "torrents": crab_core::index::current_len(),
             "remoteTorrents": remote_torrents,
+            // Last integrity check against syncapi (Data/temp/sync_check.json) and whether one runs now.
+            "check": crab_ops::sync::check::last_report(),
+            "checkRunning": crab_ops::sync::check::is_running(),
+            "checkMinutes": c.timeSyncCheck,
         },
         "config": { "path": info.path, "format": info.format },
         // Settings that slow this host down (see config::performance_hints); the panel warns.
         "hints": config::performance_hints(c),
+        // Health signals (see crate::health); notifications go out from the notifier worker.
+        "issues": crate::health::issues(c),
+        "notifyConfigured": !crab_core::util::is_blank(&c.notify.webhookUrl)
+            || (!crab_core::util::is_blank(&c.notify.telegramToken) && !crab_core::util::is_blank(&c.notify.telegramChatId)),
     })
 }
 

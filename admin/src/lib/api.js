@@ -111,6 +111,19 @@ export const getBackgroundJobs = (opts) => get('health/background-jobs', opts)
 export const getParseAllStatus = (opts) => get('cron/maintenance/parseallstatus', opts)
 export const resumeParseAll = () => get('cron/maintenance/resumeparseall', { raw: true })
 
+// --- Sync ----------------------------------------------------------------------
+export const getSyncPeers = (opts) => get('cron/sync/peers', opts)
+export const startSyncCheck = () => get('cron/sync/check', { raw: true })
+export const getSyncCheckStatus = (opts) => get('cron/sync/checkstatus', opts)
+
+// --- Health / notifications ------------------------------------------------------
+export const checkTrackerLogin = (slug) => post('trackers/checklogin', undefined, { query: { tracker: slug } })
+export const sendTestNotification = () => post('notify/test')
+
+// --- Data quality check (weekly cron, read-only) -----------------------------------
+export const getDataCheck = (opts) => get('dev/checkdatastatus', opts)
+export const runDataCheck = () => get('dev/checkdata', { raw: true })
+
 // --- Trackers ------------------------------------------------------------
 export const runCron = (slug, action, query) =>
   get(`cron/${encodeURIComponent(slug)}/${encodeURIComponent(action)}`, { query, raw: true })

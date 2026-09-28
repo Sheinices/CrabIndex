@@ -150,6 +150,22 @@ curl "http://127.0.0.1:9117/sync/fdb?key=matrix"
 
 При `opensync: false` возвращается `[]`.
 
+## GET /sync/fdb/digest
+
+Список всех бакетов сервера для сверки: `{ "count": N, "buckets": [["ключ", fileTime], …] }`. При `opensync: false` - пустой список. Ответ большой (десятки мегабайт на базе в несколько миллионов раздач), клиент CrabIndex запрашивает его раз в `timeSyncCheck` минут.
+
+Клиент сравнивает список со своим `masterDb`: бакеты, которых у него нет или у которых отличается `fileTime`, забирает целиком через `GET /sync/fdb?key=` и удаляет из них записи обслуживаемых трекеров, которых в пришедшем бакете нет; бакеты, которых нет на сервере, удаляет, если все их записи принадлежат трекерам из `trackers` в `/sync/conf` и разрешены у клиента. За один запуск не больше 20 000 бакетов на докачку и 20 000 на удаление, остальное - в следующий раз. Отчёт - `Data/temp/sync_check.json` и раздел **Обзор** админ-панели.
+
+## Клиенты и сверка (только для админ-панели)
+
+Маршруты под `/cron/`, политика DevAdmin (LAN, localhost или `devkey`):
+
+| Маршрут | Что делает |
+| --- | --- |
+| `GET /cron/sync/peers` | `{ ok, opensync, peers: [{ ip, version, firstSeen, lastSeen, requests, lastCursor, lastSpidr, lastCheck, lastRefetch }] }` - кто забирал базу с этого сервера. Адрес берётся из `CF-Connecting-IP`, `X-Real-IP`, первого `X-Forwarded-For` или сокета; `version` - заголовок `X-CrabIndex-Version`, который шлёт клиент CrabIndex, пусто для других клиентов. Хранится в `Data/temp/sync_peers.json`, клиенты без запросов 30 дней удаляются |
+| `GET /cron/sync/check` | Запустить сверку с `syncapi` сейчас: `ok`, `work` (уже идёт) или `disabled` (`syncapi` не задан) |
+| `GET /cron/sync/checkstatus` | `{ ok, running, last }` - идёт ли сверка и последний отчёт |
+
 ## GET /sync/torrents
 
 Маршрут старой версии протокола. Всегда возвращает подсказку:

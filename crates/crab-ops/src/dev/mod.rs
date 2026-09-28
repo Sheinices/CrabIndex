@@ -2,6 +2,7 @@
 
 pub mod diagnostics;
 pub mod maintenance;
+pub mod datacheck;
 pub mod migrations;
 
 use axum::extract::Query;
@@ -33,6 +34,8 @@ macro_rules! simple {
 }
 
 simple!(update_size, maintenance::update_size);
+simple!(check_data, datacheck::run);
+simple!(check_data_status, datacheck::status);
 simple!(fix_zero_sizes, maintenance::fix_zero_sizes);
 simple!(reset_check_time, maintenance::reset_check_time);
 simple!(update_details, maintenance::update_details);
@@ -104,4 +107,6 @@ pub fn router() -> Router {
         .route("/dev/fixserialtypes", any(fix_serial_types))
         .route("/dev/fixrutrackernames", any(fix_rutracker_names))
         .route("/dev/fixslugduplicates", any(fix_slug_duplicates))
+        .route("/dev/checkdata", any(check_data))
+        .route("/dev/checkdatastatus", any(check_data_status))
 }

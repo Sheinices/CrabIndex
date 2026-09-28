@@ -66,8 +66,55 @@ fn date_value(dt: Option<chrono::DateTime<chrono::Utc>>) -> Option<Value> {
 // /stats
 // ---------------------------------------------------------------------------
 
-async fn stats_torrents() -> Response {
+#[derive(Deserialize, Default)]
+#[serde(default)]
+struct StatsQuery {
+    format: Option<String>,
+}
+
+/// `/stats/torrents` rows as CSV (`format=csv`): one line per tracker, UTF-8 with BOM so
+/// spreadsheets open it directly.
+pub fn stats_csv(json: &str) -> String {
+    let rows: Vec<Value> = serde_json::from_str(json).unwrap_or_default();
+    let mut out = String::from("\u{feff}tracker,alltorrents,newtor,update,check,lastnewtor,tracks_wait,tracks_confirm,tracks_skip\n");
+    for r in rows {
+        let cell = |v: &Value| match v {
+            Value::String(s) => {
+                let s = s.replace('"', "\"\"");
+                if s.contains([',', '"', '\n']) { format!("\"{s}\"") } else { s }
+            }
+            Value::Null => String::new(),
+            other => other.to_string(),
+        };
+        out.push_str(&format!(
+            "{},{},{},{},{},{},{},{},{}\n",
+            cell(&r["trackerName"]),
+            cell(&r["alltorrents"]),
+            cell(&r["newtor"]),
+            cell(&r["update"]),
+            cell(&r["check"]),
+            cell(&r["lastnewtor"]),
+            cell(&r["tracks"]["wait"]),
+            cell(&r["tracks"]["confirm"]),
+            cell(&r["tracks"]["skip"]),
+        ));
+    }
+    out
+}
+
+async fn stats_torrents(Query(q): Query<StatsQuery>) -> Response {
     let body = if conf().openstats { blocking(stats::read_all_json).await.unwrap_or_else(|| "[]".into()) } else { "[]".into() };
+    if q.format.as_deref().map(|f| f.eq_ignore_ascii_case("csv")).unwrap_or(false) {
+        let csv = stats_csv(&body);
+        return (
+            [
+                (header::CONTENT_TYPE, "text/csv; charset=utf-8".to_string()),
+                (header::CONTENT_DISPOSITION, "attachment; filename=\"crabindex-trackers.csv\"".to_string()),
+            ],
+            csv,
+        )
+            .into_response();
+    }
     ([(header::CONTENT_TYPE, "application/json; charset=utf-8")], body).into_response()
 }
 
@@ -202,5 +249,20 @@ async fn dev_backfill_tracks(Query(q): Query<BackfillQuery>) -> Response {
     match blocking(move || admin::backfill_tracks(dry_run, migrate, include)).await {
         Some(v) => Json(v).into_response(),
         None => internal_error(),
+    }
+}
+
+#[cfg(test)]
+mod csv_tests {
+    use super::*;
+
+    #[test]
+    fn stats_csv_escapes_and_orders_columns() {
+        let json = r#"[{"trackerName":"ru,tor","lastnewtor":"27.09.2026","newtor":7,"update":42,"check":43,"alltorrents":1490788,"tracks":{"wait":1,"confirm":2,"skip":0}}]"#;
+        let csv = stats_csv(json);
+        let lines: Vec<&str> = csv.lines().collect();
+        assert_eq!(lines[0], "\u{feff}tracker,alltorrents,newtor,update,check,lastnewtor,tracks_wait,tracks_confirm,tracks_skip");
+        assert_eq!(lines[1], "\"ru,tor\",1490788,7,42,43,27.09.2026,1,2,0");
+        assert_eq!(stats_csv("[]").lines().count(), 1);
     }
 }

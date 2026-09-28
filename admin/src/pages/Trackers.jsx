@@ -1,7 +1,7 @@
 import { useId, useMemo, useState } from 'react'
 import { Link } from 'react-router'
-import { FileText, Play, RefreshCw, Search } from 'lucide-react'
-import { getOverview, runCron } from '../lib/api.js'
+import { Download, FileText, KeyRound, Play, RefreshCw, Search } from 'lucide-react'
+import { checkTrackerLogin, getOverview, runCron } from '../lib/api.js'
 import { actionsFor, cleanParams, hasParseAll, TRACKER_ACTIONS, trackerLogName } from '../lib/actions.js'
 import { usePolling } from '../hooks/usePolling.js'
 import { useResult } from '../components/ResultDrawer.jsx'
@@ -74,6 +74,47 @@ function ParamsDialog({ state, onClose, onRun }) {
   )
 }
 
+/** Login state of a tracker that needs an account, with the on-demand check button. */
+function LoginCell({ tracker, busy, onCheck }) {
+  const t = useT()
+  const l = tracker.login
+  if (!l || !l.required) return <span className="text-xs text-muted">{t('tr_login_not_required')}</span>
+  let tone = 'warn'
+  let label = t('tr_login_missing')
+  let title = ''
+  if (l.configured) {
+    if (!l.status) {
+      tone = 'muted'
+      label = t('tr_login_unchecked')
+    } else if (l.status.ok) {
+      tone = 'ok'
+      label = t('tr_login_ok')
+      title = l.status.at
+    } else {
+      tone = 'danger'
+      label = t('tr_login_failed')
+      title = l.status.error
+    }
+  }
+  return (
+    <div className="flex flex-wrap items-center gap-2">
+      <span title={title}>
+        <StatusDot tone={tone} label={label} />
+      </span>
+      {l.canCheck && l.configured ? (
+        <button type="button" className="btn btn-sm btn-ghost" onClick={onCheck} disabled={busy} title={t('tr_login_check_hint')}>
+          {busy ? <Spinner className="size-3.5" /> : <KeyRound className="size-3.5" aria-hidden="true" />} {t('tr_login_check')}
+        </button>
+      ) : null}
+      {!l.configured ? (
+        <Link to="/settings" className="text-xs text-muted hover:text-fg">
+          {t('hint_open_settings')}
+        </Link>
+      ) : null}
+    </div>
+  )
+}
+
 export function TrackersPage() {
   const t = useT()
   const { data, error, loading, reload } = usePolling(() => getOverview(), 15_000)
@@ -98,6 +139,13 @@ export function TrackersPage() {
     setBusy(key)
     await run(`${tracker.name || tracker.slug}: ${action.label}`, () => runCron(tracker.slug, action.id, query))
     setBusy(null)
+  }
+
+  const checkLogin = async (tracker) => {
+    setBusy(`${tracker.slug}:login`)
+    await run(t('tr_check_login_of', { slug: tracker.slug }), () => checkTrackerLogin(tracker.slug))
+    setBusy(null)
+    reload()
     reload()
   }
 
@@ -123,9 +171,14 @@ export function TrackersPage() {
         title={t('nav_trackers')}
         description={t('tr_desc')}
         actions={
-          <button type="button" className="btn btn-sm" onClick={reload}>
-            <RefreshCw className="size-4" aria-hidden="true" /> {t('refresh')}
-          </button>
+          <>
+            <a href="/stats/torrents?format=csv" className="btn btn-sm" download title={t('tr_csv_hint')}>
+              <Download className="size-4" aria-hidden="true" /> CSV
+            </a>
+            <button type="button" className="btn btn-sm" onClick={reload}>
+              <RefreshCw className="size-4" aria-hidden="true" /> {t('refresh')}
+            </button>
+          </>
         }
       />
       <ErrorBox error={error} onRetry={reload} />
@@ -149,6 +202,7 @@ export function TrackersPage() {
               <tr>
                 <th scope="col">{t('tr_col_tracker')}</th>
                 <th scope="col">{t('status')}</th>
+                <th scope="col">{t('tr_col_login')}</th>
                 <th scope="col" className="min-w-44">
                   ParseAll
                 </th>
@@ -167,6 +221,9 @@ export function TrackersPage() {
                     </td>
                     <td className="text-sm whitespace-nowrap">
                       <StatusDot tone={tr.enabled === false ? 'muted' : 'ok'} label={tr.enabled === false ? t('tr_off') : t('tr_on')} />
+                    </td>
+                    <td className="text-sm">
+                      <LoginCell tracker={tr} busy={busy === `${tr.slug}:login`} onCheck={() => checkLogin(tr)} />
                     </td>
                     <td>
                       {hasParseAll(tr.slug) && pa ? (

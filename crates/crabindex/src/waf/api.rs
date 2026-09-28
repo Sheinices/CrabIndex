@@ -136,6 +136,8 @@ pub async fn handle(req: Request, sub: &str) -> Response {
             if let Value::Object(m) = &mut v {
                 m.insert("enabled".into(), json!(c.waf.enable));
                 m.insert("logRequests".into(), json!(c.waf.logRequests));
+                // media clients caught by a ban / rate limit / trap in the window
+                m.insert("affectedClients".into(), Value::Array(WAF.stats.affected_clients(now, window)));
             }
             json_response(StatusCode::OK, v)
         }

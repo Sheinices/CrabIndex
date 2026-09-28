@@ -153,7 +153,7 @@ async fn save_master() {
 
 /// Trackers a `/sync/conf` answer says the host serves (lowercase); `None` for hosts that
 /// predate the field - then nothing is ever dropped.
-fn served_from_conf(v: Option<&serde_json::Value>) -> Option<HashSet<String>> {
+pub(super) fn served_from_conf(v: Option<&serde_json::Value>) -> Option<HashSet<String>> {
     let list = v?.get("trackers")?.as_array()?;
     Some(list.iter().filter_map(|x| x.as_str()).map(|s| s.trim().to_lowercase()).filter(|s| !s.is_empty()).collect())
 }
@@ -228,23 +228,49 @@ async fn buckets_with_unknown_slim(cols: &[CollectionIn]) -> Vec<String> {
     .unwrap_or_default()
 }
 
-/// Fetch the named buckets in full and import their rows. Returns `(buckets fetched, rows imported)`.
-async fn refetch_buckets(syncapi: &str, keys: Vec<String>, c: &AppOptions, ct: &CancellationToken) -> (usize, usize) {
-    let (mut fetched, mut rows) = (0usize, 0usize);
+/// Fetch the named buckets in full and import their rows. With `prune`, local rows of those
+/// served trackers that the fetched bucket no longer has are dropped (the bucket is
+/// authoritative). Returns `(buckets fetched, rows imported, rows pruned)`.
+pub(super) async fn refetch_buckets(
+    syncapi: &str,
+    keys: Vec<String>,
+    c: &AppOptions,
+    ct: &CancellationToken,
+    prune: Option<&HashSet<String>>,
+) -> (usize, usize, usize) {
+    let (mut fetched, mut rows, mut pruned) = (0usize, 0usize, 0usize);
     for key in keys {
         if ct.is_cancelled() {
             break;
         }
         let url = format!("{syncapi}/sync/fdb?key={}", urlencoding::encode(&key));
-        let req = Req::new().timeout(120).max_size(100_000_000).cancel(ct);
+        let req = sync_req(120, 100_000_000).cancel(ct);
         let Some(items) = net::get_json::<Vec<BucketIn>>(&url, &req).await else { continue };
         let Some(item) = items.into_iter().find(|i| i.Key == key) else { continue };
         fetched += 1;
-        let torrents: Vec<TorrentDetails> = item.value.unwrap_or_default().into_values().filter(|t| !is_slim(t) && row_allowed(t, c)).collect();
+        let incoming = item.value.unwrap_or_default();
+        let urls: HashSet<String> = incoming.keys().cloned().collect();
+        let torrents: Vec<TorrentDetails> = incoming.into_values().filter(|t| !is_slim(t) && row_allowed(t, c)).collect();
         rows += torrents.len();
         import(torrents).await;
+        if let Some(served) = prune {
+            let (served, c2) = (served.clone(), c.clone());
+            pruned += tokio::task::spawn_blocking(move || {
+                if !fdb::MASTER_DB.contains_key(&key) {
+                    return 0;
+                }
+                let plan = prune_plan(&fdb::open_read(&key, false, false), &urls, &served, &c2);
+                if plan.is_empty() {
+                    return 0;
+                }
+                let drop: HashSet<String> = plan.into_iter().collect();
+                fdb::retain_rows(&key, |t| !drop.contains(&t.url))
+            })
+            .await
+            .unwrap_or(0);
+        }
     }
-    (fetched, rows)
+    (fetched, rows, pruned)
 }
 
 /// Heal buckets whose slim rows are unknown here; returns `(buckets, rows)` imported.
@@ -253,7 +279,8 @@ async fn heal_unknown_slim(syncapi: &str, cols: &[CollectionIn], c: &AppOptions,
     if keys.is_empty() {
         return (0, 0);
     }
-    refetch_buckets(syncapi, keys, c, ct).await
+    let (b, r, _) = refetch_buckets(syncapi, keys, c, ct, None).await;
+    (b, r)
 }
 
 /// Apply [`prune_plan`] to every bucket of a page; returns the number of dropped rows.
@@ -291,21 +318,26 @@ async fn prune_missing(cols: &[CollectionIn], served: Option<&HashSet<String>>, 
     .unwrap_or(0)
 }
 
-async fn import(torrents: Vec<TorrentDetails>) {
+pub(super) async fn import(torrents: Vec<TorrentDetails>) {
     if torrents.is_empty() {
         return;
     }
     let _ = tokio::task::spawn_blocking(move || fdb::add_or_update(&torrents)).await;
 }
 
+/// Request to the sync host, tagged with this client's version (the host lists its clients).
+pub(super) fn sync_req(timeout: u64, max_size: usize) -> Req {
+    Req::new().timeout(timeout).max_size(max_size).header(super::peers::VERSION_HEADER, env!("CARGO_PKG_VERSION"))
+}
+
 async fn fetch_page(url: &str, ct: &CancellationToken) -> Option<RootIn> {
-    let req = Req::new().timeout(300).max_size(100_000_000).cancel(ct);
+    let req = sync_req(300, 100_000_000).cancel(ct);
     net::get_json::<RootIn>(url, &req).await
 }
 
 /// The whole remote `/sync/conf` JSON, or `None` when the host did not answer.
-async fn remote_conf(syncapi: &str) -> Option<serde_json::Value> {
-    net::get_json::<serde_json::Value>(&format!("{syncapi}/sync/conf"), &Req::new()).await
+pub(super) async fn remote_conf(syncapi: &str) -> Option<serde_json::Value> {
+    net::get_json::<serde_json::Value>(&format!("{syncapi}/sync/conf"), &sync_req(15, 0)).await
 }
 
 /// Retry delay after a failed cycle: 1, 2, 5, 10 minutes, never longer than `timeSync`.

@@ -1,8 +1,13 @@
-//! Console logging with per-category levels.
+//! Console logging with per-category levels. The same lines (after the level filter) also go
+//! to `Data/log/app.log`, the sync categories to `Data/log/sync.log`, so the admin panel can show
+//! them without access to journalctl or `docker logs`. Files rotate once (`app.1.log`) at
+//! `logging.fileMaxMb`.
 
 use arc_swap::ArcSwap;
 use once_cell::sync::Lazy;
+use parking_lot::Mutex;
 use std::collections::HashMap;
+use std::io::Write;
 use std::sync::Arc;
 
 use crate::config::AppOptions;
@@ -57,6 +62,63 @@ pub struct LogSettings {
     pub cron_skip_fast_ms: i32,
     pub default_level: Level,
     pub category_levels: Option<HashMap<String, Level>>,
+    pub files: bool,
+    pub file_max_bytes: u64,
+}
+
+pub const LOG_DIR: &str = "Data/log";
+pub const APP_LOG: &str = "app.log";
+pub const SYNC_LOG: &str = "sync.log";
+
+static FILE_LOCK: Mutex<()> = parking_lot::const_mutex(());
+
+/// Which file a category lands in; parser detail has its own per-tracker files.
+pub fn file_for(category: &str) -> Option<&'static str> {
+    let c = category.trim().to_lowercase();
+    if c == cat::SYNC || c == cat::SYNC_SPIDR || c == "syncspidr" {
+        Some(SYNC_LOG)
+    } else if c == cat::PARSER {
+        None
+    } else {
+        Some(APP_LOG)
+    }
+}
+
+/// `app.log` → `app.1.log`.
+pub fn rotated_name(name: &str) -> String {
+    match name.strip_suffix(".log") {
+        Some(stem) => format!("{stem}.1.log"),
+        None => format!("{name}.1"),
+    }
+}
+
+fn level_tag(level: Level) -> &'static str {
+    match level {
+        Level::Trace => "TRACE",
+        Level::Debug => "DEBUG",
+        Level::Information => "INFO",
+        Level::Warning => "WARN",
+        Level::Error => "ERROR",
+        Level::Critical => "CRIT",
+        Level::None => "NONE",
+    }
+}
+
+fn append_file(name: &str, line: &str, max_bytes: u64) {
+    let _g = FILE_LOCK.lock();
+    let _ = std::fs::create_dir_all(LOG_DIR);
+    let path = format!("{LOG_DIR}/{name}");
+    if max_bytes > 0 {
+        if let Ok(meta) = std::fs::metadata(&path) {
+            if meta.len() >= max_bytes {
+                let _ = std::fs::rename(&path, format!("{LOG_DIR}/{}", rotated_name(name)));
+            }
+        }
+    }
+    if let Ok(mut f) = std::fs::OpenOptions::new().create(true).append(true).open(&path) {
+        let _ = f.write_all(line.as_bytes());
+        let _ = f.write_all(b"\n");
+    }
 }
 
 impl Default for LogSettings {
@@ -69,6 +131,8 @@ impl Default for LogSettings {
             cron_skip_fast_ms: 100,
             default_level: Level::Information,
             category_levels: Some(m),
+            files: true,
+            file_max_bytes: 20 * 1024 * 1024,
         }
     }
 }
@@ -112,6 +176,8 @@ pub fn apply(conf: &AppOptions) {
         cron_skip_fast_ms: o.cronSkipFastMs,
         default_level: Level::parse(Some(&o.defaultLevel), Level::Information),
         category_levels,
+        files: o.files,
+        file_max_bytes: (o.fileMaxMb.max(0) as u64) * 1024 * 1024,
     }));
 }
 
@@ -130,7 +196,8 @@ pub fn write(category: &str, level: Level, message: impl AsRef<str>) {
         return;
     }
     let message = message.as_ref();
-    let line = if SETTINGS.load().console_timestamp && !message.starts_with('[') {
+    let s = SETTINGS.load();
+    let line = if s.console_timestamp && !message.starts_with('[') {
         format!("{category}: [{}] {message}", chrono::Local::now().format("%H:%M:%S"))
     } else {
         format!("{category}: {message}")
@@ -139,6 +206,12 @@ pub fn write(category: &str, level: Level, message: impl AsRef<str>) {
         eprintln!("{line}");
     } else {
         println!("{line}");
+    }
+    if s.files {
+        if let Some(file) = file_for(category) {
+            let file_line = format!("{} [{}] {category}: {message}", chrono::Local::now().format("%Y-%m-%d %H:%M:%S"), level_tag(level));
+            append_file(file, &file_line, s.file_max_bytes);
+        }
     }
 }
 
@@ -182,4 +255,22 @@ pub fn classify_tracks_message(message: &str) -> Level {
         return Level::Debug;
     }
     Level::Information
+}
+
+#[cfg(test)]
+mod file_tests {
+    use super::*;
+
+    #[test]
+    fn categories_map_to_files() {
+        assert_eq!(file_for("sync"), Some(SYNC_LOG));
+        assert_eq!(file_for("syncSpidr"), Some(SYNC_LOG));
+        assert_eq!(file_for("sync_spidr"), Some(SYNC_LOG));
+        assert_eq!(file_for("parser"), None);
+        assert_eq!(file_for("host"), Some(APP_LOG));
+        assert_eq!(file_for("admin"), Some(APP_LOG));
+        assert_eq!(rotated_name("app.log"), "app.1.log");
+        assert_eq!(rotated_name("sync.log"), "sync.1.log");
+        assert_eq!(level_tag(Level::Warning), "WARN");
+    }
 }

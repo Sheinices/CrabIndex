@@ -95,6 +95,8 @@
 | `timeSyncCheck` | `1440` | Интервал сверки с `syncapi`, минуты: клиент сравнивает свой список бакетов со списком сервера, недостающие и расходящиеся докачивает целиком, лишние удаляет; `0` - выключить |
 | `saveCheckpointEveryNBatches` | `5` | Сохранять позицию синхронизации каждые N страниц |
 | `timeStatsUpdate` | `90` | Интервал сбора статистики, минуты; `-1` - пауза |
+| `notify` | блок | Уведомления о сигналах здоровья: `telegramToken`, `telegramChatId`, `webhookUrl`, `cooldownMinutes`, `enable`. См. [Здоровье и уведомления](../operations/health.md) |
+| `logging.files`, `logging.fileMaxMb` | `true`, `20` | Строки консоли в `Data/log/app.log` и `sync.log` с ротацией. См. [Логирование](logging.md) |
 
 См. [Синхронизация](../concepts/sync.md).
 

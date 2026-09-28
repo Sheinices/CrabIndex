@@ -22,6 +22,7 @@ pub fn init() {
     register_parse_all_starter(Arc::new(nnmclub::Starter));
     register_parse_all_starter(Arc::new(kinozal::Starter));
     crab_core::fdb::register_id_extractor(kinozal::TRACKER_NAME, kinozal::url_id);
+    crab_core::trackers::login_status::register_checker(kinozal::TRACKER_NAME, kinozal::login_checker());
 }
 
 /// HTTP routes owned by this crate (paths registered in lowercase).

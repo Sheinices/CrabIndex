@@ -58,7 +58,7 @@ const sidebars = {
     {
       type: 'category',
       label: 'Эксплуатация',
-      items: ['operations/waf', 'operations/access-matrix', 'operations/maintenance', 'operations/troubleshooting'],
+      items: ['operations/health', 'operations/waf', 'operations/access-matrix', 'operations/maintenance', 'operations/troubleshooting'],
     },
     { type: 'doc', id: 'clients/overview', label: 'Prisma, Lampa, Sonarr' },
     {

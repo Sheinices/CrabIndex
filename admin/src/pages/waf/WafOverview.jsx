@@ -174,6 +174,41 @@ export function WafOverview() {
             </section>
           </div>
 
+          {(o.affectedClients || []).length ? (
+            <section className="rounded-xl border border-warn/40 bg-warn/10 p-5" aria-labelledby="waf-affected">
+              <h2 id="waf-affected" className="mb-1 font-semibold">
+                {t('waf_affected_title', { count: o.affectedClients.length })}
+              </h2>
+              <p className="mb-3 text-sm text-muted">{t('waf_affected_desc')}</p>
+              <div className="table-wrap">
+                <table className="table">
+                  <thead>
+                    <tr>
+                      <th scope="col">IP</th>
+                      <th scope="col">{t('waf_affected_reason')}</th>
+                      <th scope="col" className="text-right">{t('waf_affected_searches')}</th>
+                      <th scope="col">{t('waf_affected_last')}</th>
+                      <th scope="col">User-Agent</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {o.affectedClients.map((r) => (
+                      <tr key={r.ip}>
+                        <td className="font-mono text-xs">
+                          <Link to={`/waf/ips?ip=${encodeURIComponent(r.ip)}`} className="hover:underline">{r.ip}</Link>
+                        </td>
+                        <td className="text-xs">{r.reason}</td>
+                        <td className="text-right text-xs tabular-nums">{formatNumber(r.searches)}</td>
+                        <td className="text-xs whitespace-nowrap text-muted">{formatRelative(r.at)}</td>
+                        <td className="max-w-64 truncate text-xs text-muted" title={r.ua}>{r.ua}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </section>
+          ) : null}
+
           <div className="grid gap-6 lg:grid-cols-2">
             <section aria-labelledby="waf-top-ips">
               <h2 id="waf-top-ips" className="mb-3 font-semibold">
