@@ -59,6 +59,12 @@ body,
   min-height: 100%;
 }
 
+/* Safety net for phones: a stray element wider than the screen must not turn into a
+   horizontally scrollable, zoomed-out page. Wide content scrolls inside its own container. */
+html {
+  overflow-x: clip;
+}
+
 body {
   background: var(--bg);
   color: var(--fg);
@@ -75,6 +81,16 @@ mark {
   background: color-mix(in srgb, var(--color-brand) 35%, transparent);
   color: inherit;
   border-radius: 2px;
+}
+
+@layer base {
+  /* Grid and flex children default to `min-width: auto` and grow to their content, so a wide
+     table inside a card pushes the whole page past the phone screen instead of scrolling
+     inside its `.table-wrap`. */
+  .grid > *,
+  .flex > * {
+    min-width: 0;
+  }
 }
 
 @layer components {
@@ -106,7 +122,10 @@ mark {
     @apply inline-flex items-center gap-1 rounded-full border border-border px-2 py-0.5 text-xs font-medium;
   }
   .table-wrap {
-    @apply overflow-x-auto rounded-xl border border-border bg-surface;
+    /* `relative`: absolutely positioned descendants (the `sr-only` header labels) must be
+       contained here, otherwise they sit at their column's x inside the viewport and widen the
+       document - phones then zoom out to fit the "page". */
+    @apply relative overflow-x-auto rounded-xl border border-border bg-surface;
   }
   .table {
     @apply w-full text-left text-sm;

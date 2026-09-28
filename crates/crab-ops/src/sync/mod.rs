@@ -4,9 +4,12 @@
 //! `{nextread, countread, take, collections:[{Key, Value:{time, fileTime, torrents}}]}` with
 //! buckets ordered by masterDb `fileTime`.
 
+pub mod check;
 pub mod cron;
+pub mod peers;
 
-use axum::extract::Query;
+use axum::extract::{ConnectInfo, Query};
+use axum::http::HeaderMap;
 use axum::http::{header, StatusCode};
 use axum::response::{IntoResponse, Response};
 use axum::routing::any;
@@ -22,6 +25,7 @@ use parking_lot::RwLock;
 use serde::Serialize;
 use serde_json::json;
 use std::collections::HashMap;
+use std::net::SocketAddr;
 use std::sync::Arc;
 use tokio_util::sync::CancellationToken;
 
@@ -66,20 +70,65 @@ pub fn router() -> Router {
         .route("/sync/conf", any(sync_conf))
         .route("/sync/fdb", any(fdb_key))
         .route("/sync/fdb/torrents", any(fdb_torrents))
+        .route("/sync/fdb/digest", any(fdb_digest))
         .route("/sync/torrents", any(torrents_legacy))
+        // DevAdmin policy (everything under /cron/), used by the admin panel.
+        .route("/cron/sync/peers", any(cron_peers))
+        .route("/cron/sync/check", any(cron_check))
+        .route("/cron/sync/checkstatus", any(cron_check_status))
 }
 
 pub fn spawn_workers(shutdown: CancellationToken) {
+    peers::load();
     let s = shutdown.clone();
     tokio::spawn(async move {
         loop {
             if !crate::sleep_ct(std::time::Duration::from_secs(600), &s).await {
+                peers::save_if_dirty();
                 return;
             }
-            let _ = tokio::task::spawn_blocking(refresh_sorted_master).await;
+            let _ = tokio::task::spawn_blocking(|| {
+                refresh_sorted_master();
+                peers::save_if_dirty();
+            })
+            .await;
         }
     });
-    tokio::spawn(cron::run_worker(shutdown));
+    tokio::spawn(cron::run_worker(shutdown.clone()));
+    tokio::spawn(check::run_worker(shutdown));
+}
+
+/// Clients that pulled from this host (admin panel, section "Clients").
+async fn cron_peers() -> axum::Json<serde_json::Value> {
+    axum::Json(json!({ "ok": true, "opensync": conf().opensync, "peers": peers::list() }))
+}
+
+/// Start an integrity check against `syncapi` now: `ok` / `work` / `disabled`.
+async fn cron_check() -> String {
+    check::start_now().to_string()
+}
+
+async fn cron_check_status() -> axum::Json<serde_json::Value> {
+    axum::Json(json!({ "ok": true, "running": check::is_running(), "last": check::last_report() }))
+}
+
+/// `[[key, fileTime], ...]` for every bucket: the integrity check on a client compares it with
+/// its own masterDb and refetches or drops buckets that differ.
+async fn fdb_digest(headers: HeaderMap, peer: Option<ConnectInfo<SocketAddr>>) -> Response {
+    if !conf().opensync {
+        return axum::Json(json!({ "count": 0, "buckets": [] })).into_response();
+    }
+    peers::record(&peers::client_ip(&headers, peer.as_ref()), &peers::client_version(&headers), peers::Hit::Digest);
+    let res = tokio::task::spawn_blocking(|| {
+        let snap = fdb::master_db_snapshot();
+        let buckets: Vec<(String, i64)> = snap.into_iter().map(|(k, s)| (k, s.fileTime)).collect();
+        serde_json::to_vec(&json!({ "count": buckets.len(), "buckets": buckets }))
+    })
+    .await;
+    match res {
+        Ok(Ok(body)) => ([(header::CONTENT_TYPE, "application/json; charset=utf-8")], body).into_response(),
+        _ => StatusCode::INTERNAL_SERVER_ERROR.into_response(),
+    }
 }
 
 /// Trackers whose rows this host serves: `synctrackers` when set, else every built-in slug,
@@ -98,7 +147,8 @@ pub fn served_trackers() -> Vec<String> {
     out
 }
 
-async fn sync_conf() -> axum::Json<serde_json::Value> {
+async fn sync_conf(headers: HeaderMap, peer: Option<ConnectInfo<SocketAddr>>) -> axum::Json<serde_json::Value> {
+    peers::record(&peers::client_ip(&headers, peer.as_ref()), &peers::client_version(&headers), peers::Hit::Conf);
     // `count` lets a client show how full its copy is versus this host (admin progress only).
     let count = crab_core::index::current_len().unwrap_or(0);
     axum::Json(json!({ "fbd": true, "spidr": true, "version": 2, "count": count, "trackers": served_trackers() }))
@@ -138,8 +188,9 @@ pub fn fdb_key_items(key: &str) -> Vec<serde_json::Value> {
         .collect()
 }
 
-async fn fdb_key(q: Query<HashMap<String, String>>) -> Response {
+async fn fdb_key(headers: HeaderMap, peer: Option<ConnectInfo<SocketAddr>>, q: Query<HashMap<String, String>>) -> Response {
     let p = Params::from_query(q);
+    peers::record(&peers::client_ip(&headers, peer.as_ref()), &peers::client_version(&headers), peers::Hit::Bucket);
     if !conf().opensync {
         return ([(header::CONTENT_TYPE, "application/json; charset=utf-8")], "[]").into_response();
     }
@@ -217,11 +268,12 @@ pub fn build_torrents_page(master: &[(String, MasterDbShard)], time: i64, start:
     TorrentsPage { nextread, countread, take: TAKE, collections }
 }
 
-async fn fdb_torrents(q: Query<HashMap<String, String>>) -> Response {
+async fn fdb_torrents(headers: HeaderMap, peer: Option<ConnectInfo<SocketAddr>>, q: Query<HashMap<String, String>>) -> Response {
     let p = Params::from_query(q);
     let time = p.i64("time", 0);
     let start = p.i64("start", -1);
     let spidr = p.bool("spidr", false);
+    peers::record(&peers::client_ip(&headers, peer.as_ref()), &peers::client_version(&headers), peers::Hit::Torrents { cursor: time, spidr });
 
     if !conf().opensync || time == 0 {
         return axum::Json(json!({ "nextread": false, "collections": [] })).into_response();

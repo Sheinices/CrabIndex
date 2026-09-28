@@ -453,6 +453,8 @@ pub struct AppOptions {
     pub timeSync: i32,
     /// minutes
     pub timeSyncSpidr: i32,
+    /// minutes between integrity checks against `syncapi` (bucket digest); 0 - off
+    pub timeSyncCheck: i32,
     pub saveCheckpointEveryNBatches: i32,
 
     pub Rutor: TrackerSettings,
@@ -542,6 +544,7 @@ impl Default for AppOptions {
             timeStatsUpdate: 90,
             timeSync: 60,
             timeSyncSpidr: 60,
+            timeSyncCheck: 1440,
             saveCheckpointEveryNBatches: 5,
             Rutor: t("http://rutor.info", 8),
             Megapeer: t("http://megapeer.vip", 5),

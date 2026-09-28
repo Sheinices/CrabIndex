@@ -130,6 +130,7 @@ pub fn get() -> Value {
             fd("syncspidr", "bool", "Sync spidr", None),
             field("timeSync", "int", "Интервал sync (мин)", None, min(1)),
             field("timeSyncSpidr", "int", "Интервал sync spidr (мин)", None, min(1)),
+            field("timeSyncCheck", "int", "Сверка с syncapi (мин)", Some("Сравнение списка бакетов с сервером: недостающие докачиваются, лишние удаляются; 0 - выключить"), min(0)),
             field("saveCheckpointEveryNBatches", "int", "Sync checkpoint (батчей)", Some("При catch-up: сохранять masterDb каждые N батчей; 0 - только по таймеру (5 мин)"), min(0)),
             field("maxreadfile", "int", "Max read file", Some("Лимит чтения fdb"), min(1)),
         ]),
