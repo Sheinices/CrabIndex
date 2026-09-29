@@ -222,4 +222,27 @@ async fn fdb_operations_end_to_end() {
     assert_eq!(upd["ok"], true);
     let rn = get_json("/dev/removenullvalues").await;
     assert_eq!(rn["removed"], 0);
+
+    id_index_scenario();
+}
+
+/// A torrent re-parsed under another name lands in another bucket; with the id index built,
+/// the old copy is removed and the newest row wins. Runs inside the end-to-end test: the
+/// FileDB globals are shared by every test of this binary.
+fn id_index_scenario() {
+    fdb::add_or_update(&[row("rutor", "http://rutor.info/torrent/777/druzja-1938", "Друзья 1938", "Друзья 1938")]);
+    assert!(fdb::master_db().contains_key("друзья1938:друзья1938"));
+
+    let _ = fdb::id_index::build();
+    assert!(fdb::id_index::is_ready());
+    assert_eq!(fdb::id_index::lookup("rutor", 777).as_deref(), Some("друзья1938:друзья1938"));
+
+    fdb::add_or_update(&[row("rutor", "http://rutor.info/torrent/777/druzja-1939", "Друзья", "Friends")]);
+    let old = fdb::open_read("друзья1938:друзья1938", false, false);
+    assert!(old.is_empty(), "old copy must be dropped, got {} rows", old.len());
+    assert!(!fdb::master_db().contains_key("друзья1938:друзья1938"), "emptied bucket leaves masterDb");
+    let new = fdb::open_read("друзья:friends", false, false);
+    assert_eq!(new.len(), 1);
+    assert_eq!(fdb::id_index::lookup("rutor", 777).as_deref(), Some("друзья:friends"));
+    assert_eq!(fdb::remove_by_id("друзья:friends", "kinozal", 777), 0);
 }

@@ -137,6 +137,8 @@ pub fn overview(c: &AppOptions) -> Value {
         "torrents": sum_stats_torrents(&crab_tracks::stats::read_all_json()),
         "lastUpdateDb": last_update,
         "fastDbKeys": crab_core::index::current_len(),
+        // Global torrent-id index (cross-bucket duplicate guard): ready after the startup scan.
+        "idIndex": { "ready": crab_core::fdb::id_index::is_ready(), "rows": crab_core::fdb::id_index::len() },
         "activeJobs": active_jobs,
         "trackers": trackers,
         "sync": {

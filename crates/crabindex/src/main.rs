@@ -142,6 +142,7 @@ fn spawn_workers(ct: &CancellationToken) {
     waf::spawn_maintenance(ct.clone());
     workers::spawn_fastdb_refresh(ct.clone());
     workers::spawn_filedb(ct.clone());
+    workers::spawn_id_index(ct.clone());
     crab_tracks::spawn_workers(ct.clone());
     crab_ops::spawn_workers(ct.clone());
     workers::spawn_update_check(ct.clone());

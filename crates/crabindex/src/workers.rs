@@ -26,6 +26,26 @@ pub fn spawn_fastdb_refresh(ct: CancellationToken) {
     });
 }
 
+/// Global (tracker, id) → bucket index: first scan 30 s after start, then rebuilt daily to
+/// drop entries of rows that migrations removed.
+pub fn spawn_id_index(ct: CancellationToken) {
+    tokio::spawn(async move {
+        tokio::select! {
+            _ = ct.cancelled() => return,
+            _ = tokio::time::sleep(Duration::from_secs(30)) => {}
+        }
+        loop {
+            let started = std::time::Instant::now();
+            let n = tokio::task::spawn_blocking(crab_core::fdb::id_index::build).await.unwrap_or(0);
+            log::info(cat::FDB, format!("id index: {n} rows in {:.0}s", started.elapsed().as_secs_f64()));
+            tokio::select! {
+                _ = ct.cancelled() => break,
+                _ = tokio::time::sleep(Duration::from_secs(24 * 3600)) => {}
+            }
+        }
+    });
+}
+
 /// FileDB cache eviction / masterDb persistence loops.
 pub fn spawn_filedb(ct: CancellationToken) {
     println!("fdb worker started");

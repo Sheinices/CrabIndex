@@ -14,6 +14,7 @@ mod details;
 mod jsonstream;
 mod master;
 mod url_ids;
+pub mod id_index;
 
 pub use details::{all_voices, rus_voices, size_from_name, ukr_voices, update_full_details};
 pub use jsonstream::{read_gz_json, write_gz_json};
@@ -172,13 +173,61 @@ impl FileDb {
             let mut g = self.inner.lock();
             add_or_update_core(&self.key, &mut g, torrent, &mut migrate);
         }
+        let mut final_key = self.key.clone();
         if let Some((t, new_key, now_empty)) = migrate {
             migrate_torrent_to_new_key(&t, &new_key);
             if now_empty {
                 remove_key_from_master_db(&self.key);
             }
+            final_key = new_key;
+        }
+        // The same torrent (tracker + numeric id) may already sit in another bucket under an
+        // older name: the newest row wins, the old copy goes (outside this shard's lock).
+        let id = torrent_id_from_url(&torrent.trackerName, &torrent.url);
+        if id > 0 {
+            if let Some(other) = id_index::lookup(&torrent.trackerName, id) {
+                if other.as_ref() != final_key.as_str() {
+                    remove_by_id(&other, &torrent.trackerName, id);
+                }
+            }
+            id_index::record(&torrent.trackerName, id, &final_key);
         }
     }
+}
+
+/// Drop every row of `tracker` with torrent id `id` from bucket `key` (another bucket now holds
+/// the torrent). The bucket is re-stamped so sync clients receive it and prune the same rows.
+pub fn remove_by_id(key: &str, tracker: &str, id: i32) -> usize {
+    if key.is_empty() || !MASTER_DB.contains_key(key) {
+        return 0;
+    }
+    let w = open_write(key);
+    let mut removed = 0usize;
+    let mut now_empty = false;
+    w.modify(|db| {
+        let urls: Vec<String> = db
+            .iter()
+            .filter(|(u, t)| t.trackerName.eq_ignore_ascii_case(tracker) && torrent_id_from_url(tracker, u) == id)
+            .map(|(u, _)| u.clone())
+            .collect();
+        for u in &urls {
+            db.shift_remove(u);
+        }
+        removed = urls.len();
+        now_empty = db.is_empty();
+        removed > 0
+    });
+    if removed > 0 {
+        if now_empty {
+            // an empty shard is never written by the guard: persist it so the stale file
+            // does not resurrect the row on the next read
+            w.save_now();
+            remove_key_from_master_db(key);
+        } else {
+            set_shard(key, time::now());
+        }
+    }
+    removed
 }
 
 fn upt(t: &mut TorrentDetails, st: &mut ShardState, update_full: &mut bool, uptfull: bool, updatetime: bool) {

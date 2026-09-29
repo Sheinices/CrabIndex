@@ -32,6 +32,29 @@ pub fn guess_kind(title: &str) -> Kind {
     }
 }
 
+/// Generic fallback for titles the pattern lists do not match: the head before the first `(`
+/// or `[` is split by ` / `; season/episode segments (`Сезон: 10`, `Сезоны 1-4`, `Серии 1-24`,
+/// `9, 10 сезоны`) are dropped; the first segment is the name, the last remaining segment with
+/// Latin letters is the original; the year is the first four-digit number inside `[...]`.
+/// Handles `Terminator(Джеймс Кэмерон)` (no space), `[1984; США; ...]` and `[1994-1995, ...]`.
+pub fn parse_generic(title: &str) -> Names {
+    let flat = collapse_parens(title);
+    let head_end = flat.find(['(', '[']).unwrap_or(flat.len());
+    let head = flat[..head_end].trim();
+    if head.is_empty() {
+        return (None, None, 0, false);
+    }
+    let is_marker = |seg: &str| rx::is_match_i(seg, r"^(Сезон(ы)?|Серии|Серия|Season(s)?|Episodes?)\b") || rx::is_match_i(seg, r"^[\d\s,\-]+(сезон|season)") || rx::is_match(seg, r"^[\d\s,\-/]+$");
+    let segs: Vec<&str> = head.split(" / ").map(str::trim).filter(|s| !s.is_empty() && !is_marker(s)).collect();
+    let Some(name) = segs.first().map(|s| s.to_string()).filter(|n| !util::is_blank(n)) else {
+        return (None, None, 0, false);
+    };
+    let latin = |s: &str| s.chars().any(|c| c.is_ascii_alphabetic());
+    let orig = segs.iter().skip(1).rev().find(|s| latin(s)).map(|s| s.to_string());
+    let year = rx::group(title, r"\[[^\]]*?((?:19|20)\d{2})", 1).parse().unwrap_or(0);
+    (Some(name), orig, year, false)
+}
+
 /// Replace every top-level `( ... )` group (nested parentheses included) by `(x)` so the title
 /// patterns can treat the director/studio block as one token:
 /// `Матрица / The Matrix (Братья Вачовски (Энди, Ларри) / The Wachowski Brothers (Andy, Larry)) [1999, ...]`.
@@ -87,6 +110,13 @@ fn parse_movie_title(title: &str) -> Names {
             break;
         }
     }
+    if res.0.is_none() {
+        let (n, o, y, skip) = parse_generic(title);
+        res = (n, o, y);
+        if skip {
+            return (None, None, 0, true);
+        }
+    }
     let name = res.0.map(|n| n.replace("в 3Д", "").trim().to_string());
     let orig = res.1.map(|o| o.replace(" in 3D", "").replace(" 3D", "").trim().to_string());
     (name, orig, res.2, false)
@@ -126,8 +156,12 @@ fn parse_serial_title(title: &str) -> Names {
         }
     }
     let bad = |s: &Option<String>| rx::is_match_i(s.as_deref().unwrap_or(""), "(Сезон|Серии)");
-    if bad(&res.0) || bad(&res.1) {
-        return (None, None, 0, false);
+    if res.0.is_none() || bad(&res.0) || bad(&res.1) {
+        let (n, o, y, _) = parse_generic(title);
+        if bad(&n) || bad(&o) {
+            return (None, None, 0, false);
+        }
+        return (n, o, y, false);
     }
     (res.0, res.1, res.2, false)
 }
@@ -149,6 +183,27 @@ mod tests {
         assert_eq!(collapse_parens("a (b (c) d) e"), "a (x) e");
         assert_eq!(parse(Kind::Movie, t), (Some("Матрица".into()), Some("The Matrix".into()), 1999, false));
         assert_eq!(guess_kind(t), Kind::Movie);
+    }
+
+    #[test]
+    fn generic_fallback_covers_real_rutracker_titles() {
+        let cases: [(&str, Kind, &str, Option<&str>, i32); 9] = [
+            ("Друзья / Friends / Сезон: 10 (David Crane, Marta Kauffman) [2004, США, Комедийный сериал, DVDRip, ENG+RUS]", Kind::Serial, "Друзья", Some("Friends"), 2004),
+            ("Друзья / Friends / Сезон 1 / Серии 1-24 из 24 (Дэвид Крэйн / David Crane, Марта Кауффман / Marta Kauffman) [1994-1995, США, мелодрама]", Kind::Serial, "Друзья", Some("Friends"), 1994),
+            ("Друзья / Friends / Сезон: 1-5 / Серии: 121 (121) (Гари Хэлворсон) [1994-1999, США, Комедия, HDTVRip]", Kind::Serial, "Друзья", Some("Friends"), 1994),
+            ("Друзья / Friends (9, 10 сезоны / 9, 10 seasons) (David Crane, Marta Kauffman) [1994-2004, США, комедия, DVDRip-AVC]", Kind::Movie, "Друзья", Some("Friends"), 1994),
+            ("Друзья / Friends / Сезон: 10 [2004]", Kind::Serial, "Друзья", Some("Friends"), 2004),
+            ("Шерлок / Sherlock / Сезоны: 1-4 / Серии: 1-13 из 13 (Пол МакГиган) [2010-2017, Великобритания, триллер]", Kind::Serial, "Шерлок", Some("Sherlock"), 2010),
+            ("Шерлок / Шерлок: Нерассказанные истории / Sherlock: Untold Stories [11/11] + SP [2019, детектив, WEBRip] [720p] DVO", Kind::Movie, "Шерлок", Some("Sherlock: Untold Stories"), 2019),
+            ("Терминатор / Terminator(Джеймс Кэмерон / James Cameron) [1984, США, Боевик, BDRip 1080p] MVO", Kind::Movie, "Терминатор", Some("Terminator"), 1984),
+            ("Терминатор / The Terminator (Джеймс Кэмерон / James Cameron) [1984; Великобритания, США; фантастика; DVB] Dub", Kind::Movie, "Терминатор", Some("The Terminator"), 1984),
+        ];
+        for (title, kind, name, orig, year) in cases {
+            let (n, o, y, skip) = parse(kind, title);
+            assert_eq!((n.as_deref(), o.as_deref(), y, skip), (Some(name), orig, year, false), "{title}");
+        }
+        // a plain Russian-only title keeps no original
+        assert_eq!(parse_generic("Просто фильм [2020, Россия]"), (Some("Просто фильм".into()), None, 2020, false));
     }
 
     #[test]

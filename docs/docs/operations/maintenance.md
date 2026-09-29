@@ -105,7 +105,7 @@ Ctrl+C корректно прерывает проход.
 | Колонка | Что считает | Чем чинится |
 | --- | --- | --- |
 | Размер 0 | `size` = 0 при читаемом `sizeName` | `FixZeroSizes` |
-| Дубли по id | Лишние записи одной раздачи (один числовой id в адресе, несколько строк) у трекеров с id в URL | `FixSlugDuplicates` |
+| Дубли по id | Лишние записи одной раздачи (один числовой id в адресе, несколько строк) у трекеров с id в URL. Новые дубли не появляются: их снимает [индекс id](../concepts/filedb.md#индекс-id-раздач) при записи | `FixSlugDuplicates` |
 | Чужой домен | Записи с хостом, отличным от `host` трекера в конфиге (knaben не считается: его записи по замыслу ведут на другие сайты) | `FixKinozalDomainDuplicates`, `FixRutrackerDomainDuplicates`, `FixSelezenDomainDuplicates`, `FixUltradoxDomainDuplicates` |
 | Имена | rutracker: `originalname` совпал с `name`, хотя в заголовке есть оригинал через `/` | `FixRutrackerNames` |
 
