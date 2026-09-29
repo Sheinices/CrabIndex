@@ -25,7 +25,9 @@ pub const TRACKER_NAME: &str = "selezen";
 const COOKIE_KEY: &str = "selezen:cookie";
 const AUTH_KEY: &str = "selezen:TakeLogin()";
 const SELEZEN_USER_AGENT: &str = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36";
-const ID_RE: &str = r"/relizy-ot-selezen/(\d+)-";
+/// DLE release id: the number that starts the last path segment, in any section and on any of
+/// the site's domains (same rule as `fdb::torrent_id_from_url`).
+const ID_RE: &str = r"/(\d+)-[^/?#]*\.html";
 
 static PARSE_LOCK: ParseLock = ParseLock::new();
 static LOGIN_BUSY: AtomicBool = AtomicBool::new(false);

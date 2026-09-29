@@ -44,7 +44,9 @@ pub fn torrent_id_from_url(tracker: &str, url: &str) -> i32 {
                 num(url, r"/(\d+)/", false)
             }
         }
-        "selezen" => num(url, r"/relizy-ot-selezen/(\d+)-", false),
+        // DLE news id: the number that starts the last path segment, in any section
+        // (`/relizy-ot-selezen/254-…`, `/relizy-ot-selezen/komedija/5054-…`, `/blu-ray/1280-…`)
+        "selezen" => num(url, r"/(\d+)-[^/?#]*\.html", false),
         "baibako" | "rudub" => num(url, r"details\.php\?id=(\d+)", true),
         "kinozal" => {
             // details.php?id= but not userdetails.php?id= (fallback when parser crate did not register)

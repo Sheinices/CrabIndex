@@ -6,7 +6,7 @@
 //!
 //! * kinozal: grouped by `details.php?id=` (`.tv` → `.guru`); `userdetails` rows are dropped.
 //! * rutracker: grouped by `viewtopic.php?t=` (`.net` and mirrors → `.org`).
-//! * selezen: grouped by the release id in `/relizy-ot-selezen/{id}-…` (`selezen.org`,
+//! * selezen: grouped by the DLE release id `/{id}-….html` in any section (`selezen.org`,
 //!   `use.selezen.club` → `Selezen.host`); the kept row's path is preserved.
 //! * ultradox: grouped by host-independent path + `#h=` fragment (`.onl` → `.vip`, `00N.` mirrors),
 //!   so different qualities on one page stay separate rows.
@@ -255,7 +255,8 @@ pub fn fix_rutracker() -> Value {
 }
 
 fn selezen_group_key(url: &str) -> Option<String> {
-    let id = rx::group(url, r"(?i)/relizy-ot-selezen/(\d+)-", 1);
+    // same DLE news id as fdb::torrent_id_from_url: any section, old domains included
+    let id = rx::group(url, r"/(\d+)-[^/?#]*\.html", 1);
     id.parse::<i32>().ok().filter(|i| *i > 0).map(|i| i.to_string())
 }
 
@@ -398,6 +399,28 @@ mod tests {
         let rehosted = "https://open.selezen.org/serialy/ostavshiesya-v-zhivyh.html";
         assert_eq!(db[rehosted].url, rehosted);
         assert!(!db.contains_key(loose));
+    }
+
+    #[test]
+    fn selezen_ids_in_other_sections_merge_across_domains() {
+        assert_eq!(selezen_group_key("https://selezen.org/blu-ray/1280-pervomu-igroku.html").as_deref(), Some("1280"));
+        assert_eq!(selezen_group_key("https://selezen.org/relizy-ot-selezen/komedija/5054-golubye-gavaji.html").as_deref(), Some("5054"));
+        assert_eq!(selezen_group_key("https://open.selezen.org/relizy-ot-selezen/page/2/"), None);
+        let mut db = fdb::ShardMap::new();
+        let old = "https://selezen.org/relizy-ot-selezen/komedija/5054-golubye-gavaji.html";
+        let new = "https://open.selezen.org/relizy-ot-selezen/5054-golubye-gavaji.html";
+        for (u, sid) in [(old, 2), (new, 7)] {
+            let mut r = row(u, "magnet:?xt=urn:btih:cc", sid);
+            r.trackerName = "selezen".into();
+            db.insert(u.into(), r);
+        }
+        let cu = |_: &str, keep: &str| path_on_host("https://open.selezen.org", keep);
+        let spec = Spec { tracker: "selezen", canonical_host: "open.selezen.org".into(), drop_userdetails: false, group_key: &selezen_group_key, canonical_url: &cu, rehost_base: Some("https://open.selezen.org".into()) };
+        let mut c = Counts::default();
+        assert!(process_shard(&mut db, &spec, &mut c));
+        assert_eq!((c.merged, c.removed), (1, 1));
+        assert_eq!(db.len(), 1);
+        assert!(db.contains_key(new));
     }
 
     #[test]
