@@ -4,6 +4,9 @@ import {
   AlertTriangle,
   BellRing,
   BookOpen,
+  ChevronDown,
+  ChevronRight,
+  EyeOff,
   Braces,
   Clock,
   Database,
@@ -14,7 +17,7 @@ import {
   Server,
   Shield,
 } from "lucide-react";
-import { getOverview, getWafOverview, sendTestNotification, startSyncCheck } from "../lib/api.js";
+import { getOverview, getWafOverview, muteIssue, sendTestNotification, startSyncCheck, unmuteIssue } from "../lib/api.js";
 import { usePolling } from "../hooks/usePolling.js";
 import {
   ErrorBox,
@@ -77,10 +80,47 @@ function SyncCheckRow({ sync, onDone }) {
   );
 }
 
+const HEALTH_COLLAPSED_KEY = "crab.health.collapsed";
+
+function readCollapsed() {
+  try {
+    return localStorage.getItem(HEALTH_COLLAPSED_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
 /// Health signals (see crabindex::health) with a link to the section that fixes them.
-function HealthCard({ issues, notifyConfigured }) {
+/// A signal can be hidden (kept on the server until it resolves); the list itself folds and the
+/// state is remembered per browser.
+function HealthCard({ issues, notifyConfigured, onChange }) {
   const t = useT();
   const [testState, setTestState] = useState(null);
+  const [collapsed, setCollapsed] = useState(readCollapsed);
+  const [showMuted, setShowMuted] = useState(false);
+  const [busyUid, setBusyUid] = useState(null);
+  const visible = issues.filter((i) => !i.muted);
+  const muted = issues.filter((i) => i.muted);
+  const toggleCollapsed = () => {
+    const next = !collapsed;
+    setCollapsed(next);
+    try {
+      localStorage.setItem(HEALTH_COLLAPSED_KEY, next ? "1" : "0");
+    } catch {
+      /* per-browser convenience only */
+    }
+  };
+  const setMute = async (i, mute) => {
+    const uid = i.key ? `${i.id}:${i.key}` : i.id;
+    setBusyUid(uid);
+    try {
+      await (mute ? muteIssue(uid) : unmuteIssue(uid));
+    } catch {
+      /* the list refresh shows the actual state */
+    }
+    setBusyUid(null);
+    onChange?.();
+  };
   const sendTest = async () => {
     setTestState("busy");
     try {
@@ -92,13 +132,48 @@ function HealthCard({ issues, notifyConfigured }) {
   };
   const testLabel =
     testState === "busy" ? t("health_test_sending") : testState === "ok" ? t("health_test_sent") : testState ? testState : null;
+  const renderIssue = (i, isMuted) => {
+    const error = i.severity === "error";
+    const params = { ...(i.params || {}) };
+    if (typeof params.minutes === "number") params.minutes = formatNumber(params.minutes);
+    if (typeof params.remaining === "number") params.remaining = formatNumber(params.remaining);
+    const uid = i.key ? `${i.id}:${i.key}` : i.id;
+    return (
+      <li
+        key={uid}
+        className={`flex flex-wrap items-start gap-3 rounded-xl border px-4 py-3 text-sm ${isMuted ? "border-border bg-surface opacity-70" : error ? "border-danger/40 bg-danger/10" : "border-warn/40 bg-warn/10"}`}
+      >
+        <AlertTriangle className={`mt-0.5 size-4 shrink-0 ${isMuted ? "text-muted" : error ? "text-danger" : "text-warn"}`} aria-hidden="true" />
+        <div className="min-w-0 flex-1">
+          <p className="font-medium">{t(`issue_${i.id}_title`, params)}</p>
+          <p className="text-muted">{t(`issue_${i.id}_text`, params)}</p>
+        </div>
+        <div className="flex shrink-0 gap-1.5">
+          {i.link ? (
+            <Link to={i.link} className="btn btn-sm">
+              {t("issue_open")}
+            </Link>
+          ) : null}
+          <button type="button" className="btn btn-sm btn-ghost" onClick={() => setMute(i, !isMuted)} disabled={busyUid === uid} title={isMuted ? t("issue_unmute_hint") : t("issue_mute_hint")}>
+            <EyeOff className="size-3.5" aria-hidden="true" /> {isMuted ? t("issue_unmute") : t("issue_mute")}
+          </button>
+        </div>
+      </li>
+    );
+  };
   return (
     <section aria-labelledby="ov-health" className="mb-6">
       <div className="mb-2 flex flex-wrap items-center gap-3">
-        <h2 id="ov-health" className="font-semibold">
-          {t("health_title")}
-        </h2>
-        {issues.length === 0 ? <StatusDot tone="ok" label={t("health_ok")} /> : <StatusDot tone={issues.some((i) => i.severity === "error") ? "danger" : "warn"} label={t("health_count", { count: issues.length })} />}
+        <button type="button" className="flex items-center gap-1 font-semibold" onClick={toggleCollapsed} aria-expanded={!collapsed} aria-controls="ov-health-list">
+          {collapsed ? <ChevronRight className="size-4" aria-hidden="true" /> : <ChevronDown className="size-4" aria-hidden="true" />}
+          <span id="ov-health">{t("health_title")}</span>
+        </button>
+        {visible.length === 0 ? <StatusDot tone="ok" label={muted.length ? t("health_ok_muted", { muted: muted.length }) : t("health_ok")} /> : <StatusDot tone={visible.some((i) => i.severity === "error") ? "danger" : "warn"} label={t("health_count", { count: visible.length })} />}
+        {muted.length ? (
+          <button type="button" className="text-xs text-muted hover:text-fg" onClick={() => setShowMuted((v) => !v)}>
+            {showMuted ? t("health_hide_muted") : t("health_show_muted", { count: muted.length })}
+          </button>
+        ) : null}
         {notifyConfigured ? (
           <button type="button" className="btn btn-sm btn-ghost ml-auto" onClick={sendTest} disabled={testState === "busy"}>
             <BellRing className="size-3.5" aria-hidden="true" /> {t("health_test_notification")}
@@ -110,31 +185,10 @@ function HealthCard({ issues, notifyConfigured }) {
         )}
       </div>
       {testLabel ? <p className="mb-2 text-xs text-muted">{testLabel}</p> : null}
-      {issues.length ? (
-        <ul className="space-y-2">
-          {issues.map((i) => {
-            const error = i.severity === "error";
-            const params = { ...(i.params || {}) };
-            if (typeof params.minutes === "number") params.minutes = formatNumber(params.minutes);
-            if (typeof params.remaining === "number") params.remaining = formatNumber(params.remaining);
-            return (
-              <li
-                key={`${i.id}:${i.key}`}
-                className={`flex flex-wrap items-start gap-3 rounded-xl border px-4 py-3 text-sm ${error ? "border-danger/40 bg-danger/10" : "border-warn/40 bg-warn/10"}`}
-              >
-                <AlertTriangle className={`mt-0.5 size-4 shrink-0 ${error ? "text-danger" : "text-warn"}`} aria-hidden="true" />
-                <div className="min-w-0 flex-1">
-                  <p className="font-medium">{t(`issue_${i.id}_title`, params)}</p>
-                  <p className="text-muted">{t(`issue_${i.id}_text`, params)}</p>
-                </div>
-                {i.link ? (
-                  <Link to={i.link} className="btn btn-sm">
-                    {t("issue_open")}
-                  </Link>
-                ) : null}
-              </li>
-            );
-          })}
+      {!collapsed && (visible.length || (showMuted && muted.length)) ? (
+        <ul id="ov-health-list" className="space-y-2">
+          {visible.map((i) => renderIssue(i, false))}
+          {showMuted ? muted.map((i) => renderIssue(i, true)) : null}
         </ul>
       ) : null}
     </section>
@@ -279,7 +333,7 @@ export function OverviewPage() {
         }
       />
       <ErrorBox error={error} onRetry={reload} />
-      {data ? <HealthCard issues={o.issues || []} notifyConfigured={!!o.notifyConfigured} /> : null}
+      {data ? <HealthCard issues={o.issues || []} notifyConfigured={!!o.notifyConfigured} onChange={reload} /> : null}
       {(o.hints || []).length ? (
         <div role="status" className="mb-6 space-y-2">
           {o.hints.map((h) => (

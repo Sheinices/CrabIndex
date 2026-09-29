@@ -39,11 +39,14 @@ pub struct Issue {
     /// Panel route to open.
     pub link: &'static str,
     pub params: Value,
+    /// Hidden by the operator (`POST {admin}/api/health/mute`); not notified. Cleared once the
+    /// signal disappears, so a signal that comes back later is shown again.
+    pub muted: bool,
 }
 
 impl Issue {
     fn new(id: &'static str, key: impl Into<String>, severity: &'static str, link: &'static str, params: Value) -> Self {
-        Issue { id, key: key.into(), severity, link, params }
+        Issue { id, key: key.into(), severity, link, params, muted: false }
     }
     pub fn uid(&self) -> String {
         if self.key.is_empty() {
@@ -169,7 +172,67 @@ pub fn issues(c: &AppOptions) -> Vec<Issue> {
     }
 
     out.sort_by_key(|i| if i.severity == "error" { 0 } else { 1 });
+    apply_mutes(&mut out);
     out
+}
+
+// ---------------------------------------------------------------- mutes
+
+pub const MUTED_PATH: &str = "Data/temp/health_muted.json";
+
+static MUTED: Lazy<Mutex<Option<std::collections::HashSet<String>>>> = Lazy::new(|| Mutex::new(None));
+
+fn muted_set() -> std::collections::HashSet<String> {
+    let mut g = MUTED.lock();
+    if g.is_none() {
+        let loaded: std::collections::HashSet<String> =
+            std::fs::read_to_string(MUTED_PATH).ok().and_then(|s| serde_json::from_str(&s).ok()).unwrap_or_default();
+        *g = Some(loaded);
+    }
+    g.as_ref().cloned().unwrap_or_default()
+}
+
+fn save_muted(set: &std::collections::HashSet<String>) {
+    let _ = std::fs::create_dir_all("Data/temp");
+    let mut v: Vec<&String> = set.iter().collect();
+    v.sort();
+    if let Ok(s) = serde_json::to_string_pretty(&v) {
+        let _ = std::fs::write(MUTED_PATH, s);
+    }
+}
+
+/// Hide a signal (`uid` = `id` or `id:key`) until it resolves.
+pub fn mute(uid: &str) {
+    let mut set = muted_set();
+    if set.insert(uid.trim().to_string()) {
+        save_muted(&set);
+        *MUTED.lock() = Some(set);
+    }
+}
+
+pub fn unmute(uid: &str) {
+    let mut set = muted_set();
+    if set.remove(uid.trim()) {
+        save_muted(&set);
+        *MUTED.lock() = Some(set);
+    }
+}
+
+/// Mark muted signals and forget mutes of signals that are gone.
+fn apply_mutes(issues: &mut [Issue]) {
+    let set = muted_set();
+    if set.is_empty() {
+        return;
+    }
+    let present: std::collections::HashSet<String> = issues.iter().map(|i| i.uid()).collect();
+    for i in issues.iter_mut() {
+        i.muted = set.contains(&i.uid());
+    }
+    let alive: std::collections::HashSet<String> = set.iter().filter(|u| present.contains(*u)).cloned().collect();
+    if alive.len() != set.len() {
+        save_muted(&alive);
+        *MUTED.lock() = Some(alive);
+    }
 }
 
 fn read_checkpoint(path: &str) -> Option<i64> {
@@ -320,7 +383,7 @@ pub fn spawn_notifier(ct: CancellationToken) {
         loop {
             let c = conf();
             if c.notify.enable {
-                let current = issues(&c);
+                let current: Vec<Issue> = issues(&c).into_iter().filter(|i| !i.muted).collect();
                 let (new, resolved) = {
                     let mut st = STATE.lock();
                     diff(&mut st, &current, Utc::now(), c.notify.cooldownMinutes.max(0) as i64)
@@ -376,6 +439,20 @@ mod tests {
         let (_, _) = diff(&mut st, &[issue("a", "")], t0 + chrono::Duration::minutes(20), 60);
         let (n, _) = diff(&mut st, &[issue("a", ""), issue("b", "x")], t0 + chrono::Duration::minutes(90), 60);
         assert_eq!(n.len(), 1);
+    }
+
+    #[test]
+    fn mutes_follow_signals() {
+        let _guard = std::env::temp_dir();
+        *MUTED.lock() = Some(std::collections::HashSet::new());
+        let mut list = vec![issue("a", ""), issue("b", "x")];
+        MUTED.lock().as_mut().unwrap().insert("b:x".into());
+        MUTED.lock().as_mut().unwrap().insert("gone:z".into());
+        apply_mutes(&mut list);
+        assert_eq!(list.iter().map(|i| i.muted).collect::<Vec<_>>(), vec![false, true]);
+        // the mute of a signal that is not present any more is forgotten
+        assert_eq!(muted_set().len(), 1);
+        assert!(muted_set().contains("b:x"));
     }
 
     #[test]

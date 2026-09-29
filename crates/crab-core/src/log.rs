@@ -105,8 +105,12 @@ fn level_tag(level: Level) -> &'static str {
 }
 
 fn append_file(name: &str, line: &str, max_bytes: u64) {
+    // Only where the app runs from its data directory (created at startup); tests and CLI
+    // runs from a source tree must not leave log files behind.
+    if !std::path::Path::new(LOG_DIR).is_dir() {
+        return;
+    }
     let _g = FILE_LOCK.lock();
-    let _ = std::fs::create_dir_all(LOG_DIR);
     let path = format!("{LOG_DIR}/{name}");
     if max_bytes > 0 {
         if let Ok(meta) = std::fs::metadata(&path) {

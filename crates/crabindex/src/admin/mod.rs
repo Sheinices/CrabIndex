@@ -351,6 +351,22 @@ async fn api_request(mut req: Request, next: Next, c: &AppOptions, base: &str, s
                 Some(Err(e)) => json_response(StatusCode::OK, json!({ "ok": false, "tracker": tracker, "error": e, "status": crab_core::trackers::login_status::get(&tracker) })),
             };
         }
+        ("POST", "health/mute") | ("POST", "health/unmute") => {
+            let uid = req
+                .uri()
+                .query()
+                .and_then(|q| url::form_urlencoded::parse(q.as_bytes()).find(|(k, _)| k == "uid").map(|(_, v)| v.into_owned()))
+                .unwrap_or_default();
+            if uid.trim().is_empty() || uid.len() > 200 {
+                return json_response(StatusCode::BAD_REQUEST, json!({ "ok": false, "error": "uid required" }));
+            }
+            if sub.ends_with("unmute") {
+                crate::health::unmute(&uid);
+            } else {
+                crate::health::mute(&uid);
+            }
+            return json_response(StatusCode::OK, json!({ "ok": true, "uid": uid.trim(), "muted": !sub.ends_with("unmute") }));
+        }
         ("POST", "notify/test") => {
             let errors = crate::health::send_test(c).await;
             return json_response(StatusCode::OK, json!({ "ok": errors.is_empty(), "errors": errors }));

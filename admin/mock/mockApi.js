@@ -24,6 +24,7 @@ const state = {
   failures: [],
   checkRunning: false,
   syncCheckRunning: false,
+  mutedIssues: new Set(),
 }
 
 const TRACKERS = [
@@ -185,7 +186,7 @@ function overview() {
       { id: 'login_failed', key: 'selezen', severity: 'error', link: '/trackers', params: { tracker: 'selezen', error: 'TakeLogin failed: no PHPSESSID (403)' } },
       { id: 'tracker_stale', key: 'baibako', severity: 'warn', link: '/trackers', params: { tracker: 'baibako', days: 385 } },
       { id: 'sync_check_backlog', key: '', severity: 'warn', link: '/', params: { remaining: 4120 } },
-    ],
+    ].map((i) => ({ ...i, muted: state.mutedIssues.has(i.key ? `${i.id}:${i.key}` : i.id) })),
     notifyConfigured: !!(config.notify && (config.notify.webhookUrl || config.notify.telegramToken)),
     sync: {
       enabled: !!config.syncapi,
@@ -354,6 +355,12 @@ async function handle(req, res, path, query) {
     const ok = slug !== 'selezen'
     loginState[slug] = { ok, at: new Date().toISOString(), error: ok ? '' : 'TakeLogin failed: no PHPSESSID (403)' }
     return send(res, 200, ok ? { ok: true, tracker: slug, status: loginState[slug] } : { ok: false, tracker: slug, error: loginState[slug].error, status: loginState[slug] })
+  }
+  if ((path === 'health/mute' || path === 'health/unmute') && method === 'POST') {
+    const uid = query.get('uid') || ''
+    if (path === 'health/mute') state.mutedIssues.add(uid)
+    else state.mutedIssues.delete(uid)
+    return send(res, 200, { ok: true, uid, muted: path === 'health/mute' })
   }
   if (path === 'notify/test' && method === 'POST') return send(res, 200, { ok: false, errors: ['no channel configured (notify.telegramToken + telegramChatId or notify.webhookUrl)'] })
   if (path === 'cron/sync/peers') return send(res, 200, { ok: true, opensync: true, peers: syncPeers() })

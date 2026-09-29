@@ -62,11 +62,18 @@ export function advice(status) {
   }
   if (t.tabCrashed > 0) {
     const worst = hosts.filter((h) => h.tabCrashed > 0).map((h) => h.host)
+    const idle = Number(status.settings?.sessionIdleMinutes)
+    const idleNote = Number.isFinite(idle) && idle > 30 ? ` Сейчас sessionIdleMinutes: ${idle}; поставьте 30 в Настройках, это применяется без перезапуска.` : ''
     out.push({
       tone: 'danger',
       title: `Вкладки браузера падают по памяти: ${t.tabCrashed}`,
-      text: `Контейнеру FlareSolverr не хватает памяти (${worst.join(', ')}). Поднимите лимит, это можно сделать без перезапуска. Или закройте сессии, чтобы освободить память сейчас.`,
-      command: 'docker update --memory 4g --memory-swap 4g flaresolverr',
+      text:
+        `Контейнеру FlareSolverr не хватает памяти на пиках (${worst.join(', ')}): при проверке Cloudflare и логине через браузер вкладка одного сайта на минуту вырастает на гигабайт, ` +
+        'даже если docker stats в спокойное время показывает треть лимита. Поднимите лимит, это делается без перезапуска. ' +
+        'Проверьте колонку PIDS в docker stats: на один браузер уходит 30-40 процессов, 400-500 при четырёх сессиях значит, что после упавших вкладок остались процессы-сироты; ' +
+        'их убирает закрытие сессий (кнопка «Закрыть сессии» или короткий sessionIdleMinutes: при закрытии Chrome завершается целиком).' +
+        idleNote,
+      command: 'docker stats flaresolverr --no-stream && docker update --memory 6g --memory-swap 6g flaresolverr',
     })
   }
   if (t.browserTimeouts >= 3) {

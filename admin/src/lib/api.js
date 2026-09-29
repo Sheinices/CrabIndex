@@ -119,6 +119,8 @@ export const getSyncCheckStatus = (opts) => get('cron/sync/checkstatus', opts)
 // --- Health / notifications ------------------------------------------------------
 export const checkTrackerLogin = (slug) => post('trackers/checklogin', undefined, { query: { tracker: slug } })
 export const sendTestNotification = () => post('notify/test')
+export const muteIssue = (uid) => post('health/mute', undefined, { query: { uid } })
+export const unmuteIssue = (uid) => post('health/unmute', undefined, { query: { uid } })
 
 // --- Data quality check (weekly cron, read-only) -----------------------------------
 export const getDataCheck = (opts) => get('dev/checkdatastatus', opts)

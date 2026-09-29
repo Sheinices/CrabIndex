@@ -75,7 +75,7 @@ describe('CloudflarePage', () => {
     expect(await screen.findByText('v3.5.2')).toBeInTheDocument()
     expect(screen.getByText('Вкладка упала: 6')).toBeInTheDocument()
     expect(screen.getByText(/Вкладки браузера падают по памяти: 6/)).toBeInTheDocument()
-    expect(screen.getAllByText(/docker update --memory 4g/).length).toBeGreaterThan(0)
+    expect(screen.getAllByText(/docker update --memory 6g/).length).toBeGreaterThan(0)
   })
 
   it('closes one host session through the admin API with the CSRF header', async () => {

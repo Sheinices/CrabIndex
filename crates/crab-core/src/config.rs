@@ -170,7 +170,7 @@ impl Default for FlareSolverrSettings {
             url: "http://127.0.0.1:8191/v1".into(),
             crawlUrl: String::new(),
             maxTimeoutMs: 300_000,
-            sessionIdleMinutes: 120,
+            sessionIdleMinutes: 30,
             browserTimeoutRetries: 1,
             recycleAfterTimeouts: 3,
             guardedHours: 6,
