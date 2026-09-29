@@ -62,12 +62,20 @@ fn configured_hosts() -> HashMap<String, String> {
 }
 
 /// rutracker title `Name / Original (…) […]` whose original was not extracted.
-pub fn rutracker_name_suspect(title: &str, name: &str, originalname: &str) -> bool {
-    if util::is_blank(name) || name != originalname {
+/// A rutracker row whose `originalname` repeats `name` although the title parser (the same one
+/// `FixRutrackerNames` uses) finds a distinct original. Sport / documentary / TV-show rows are
+/// name-only by design and never count, so the number is exactly what the migration would fix.
+pub fn rutracker_name_suspect(types: &[String], title: &str, name: &str, originalname: &str) -> bool {
+    use crab_core::parsing::rutracker_title::{self, Kind};
+    if util::is_blank(name) || name != originalname || !title.contains(" / ") {
         return false;
     }
-    let head = title.split(['(', '[']).next().unwrap_or("");
-    head.contains(" / ")
+    let kind = rutracker_title::kind_for_row(types, title);
+    if kind == Kind::NonStandard {
+        return false;
+    }
+    let (n, o, _, skip) = rutracker_title::parse(kind, title);
+    !skip && matches!((n, o), (Some(n), Some(o)) if !util::is_blank(&o) && o != n)
 }
 
 /// Slice of a report kept as `previous` in the next one, so the panel shows before / after.
@@ -149,7 +157,7 @@ fn run_inner() -> Value {
                     *ids.entry((tracker.clone(), id)).or_default() += 1;
                 }
             }
-            if tracker == "rutracker" && rutracker_name_suspect(&t.title, &t.name, &t.originalname) {
+            if tracker == "rutracker" && rutracker_name_suspect(&t.types, &t.title, &t.name, &t.originalname) {
                 c.bad_names += 1;
             }
         }
@@ -205,9 +213,20 @@ mod tests {
 
     #[test]
     fn rutracker_name_suspects() {
-        assert!(rutracker_name_suspect("Матрица / The Matrix (Братья Вачовски) [1999, США]", "Матрица", "Матрица"));
-        assert!(!rutracker_name_suspect("Матрица / The Matrix (…) [1999]", "Матрица", "The Matrix"));
-        assert!(!rutracker_name_suspect("Дневной дозор (Тимур Бекмамбетов) [2006]", "Дневной дозор", "Дневной дозор"));
-        assert!(!rutracker_name_suspect("Что-то (Автор / Author) [2020]", "Что-то", "Что-то"));
+        let movie = vec!["movie".to_string()];
+        let sport = vec!["sport".to_string()];
+        assert!(rutracker_name_suspect(&movie, "Матрица / The Matrix (Братья Вачовски) [1999, США]", "Матрица", "Матрица"));
+        assert!(!rutracker_name_suspect(&movie, "Матрица / The Matrix (…) [1999]", "Матрица", "The Matrix"));
+        assert!(!rutracker_name_suspect(&movie, "Дневной дозор (Тимур Бекмамбетов) [2006]", "Дневной дозор", "Дневной дозор"));
+        assert!(!rutracker_name_suspect(&movie, "Что-то (Автор / Author) [2020]", "Что-то", "Что-то"));
+        // sport broadcasts split event parts with ` / `: name-only by design
+        let t = "Единая лига ВТБ 2024-2025 / Плей-офф / Финал / ЦСКА (Москва) — Зенит (Санкт-Петербург) / Матч! ТВ HD [09.06.2025, Баскетбол, HD/720p/50fps]";
+        assert!(!rutracker_name_suspect(&sport, t, "Единая лига ВТБ 2024-2025", "Единая лига ВТБ 2024-2025"));
+        // documentary cycle with episodes only: nothing to extract
+        let d = vec!["docuserial".to_string(), "documovie".to_string()];
+        assert!(!rutracker_name_suspect(&d, "Освобождение Европы. Документальный Цикл / Серии: 1-5 (из 5) [2016, Документальный, HDTVRip 720p]", "Освобождение Европы. Документальный Цикл", "Освобождение Европы. Документальный Цикл"));
+        // serial with a season word in the name: fixable now
+        let serial = vec!["serial".to_string()];
+        assert!(rutracker_name_suspect(&serial, "Обмани меня Сезон 1 / Lie To Me Season 1 (Сэмюэл Баум / Samuel Baum) [2009, США, драма, DVD9]", "Обмани меня Сезон 1", "Обмани меня Сезон 1"));
     }
 }

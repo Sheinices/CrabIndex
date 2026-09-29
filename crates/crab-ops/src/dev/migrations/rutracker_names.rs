@@ -22,7 +22,19 @@ pub fn fix_rutracker_names() -> Value {
     let (processed, migrated) = walk(
         "rutracker",
         |t| {
-            let kind = rutracker_title::guess_kind(&t.title);
+            // sport / documentary / TV-show forums keep only the name (the parser does the same),
+            // so they are left alone instead of getting a bogus original the next parse reverts
+            let kind = rutracker_title::kind_for_row(&t.types, &t.title);
+            if kind == rutracker_title::Kind::NonStandard {
+                return false;
+            }
+            // only rows that are actually off: the original repeats the name, a season suffix is
+            // stuck in the name, or the year is missing; a row with a sensible original is kept
+            // even if today's parser would pick another alias (no churn for sync clients)
+            let broken = t.name == t.originalname || rutracker_title::strip_season(&t.name) != t.name.trim() || t.relased == 0;
+            if !broken {
+                return false;
+            }
             let (name, originalname, relased, skip) = rutracker_title::parse(kind, &t.title);
             if skip {
                 return false;
