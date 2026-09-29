@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! Anistar: category listings (anime / hentai / dorams) → post pages → `engine/gettorrent.php`.
 //! Requests go to `alias` (request host) while FileDB urls stay on `host`.
 //!

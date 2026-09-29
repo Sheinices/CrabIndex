@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! Bot detection: a compiled-in catalog of User-Agent signatures grouped by category, a
 //! generic "other bots" heuristic, the per-bot statistics and admin rule validation.
 //!

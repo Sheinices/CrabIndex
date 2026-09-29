@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! Settings form schema (groups/fields for the admin settings UI) and model validation rules.
 
 use crab_core::config::AppOptions;

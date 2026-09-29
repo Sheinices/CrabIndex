@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! Shared data models (FileDB rows, ffprobe streams, parse task slots, API DTOs, sync v2).
 //!
 //! JSON field names are fixed by the on-disk format, the sync protocol and clients

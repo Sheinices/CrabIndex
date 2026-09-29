@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 import { NavLink, Outlet, useOutletContext } from 'react-router'
 import { Bot, Gauge, ListFilter, Network, ShieldCheck } from 'lucide-react'
 import { getWafRules } from '../../lib/api.js'

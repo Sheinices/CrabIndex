@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! First-start bootstrap: generate `admin.token` / `devkey` when empty and persist them in the
 //! config file (YAML stays YAML, JSON stays JSON; `init.yaml` is created when there is none).
 //! Also renders the entry URL printed at startup and by `crabindex admin`.

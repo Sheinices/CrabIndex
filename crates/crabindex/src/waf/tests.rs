@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! WAF unit tests (isolated `Waf` instances) and full-pipeline tests (`build_app` + `oneshot`
 //! against the global instance). Pipeline tests use a distinct client IP each so they can run
 //! in parallel against the shared state.

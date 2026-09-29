@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! crab-search - torrent search APIs over FileDB: Jackett JSON, Torznab/Newznab XML,
 //! Prowlarr Search Feed and the native `/api/v1.0/*` endpoints, plus the Alloha
 //! external-id title resolver.

@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! End-to-end checks against a real (temporary) Data/ directory. Everything touches the
 //! process-wide masterDb, so it runs as one sequential test.
 

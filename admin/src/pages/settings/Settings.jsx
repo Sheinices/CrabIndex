@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from 'react'
 import { useBlocker, useSearchParams } from 'react-router'
 import { CheckCircle2, ChevronDown, Code2, Copy, ExternalLink, FileCheck2, KeyRound, ListTree, RefreshCw, Save, Search, Sparkles } from 'lucide-react'

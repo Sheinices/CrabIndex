@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! HTTP handlers: Jackett, Torznab/Newznab, Prowlarr and native torrent search endpoints.
 //!
 //! Query parameter names are matched case-insensitively (the server also lowercases them).

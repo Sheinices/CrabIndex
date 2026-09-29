@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! Megapeer browse page parsing and the rate-limited browse fetch.
 
 use std::sync::atomic::{AtomicUsize, Ordering};

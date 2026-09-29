@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! SubsPlease JSON API parser - keeps only 1080p magnets and maps release metadata.
 
 use chrono::{DateTime, Utc};

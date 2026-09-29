@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! Parses NUM / Lampa-style plain `query` strings into card fields
 //! (`title`, `title_original`, `year`) so exact FileDB matching works.
 //! Covers Ru-first ("Русское English 1999") and En-first ("English Русское 1999") forms.

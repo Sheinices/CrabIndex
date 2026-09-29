@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! Russian/English month-name date parsing used by HTML parsers.
 
 use chrono::{DateTime, NaiveDate, NaiveDateTime, TimeZone, Utc};

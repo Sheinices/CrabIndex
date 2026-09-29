@@ -1,4 +1,7 @@
 #![allow(dead_code)]
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 
 /// Read `tests/fixtures/{relative}`.
 pub fn read(relative: &str) -> String {

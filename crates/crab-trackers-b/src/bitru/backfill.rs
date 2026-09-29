@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! Page-by-page backfill: fetch → save → commit cursor.
 //! The cursor advances only after a page is fully saved; a saved page with no next cursor
 //! is the archive end and persists the `finished` sentinel.

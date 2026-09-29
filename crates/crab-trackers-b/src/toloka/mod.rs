@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! Toloka: login-cookie flow, hourly parse, page-map rebuild, resumable ParseAll and ParseLatest.
 //! Magnets are built from the downloaded .torrent.
 

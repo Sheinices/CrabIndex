@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! LostFilm HTML parsing: `/new/` feed collectors, V-page quality links, ids and naming helpers.
 //! Pure functions (no network), unit-tested against captured fixtures.
 

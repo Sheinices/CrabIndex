@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! One torrent id, several rows. Trackers whose topic URL carries the numeric id plus a slug
 //! (rutor `/torrent/{id}/{slug}`, selezen `/relizy-ot-selezen/{id}-{slug}.html`, …) rename the
 //! slug whenever the title changes, so rows imported before id matching existed kept every old

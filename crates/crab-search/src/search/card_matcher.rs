@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! Jackett-style FileDB lookup: exact card match (title / title_original / year / kind)
 //! or fuzzy free-text match through the FastDb token index.
 

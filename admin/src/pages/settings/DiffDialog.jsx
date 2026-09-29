@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 import { AlertTriangle, KeyRound, Save } from 'lucide-react'
 import { Modal } from '../../components/Modal.jsx'
 import { Spinner } from '../../components/ui.jsx'

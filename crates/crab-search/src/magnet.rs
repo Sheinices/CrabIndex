@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! Magnet link parsing and the text encoders used by the search output formats.
 
 /// Parsed magnet link (strict: errors on anything malformed).

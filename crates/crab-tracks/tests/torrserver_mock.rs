@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! Local stand-in for the TorrServer `/torrents` (get) and `/ffp` endpoints.
 
 mod common;

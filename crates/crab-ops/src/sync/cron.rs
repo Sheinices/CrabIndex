@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! Sync workers pulling `/sync/fdb/torrents` from `syncapi`.
 //!
 //! * torrents mode: incremental by `fileTime`; checkpoints in `Data/temp/lastsync.txt`
@@ -351,9 +354,27 @@ async fn fetch_page(url: &str, ct: &CancellationToken) -> Option<RootIn> {
     net::get_json::<RootIn>(url, &req).await
 }
 
+/// Compact self-report for the host's client list (`X-CrabIndex-Status`): bucket count, health
+/// signal counts, last integrity check, id index state.
+pub(super) fn status_summary() -> String {
+    let (errors, issues) = crab_core::hooks::health_counts().map(|(e, w)| (e, e + w)).unwrap_or((0, 0));
+    let check = super::check::last_report().map(|r| {
+        serde_json::json!({ "at": r["at"], "ok": r["ok"], "remaining": r["remaining"], "missing": r["missing"], "mismatched": r["mismatched"], "extra": r["extra"] })
+    });
+    serde_json::json!({
+        "buckets": fdb::MASTER_DB.len(),
+        "issues": issues,
+        "errors": errors,
+        "idIndex": fdb::id_index::is_ready(),
+        "check": check,
+    })
+    .to_string()
+}
+
 /// The whole remote `/sync/conf` JSON, or `None` when the host did not answer.
 pub(super) async fn remote_conf(syncapi: &str) -> Option<serde_json::Value> {
-    net::get_json::<serde_json::Value>(&format!("{syncapi}/sync/conf"), &sync_req(15, 0)).await
+    let req = sync_req(15, 0).header(super::peers::STATUS_HEADER, status_summary());
+    net::get_json::<serde_json::Value>(&format!("{syncapi}/sync/conf"), &req).await
 }
 
 /// Retry delay after a failed cycle: 1, 2, 5, 10 minutes, never longer than `timeSync`.

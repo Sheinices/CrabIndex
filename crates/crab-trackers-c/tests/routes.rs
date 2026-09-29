@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 #[test]
 fn router_builds_without_conflicts() {
     crab_trackers_c::init();

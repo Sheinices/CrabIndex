@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! Tracks data types: TorrServer status DTOs, export/backfill results, stats cache file,
 //! plus JSON helpers that keep the on-disk format stable.
 

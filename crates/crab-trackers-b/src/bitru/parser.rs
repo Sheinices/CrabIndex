@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! BitRu API JSON → FileDB rows.
 
 use chrono::{DateTime, NaiveDate, TimeZone, Utc};

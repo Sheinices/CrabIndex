@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! Collapse duplicates left by tracker domain changes and rewrite lone rows to the
 //! canonical host from config.
 //!

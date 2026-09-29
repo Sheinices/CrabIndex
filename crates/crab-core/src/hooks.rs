@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! Late-bound integration points so leaf crates can plug into core without cycles.
 //!
 //! The tracks module (`crab-tracks`) registers a [`TracksLookup`] at startup; FileDB
@@ -54,4 +57,21 @@ pub fn tracks_has_track_for_torrent(t: &TorrentDetails) -> bool {
         return true;
     }
     TRACKS.get().map(|h| h.has_track_for_torrent(t)).unwrap_or(false)
+}
+
+// ---------------------------------------------------------------- health summary
+
+/// `(errors, warnings)` of the health card, provided by the server binary; the sync client
+/// sends it to the host in `X-CrabIndex-Status`.
+pub type HealthCounts = fn() -> (usize, usize);
+
+static HEALTH: OnceCell<HealthCounts> = OnceCell::new();
+
+pub fn register_health_counts(f: HealthCounts) {
+    let _ = HEALTH.set(f);
+}
+
+/// `None` until the server registered its counter.
+pub fn health_counts() -> Option<(usize, usize)> {
+    HEALTH.get().map(|f| f())
 }

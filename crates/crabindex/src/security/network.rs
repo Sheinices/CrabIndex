@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! Client network context: who is the TCP peer, who is the (possibly proxied) client.
 //!
 //! Proxy headers (`X-Forwarded-For`, `X-Forwarded-Proto`, `CF-Connecting-IP`, `X-Real-IP`)

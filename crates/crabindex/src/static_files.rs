@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! Static web UI from `wwwroot/` (only when `web: true`). Files that do not exist fall through
 //! to the API pipeline; directories are never listed (`/` is served by the SPA route).
 //! A directory with an `index.html` (the `/docs` book) serves that file; without the trailing

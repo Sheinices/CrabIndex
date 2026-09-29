@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! ParseAll starters (trackers with a resumable ParseAllTask cycle).
 
 use async_trait::async_trait;

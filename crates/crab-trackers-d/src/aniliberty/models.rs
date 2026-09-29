@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! aniliberty.top `/api/v1/anime/torrents` response shapes.
 
 use crab_core::models::de;

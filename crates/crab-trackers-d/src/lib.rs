@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! crab-trackers-d - anibelka, aniliberty, anifilm, leproduction, viruseproject, korsars.
 #![allow(non_snake_case)]
 

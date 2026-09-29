@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! Anistar section paths and the types assigned to their releases (iteration order is crawl order).
 
 pub struct AnistarCategory {

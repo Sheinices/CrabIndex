@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! Headless FileDB integrity CLI: `crabindex maintain [--mode=report|safe|full] [--sample-size=20] [--include-numeric-xx]`.
 //!
 //! Exit codes: 0 ok (or `--help`), 1 report finished with errors, 2 bad arguments, 130 cancelled (Ctrl+C).

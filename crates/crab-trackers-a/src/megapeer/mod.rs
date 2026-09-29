@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! megapeer: `browse.php?cat=&page=` listings (cp1251), magnets from .torrent downloads.
 
 pub mod parser;

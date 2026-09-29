@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! Networking: HTTP client with proxy rotation and Cloudflare fallback.
 pub mod cf;
 pub mod http;

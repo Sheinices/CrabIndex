@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! korsars sync - login required (bb_data cookie). Listing pages carry inline magnets.
 //! Requests use the alias host when set; FileDB urls stay on the canonical host.
 //!

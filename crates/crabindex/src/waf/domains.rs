@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! Domain blocking: the site a browser request comes from (`Origin`, else `Referer`) and
 //! rule matching (`example.com` covers `example.com` and every `*.example.com`).
 

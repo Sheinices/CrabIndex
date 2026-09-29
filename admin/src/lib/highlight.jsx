@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 /** Split `text` into plain strings and <mark> elements for `query` (case-insensitive). */
 export function highlight(text, query) {
   const q = String(query || '')

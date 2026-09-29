@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! TorrServer client used by the analyzer: `POST /torrents` (list/add/get/rem) and `GET /ffp/{HASH}/{id}`,
 //! plus server selection, per-hash locks and the global analysis concurrency gate.
 

@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! viruseproject sync - category listings → release pages → one row per quality (.torrent → magnet).
 //!
 //! Route: `GET /cron/viruseproject/parse?limit_page=N` (N ≤ 0 → detect from pagination-end).

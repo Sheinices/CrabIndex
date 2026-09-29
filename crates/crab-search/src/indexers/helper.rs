@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! Request building and post-filter pipeline shared by the indexer endpoints.
 
 use crab_core::conf;

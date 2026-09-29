@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! Knaben API v1 request/response models and the archive backfill checkpoint.
 
 use chrono::{DateTime, Utc};

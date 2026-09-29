@@ -1,69 +1,74 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
+import { tGlobal as tg } from '../lang/index.jsx'
+
 /**
  * Cron actions supported per tracker (`{base}/api/cron/{slug}/{action}`).
  * Built from the tracker routers in `crates/crab-trackers-*` - keep in sync.
  */
 
-const PAGE = { name: 'page', label: 'Страница', type: 'number', placeholder: '0' }
-const PAGES = (def) => ({ name: 'pages', label: 'Страниц', type: 'number', placeholder: String(def) })
-const LIMIT_PAGE = { name: 'limit_page', label: 'Страниц на раздел', type: 'number', placeholder: '0 - все' }
+const PAGE = { name: 'page', get label() { return tg('act_p_page') }, type: 'number', get placeholder() { return tg('act_p_page_ph') } }
+const PAGES = (def) => ({ name: 'pages', get label() { return tg('act_p_pages') }, type: 'number', placeholder: String(def) })
+const LIMIT_PAGE = { name: 'limit_page', get label() { return tg('act_p_limit_page') }, type: 'number', get placeholder() { return tg('act_p_limit_page_ph') } }
 const RANGE = [
-  { name: 'parsefrom', label: 'С страницы', type: 'number', placeholder: '0' },
-  { name: 'parseto', label: 'По страницу', type: 'number', placeholder: '0' },
+  { name: 'parsefrom', get label() { return tg('act_p_parsefrom') }, type: 'number', get placeholder() { return tg('act_p_parsefrom_ph') } },
+  { name: 'parseto', get label() { return tg('act_p_parseto') }, type: 'number', get placeholder() { return tg('act_p_parseto_ph') } },
 ]
 
 export const ACTIONS = {
-  parse: { label: 'Парсинг', description: 'Обычный проход по свежим страницам', params: [] },
+  parse: { get label() { return tg('act_parse') }, get description() { return tg('act_parse_desc') }, params: [] },
   updatetasksparse: {
-    label: 'Обновить задачи',
-    description: 'Пересобрать карту страниц для ParseAll (фоново)',
+    get label() { return tg('act_updatetasks') },
+    get description() { return tg('act_updatetasks_desc') },
     params: [],
   },
   parsealltask: {
     label: 'ParseAll',
-    description: 'Полный проход по всем страницам (многочасовой, фоново)',
+    get description() { return tg('act_parseall_desc') },
     params: [],
     heavy: true,
   },
   parselatest: {
-    label: 'Последние страницы',
-    description: 'Первые N страниц каждой категории',
+    get label() { return tg('act_parselatest') },
+    get description() { return tg('act_parselatest_desc') },
     params: [PAGES(5)],
   },
-  backfill: { label: 'Backfill', description: 'Догрузка архива', params: [PAGES(20)], heavy: true },
-  backfillstatus: { label: 'Статус backfill', description: 'Состояние догрузки архива', params: [], readOnly: true },
+  backfill: { label: 'Backfill', get description() { return tg('act_backfill_desc') }, params: [PAGES(20)], heavy: true },
+  backfillstatus: { get label() { return tg('act_backfillstatus') }, get description() { return tg('act_backfillstatus_desc') }, params: [], readOnly: true },
   parsefromdate: {
-    label: 'С даты',
-    description: 'Архив старше указанной даты',
+    get label() { return tg('act_parsefromdate') },
+    get description() { return tg('act_parsefromdate_desc') },
     params: [
-      { name: 'lastnewtor', label: 'Дата (lastnewtor)', type: 'text', placeholder: '2024-01-31' },
+      { name: 'lastnewtor', get label() { return tg('act_p_lastnewtor') }, type: 'text', get placeholder() { return tg('act_p_lastnewtor_ph') } },
       PAGES(20),
     ],
     heavy: true,
   },
   parsepages: {
-    label: 'Страницы',
-    description: 'Диапазон страниц /new/',
+    get label() { return tg('act_parsepages') },
+    get description() { return tg('act_parsepages_desc') },
     params: [
-      { name: 'pagefrom', label: 'С', type: 'number', placeholder: '1' },
-      { name: 'pageto', label: 'По', type: 'number', placeholder: '1' },
+      { name: 'pagefrom', get label() { return tg('act_p_pagefrom') }, type: 'number', get placeholder() { return tg('act_p_pagefrom_ph') } },
+      { name: 'pageto', get label() { return tg('act_p_pageto') }, type: 'number', get placeholder() { return tg('act_p_pageto_ph') } },
     ],
   },
   parseseasonpacks: {
-    label: 'Сезонные паки',
-    description: 'Паки сезонов (все или одного сериала)',
-    params: [{ name: 'series', label: 'Сериал (slug)', type: 'text', placeholder: 'необязательно' }],
+    get label() { return tg('act_seasonpacks') },
+    get description() { return tg('act_seasonpacks_desc') },
+    params: [{ name: 'series', get label() { return tg('act_p_series') }, type: 'text', get placeholder() { return tg('act_p_series_ph') } }],
     heavy: true,
   },
   verifypage: {
-    label: 'Проверить страницу',
-    description: 'Диагностика страницы сериала',
-    params: [{ name: 'series', label: 'Сериал (slug)', type: 'text', placeholder: 'The_Bear' }],
+    get label() { return tg('act_verifypage') },
+    get description() { return tg('act_verifypage_desc') },
+    params: [{ name: 'series', get label() { return tg('act_p_series') }, type: 'text', placeholder: 'The_Bear' }],
     readOnly: true,
   },
-  stats: { label: 'Статистика', description: 'Статистика парсера', params: [], readOnly: true },
-  parseshows: { label: 'Шоу', description: 'Полный проход по списку шоу', params: [], heavy: true },
-  parseshowstatus: { label: 'Статус шоу', description: 'Прогресс прохода по шоу', params: [], readOnly: true },
-  takelogin: { label: 'Авторизация', description: 'Выполнить вход на трекер', params: [] },
+  stats: { get label() { return tg('act_stats') }, get description() { return tg('act_stats_desc') }, params: [], readOnly: true },
+  parseshows: { get label() { return tg('act_parseshows') }, get description() { return tg('act_parseshows_desc') }, params: [], heavy: true },
+  parseshowstatus: { get label() { return tg('act_parseshowstatus') }, get description() { return tg('act_parseshowstatus_desc') }, params: [], readOnly: true },
+  takelogin: { get label() { return tg('act_takelogin') }, get description() { return tg('act_takelogin_desc') }, params: [] },
 }
 
 const FULL = ['parse', 'updatetasksparse', 'parsealltask', 'parselatest']
@@ -108,13 +113,13 @@ const PARAM_OVERRIDES = {
   'anistar:parse': [LIMIT_PAGE],
   'leproduction:parse': [LIMIT_PAGE],
   'viruseproject:parse': [LIMIT_PAGE],
-  'anifilm:parse': [{ name: 'fullparse', label: 'Полный проход (true/false)', type: 'text', placeholder: 'false' }],
+  'anifilm:parse': [{ name: 'fullparse', get label() { return tg('act_p_fullparse') }, type: 'text', placeholder: 'false' }],
   'knaben:parse': [PAGES(1)],
   'knaben:backfill': [PAGES(10)],
   'subsplease:parse': [PAGES(1)],
   'rutracker:parsealltask': [
-    { name: 'cat', label: 'Раздел (cat)', type: 'text', placeholder: 'все' },
-    { name: 'maxpages', label: 'Макс. страниц', type: 'number', placeholder: '0 - все' },
+    { name: 'cat', get label() { return tg('act_p_cat') }, type: 'text', get placeholder() { return tg('act_p_cat_ph') } },
+    { name: 'maxpages', get label() { return tg('act_p_maxpages') }, type: 'number', get placeholder() { return tg('act_p_maxpages_ph') } },
   ],
 }
 

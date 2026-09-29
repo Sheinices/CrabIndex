@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! Global `(tracker, torrent id) → bucket` index, so a torrent that re-appears under a new
 //! name (different bucket) replaces its old row instead of adding a second one.
 //!

@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! Browser (FlareSolverr) fetches for hosts behind Cloudflare.
 //!
 //! Hosts behind Cloudflare: FlareSolverr solves the challenge and yields `cf_clearance`.

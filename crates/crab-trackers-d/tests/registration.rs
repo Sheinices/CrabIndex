@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! Every tracker with a resumable ParseAllTask registers a starter; routes are lowercase.
 
 use crab_core::trackers::parse_all_starters;

@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! Periodic track analysis over FileDB and the TorrServer orphan sweep.
 //!
 //! typetask: 1 - last day, 2 - last month, 3 - last year, 4 - older, 5 - old but recently updated.

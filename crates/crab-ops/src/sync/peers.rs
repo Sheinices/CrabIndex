@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! Sync clients seen by this host. Every `/sync/*` request is attributed to a client by IP
 //! (behind a reverse proxy: `CF-Connecting-IP`, `X-Real-IP`, first `X-Forwarded-For`); CrabIndex
 //! clients also send `X-CrabIndex-Version`. The registry lives in memory and is saved to
@@ -17,6 +20,9 @@ pub const PEERS_PATH: &str = "Data/temp/sync_peers.json";
 /// Clients not seen for this long are dropped from the list.
 const KEEP_DAYS: i64 = 30;
 pub const VERSION_HEADER: &str = "x-crabindex-version";
+/// Compact JSON the client sends with `/sync/conf`: `{buckets, issues, errors, check, idIndex}`.
+pub const STATUS_HEADER: &str = "x-crabindex-status";
+const STATUS_MAX_BYTES: usize = 2048;
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
 #[allow(non_snake_case)]
@@ -35,15 +41,20 @@ pub struct Peer {
     pub lastCheck: Option<DateTime<Utc>>,
     /// Last `/sync/fdb?key=` request (bucket refetch).
     pub lastRefetch: Option<DateTime<Utc>>,
+    /// Self-reported state (`X-CrabIndex-Status`), CrabIndex clients only.
+    #[serde(default)]
+    pub status: Option<serde_json::Value>,
+    #[serde(default)]
+    pub statusAt: Option<DateTime<Utc>>,
 }
 
 static PEERS: Lazy<RwLock<HashMap<String, Peer>>> = Lazy::new(|| RwLock::new(HashMap::new()));
 static DIRTY: AtomicBool = AtomicBool::new(false);
 
 /// What a `/sync/*` request was for.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub enum Hit {
-    Conf,
+    Conf { status: Option<serde_json::Value> },
     Torrents { cursor: i64, spidr: bool },
     Bucket,
     Digest,
@@ -63,6 +74,35 @@ pub fn client_ip(headers: &HeaderMap, peer: Option<&ConnectInfo<SocketAddr>>) ->
         }
     }
     peer.map(|p| p.0.ip().to_string()).unwrap_or_default()
+}
+
+/// Parsed `X-CrabIndex-Status` with only the known fields kept (untrusted input).
+pub fn client_status(headers: &HeaderMap) -> Option<serde_json::Value> {
+    let raw = headers.get(STATUS_HEADER)?.to_str().ok()?;
+    if raw.len() > STATUS_MAX_BYTES {
+        return None;
+    }
+    let v: serde_json::Value = serde_json::from_str(raw).ok()?;
+    let mut out = serde_json::Map::new();
+    for k in ["buckets", "issues", "errors", "idIndex"] {
+        if let Some(x) = v.get(k) {
+            if x.is_number() || x.is_boolean() {
+                out.insert(k.into(), x.clone());
+            }
+        }
+    }
+    if let Some(chk) = v.get("check").filter(|c| c.is_object()) {
+        let mut c = serde_json::Map::new();
+        for k in ["at", "ok", "remaining", "missing", "mismatched", "extra"] {
+            if let Some(x) = chk.get(k) {
+                if x.is_number() || x.is_boolean() || (x.is_string() && x.as_str().map(|s| s.len() <= 40).unwrap_or(false)) {
+                    c.insert(k.into(), x.clone());
+                }
+            }
+        }
+        out.insert("check".into(), serde_json::Value::Object(c));
+    }
+    Some(serde_json::Value::Object(out))
 }
 
 pub fn client_version(headers: &HeaderMap) -> String {
@@ -85,6 +125,8 @@ pub fn record(ip: &str, version: &str, hit: Hit) {
         lastSpidr: None,
         lastCheck: None,
         lastRefetch: None,
+        status: None,
+        statusAt: None,
     });
     p.lastSeen = now;
     p.requests += 1;
@@ -92,7 +134,12 @@ pub fn record(ip: &str, version: &str, hit: Hit) {
         p.version = version.to_string();
     }
     match hit {
-        Hit::Conf => {}
+        Hit::Conf { status } => {
+            if let Some(st) = status {
+                p.status = Some(st);
+                p.statusAt = Some(now);
+            }
+        }
         Hit::Torrents { cursor, spidr } => {
             if spidr {
                 p.lastSpidr = Some(now);
@@ -160,14 +207,30 @@ mod tests {
 
     #[test]
     fn record_tracks_cursor_spidr_and_version() {
-        record("198.51.100.7", "", Hit::Conf);
+        record("198.51.100.7", "", Hit::Conf { status: None });
         record("198.51.100.7", "1.2.3", Hit::Torrents { cursor: 42, spidr: false });
         record("198.51.100.7", "", Hit::Torrents { cursor: 0, spidr: true });
         record("198.51.100.7", "", Hit::Digest);
         let p = list().into_iter().find(|p| p.ip == "198.51.100.7").expect("peer");
         assert_eq!((p.requests, p.version.as_str(), p.lastCursor), (4, "1.2.3", 42));
         assert!(p.lastSpidr.is_some() && p.lastCheck.is_some() && p.lastRefetch.is_none());
-        record("", "x", Hit::Conf);
+        record("", "x", Hit::Conf { status: None });
         assert!(list().iter().all(|p| !p.ip.is_empty()));
+    }
+
+    #[test]
+    fn status_header_keeps_known_fields_only() {
+        let mut h = HeaderMap::new();
+        h.insert(STATUS_HEADER, HeaderValue::from_static(r#"{"buckets":5,"issues":2,"errors":1,"idIndex":true,"check":{"at":"2026-09-29T20:40:31Z","remaining":0,"ok":true,"junk":"x"},"evil":"<script>"}"#));
+        let st = client_status(&h).expect("status");
+        assert_eq!(st["buckets"], 5);
+        assert_eq!(st["check"]["remaining"], 0);
+        assert!(st.get("evil").is_none() && st["check"].get("junk").is_none());
+        h.insert(STATUS_HEADER, HeaderValue::from_static("not json"));
+        assert!(client_status(&h).is_none());
+        record("198.51.100.9", "1.2.3", Hit::Conf { status: Some(st.clone()) });
+        let p = list().into_iter().find(|p| p.ip == "198.51.100.9").expect("peer");
+        assert_eq!(p.status.as_ref().map(|s| s["issues"].as_i64()), Some(Some(2)));
+        assert!(p.statusAt.is_some());
     }
 }

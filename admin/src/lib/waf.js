@@ -1,3 +1,8 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
+import { tGlobal as tg } from '../lang/index.jsx'
+
 /** Pure WAF helpers: IP/CIDR, domain and bot rule validation, query builders, labels. */
 
 export function isIPv4(s) {
@@ -53,9 +58,9 @@ export function isIpOrCidr(value) {
 /** Russian validation message for the rule form, or null when valid. */
 export function validateRuleValue(value) {
   const s = String(value ?? '').trim()
-  if (!s) return 'Укажите IP-адрес или подсеть'
-  if (/\s/.test(s)) return 'Без пробелов: один адрес или подсеть'
-  if (!isIpOrCidr(s)) return 'Некорректный IP-адрес или CIDR (пример: 203.0.113.7, 198.51.100.0/24, 2001:db8::/32)'
+  if (!s) return tg('waf_v_ip_required')
+  if (/\s/.test(s)) return tg('waf_v_ip_spaces')
+  if (!isIpOrCidr(s)) return tg('waf_v_ip_invalid')
   return null
 }
 
@@ -89,8 +94,8 @@ export function coversIp(value, you) {
  * enforces the same rule; this only saves a round trip with a clear message.
  */
 export function selfBlockError(value, you) {
-  if (isLoopback(value)) return 'Нельзя заблокировать loopback-адрес'
-  if (coversIp(value, you)) return `Нельзя заблокировать собственный IP (${you})`
+  if (isLoopback(value)) return tg('waf_v_loopback')
+  if (coversIp(value, you)) return tg('waf_v_self', { you })
   return null
 }
 
@@ -121,11 +126,11 @@ const DOMAIN_LABEL = /^[\p{L}\p{N}](?:[\p{L}\p{N}-]*[\p{L}\p{N}])?$/u
 /** Russian validation message for a domain rule, or null when valid. */
 export function validateDomainValue(value) {
   const raw = String(value ?? '').trim()
-  if (!raw) return 'Укажите домен'
-  if (/\s/.test(raw)) return 'Без пробелов: один домен'
+  if (!raw) return tg('waf_v_domain_required')
+  if (/\s/.test(raw)) return tg('waf_v_domain_spaces')
   const d = normalizeDomain(raw)
   if (!d || !d.includes('.') || [...d].length > 253 || !d.split('.').every((l) => [...l].length <= 63 && DOMAIN_LABEL.test(l))) {
-    return 'Некорректный домен: буквы, цифры, дефисы и точки, минимум одна точка (пример: example.com)'
+    return tg('waf_v_domain_invalid')
   }
   return null
 }
@@ -149,8 +154,8 @@ export function domainRuleError(list, value, builtins = []) {
   const d = normalizeDomain(value)
   const b = builtinDomainOf(d, builtins)
   if (!b) return null
-  if (list === 'domainWhitelist') return `${d} заблокирован встроенным списком и не может быть разрешён`
-  return `${d} уже заблокирован встроенным списком`
+  if (list === 'domainWhitelist') return tg('waf_v_builtin_whitelist', { d })
+  return tg('waf_v_builtin_blacklist', { d })
 }
 
 /** Query object for `waf/requests` built from the log filters (blanks dropped). */
@@ -168,14 +173,14 @@ export function buildRequestsQuery({ ip = '', path = '', origin = '', host = '',
 }
 
 export const BLOCK_REASONS = {
-  blacklist: { label: 'Чёрный список', tone: 'danger' },
-  ban: { label: 'Бан', tone: 'danger' },
+  blacklist: { get label() { return tg('waf_reason_blacklist') }, tone: 'danger' },
+  ban: { get label() { return tg('waf_reason_ban') }, tone: 'danger' },
   ua: { label: 'User-Agent', tone: 'warn' },
-  trap: { label: 'Ловушка', tone: 'warn' },
-  rate: { label: 'Лимит запросов', tone: 'warn' },
-  domain: { label: 'Домен', tone: 'danger' },
-  bot: { label: 'Бот', tone: 'warn' },
-  manual: { label: 'Вручную', tone: 'danger' },
+  trap: { get label() { return tg('waf_reason_trap') }, tone: 'warn' },
+  rate: { get label() { return tg('waf_reason_rate') }, tone: 'warn' },
+  domain: { get label() { return tg('waf_reason_domain') }, tone: 'danger' },
+  bot: { get label() { return tg('waf_reason_bot') }, tone: 'warn' },
+  manual: { get label() { return tg('waf_reason_manual') }, tone: 'danger' },
 }
 
 export function reasonLabel(reason) {
@@ -201,16 +206,16 @@ export const TONE_BADGE = {
 }
 
 export const IP_STATES = {
-  normal: { label: 'обычный', tone: 'muted' },
-  whitelisted: { label: 'белый список', tone: 'ok' },
-  blacklisted: { label: 'чёрный список', tone: 'danger' },
-  banned: { label: 'забанен', tone: 'warn' },
+  normal: { get label() { return tg('waf_state_normal') }, tone: 'muted' },
+  whitelisted: { get label() { return tg('waf_state_whitelisted') }, tone: 'ok' },
+  blacklisted: { get label() { return tg('waf_state_blacklisted') }, tone: 'danger' },
+  banned: { get label() { return tg('waf_state_banned') }, tone: 'warn' },
 }
 
 export const BAN_PRESETS = [
-  { minutes: 15, label: '15 мин' },
-  { minutes: 60, label: '1 ч' },
-  { minutes: 1440, label: '24 ч' },
+  { minutes: 15, get label() { return tg('waf_exp_15m') } },
+  { minutes: 60, get label() { return tg('waf_exp_1h') } },
+  { minutes: 1440, get label() { return tg('waf_exp_24h') } },
 ]
 
 export function formatTime(value) {
@@ -239,21 +244,20 @@ export const BOT_RULE_MAX = 128
 /** Russian validation message for a bot rule (catalog name or User-Agent substring), or null. */
 export function validateBotRule(value) {
   const s = String(value ?? '').trim()
-  if (!s) return 'Укажите имя бота или часть User-Agent'
+  if (!s) return tg('waf_v_bot_required')
   // eslint-disable-next-line no-control-regex
-  if (/[\u0000-\u001f\u007f]/.test(s)) return 'Недопустимые символы'
-  if ([...s].length < BOT_RULE_MIN) return `Не короче ${BOT_RULE_MIN} символов`
-  if ([...s].length > BOT_RULE_MAX) return `Не длиннее ${BOT_RULE_MAX} символов`
+  if (/[\u0000-\u001f\u007f]/.test(s)) return tg('waf_v_bot_chars')
+  if ([...s].length < BOT_RULE_MIN) return tg('waf_v_bot_short', { n: BOT_RULE_MIN })
+  if ([...s].length > BOT_RULE_MAX) return tg('waf_v_bot_long', { n: BOT_RULE_MAX })
   return null
 }
 
 /** Warning shown before blocking a whole category (null when blocking is harmless). */
 export const BOT_CATEGORY_WARNINGS = {
-  search: 'Поисковые системы перестанут индексировать сервер: страницы пропадут из Google, Яндекса и других поисковиков.',
-  libraries:
-    'curl, python-requests, Go, okhttp и другие библиотеки используют и легитимные скрипты: ваши cron-задачи, самописные клиенты, некоторые приложения. Они тоже получат 403.',
-  empty: 'Некоторые легитимные клиенты и скрипты не присылают User-Agent. Они тоже получат 403.',
-  monitoring: 'Если вы сами пользуетесь сервисом мониторинга (UptimeRobot и т. п.), он начнёт считать сервер недоступным.',
+  get search() { return tg('waf_botcat_warn_search') },
+  get libraries() { return tg('waf_botcat_warn_libraries') },
+  get empty() { return tg('waf_botcat_warn_empty') },
+  get monitoring() { return tg('waf_botcat_warn_monitoring') },
 }
 
 export function botCategoryWarning(id) {
@@ -261,9 +265,9 @@ export function botCategoryWarning(id) {
 }
 
 export const BOT_STATUS = {
-  blocked: { label: 'блокируется', tone: 'danger' },
-  allowed: { label: 'разрешён', tone: 'ok' },
-  seen: { label: 'замечен', tone: 'muted' },
+  blocked: { get label() { return tg('waf_bot_state_blocked') }, tone: 'danger' },
+  allowed: { get label() { return tg('waf_bot_state_allowed') }, tone: 'ok' },
+  seen: { get label() { return tg('waf_bot_state_seen') }, tone: 'muted' },
 }
 
 /** Explicit rule for a bot name (`botBlocked` / `botAllowed`, case-insensitive), or null. */

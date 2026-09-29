@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 import { Loader2 } from 'lucide-react'
 
 export function Spinner({ className = 'size-4', label }) {

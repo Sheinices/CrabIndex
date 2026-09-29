@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! Title/URL helpers of individual trackers needed by the data migrations.
 //! Kept local so this crate does not depend on the tracker crates.
 

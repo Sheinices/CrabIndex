@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! Picks TorrServer file ids (1-based) most likely to be probeable video.
 
 use super::models::TorrentFileStat;

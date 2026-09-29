@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! Anidub: listing pages → magnet from the .torrent / detail page.
 //!
 //! Route: `/cron/anidub/parse?parsefrom&parseto`.

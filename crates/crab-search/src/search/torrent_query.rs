@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! Native `/api/v1.0/torrents` and `/api/v1.0/qualitys` queries over masterDb.
 
 use chrono::{DateTime, Utc};

@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! Knaben API v1 sync - TV + Movies aggregated from TPB, 1337x, EZTV, Rutracker.
 //!
 //! * `parse`: latest pages (`from`, `size`, `pages`, `query`, `hours`, `orderBy`, `orderDirection`, `categories`).

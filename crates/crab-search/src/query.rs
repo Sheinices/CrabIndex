@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! Case-insensitive multi-value query string collection.
 //!
 //! Keys are compared case-insensitively (stored lowercase), values keep their

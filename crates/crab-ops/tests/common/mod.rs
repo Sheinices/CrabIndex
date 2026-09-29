@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! Shared test setup: every test binary runs inside its own temporary working directory
 //! (FileDB, masterDb and Data/temp paths are relative to the cwd).
 

@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! FileDB - gzip JSON shards under `Data/fdb/` keyed by `search_name:search_originalname`,
 //! plus the in-memory `masterDb` index persisted to `Data/masterDb.bz`.
 //!

@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 import { createContext, useCallback, useContext, useMemo, useRef, useState } from 'react'
 import { CheckCircle2, AlertTriangle, Info, X } from 'lucide-react'
 import { useT } from '../lang/index.jsx'

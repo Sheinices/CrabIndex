@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! Session naming, forwarded browser headers, origin-503 fallthrough, challenge detection.
 
 use crab_cloudflare::clearance::header_ci;

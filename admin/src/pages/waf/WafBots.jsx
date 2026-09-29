@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 import { useState } from 'react'
 import { Link } from 'react-router'
 import { AlertTriangle, Bot, Check, RefreshCw, ShieldBan, Undo2 } from 'lucide-react'

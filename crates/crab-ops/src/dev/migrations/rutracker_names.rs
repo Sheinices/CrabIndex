@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! rutracker rows parsed while the title patterns could not see through a nested director
 //! block, e.g. `Матрица / The Matrix (Братья Вачовски (Энди, Ларри) / The Wachowski Brothers (...))
 //! [1999, ...]`: they got `originalname` = the Russian name and `relased` = 0. Re-derive the

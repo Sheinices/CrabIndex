@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! `/dev/*` diagnostics, bulk maintenance and data migrations (access restricted by the server).
 
 pub mod diagnostics;
@@ -33,28 +36,40 @@ macro_rules! simple {
     };
 }
 
-simple!(update_size, maintenance::update_size);
+/// A migration that changes rows: after it finishes, the data-quality report is refreshed in
+/// the background so the panel shows before / after.
+macro_rules! fixing {
+    ($name:ident, $f:path) => {
+        async fn $name() -> Response {
+            let r = blocking_json($f).await;
+            datacheck::spawn_after_fix(stringify!($name));
+            r
+        }
+    };
+}
+
+fixing!(update_size, maintenance::update_size);
 simple!(check_data, datacheck::run);
 simple!(check_data_status, datacheck::status);
-simple!(fix_zero_sizes, maintenance::fix_zero_sizes);
+fixing!(fix_zero_sizes, maintenance::fix_zero_sizes);
 simple!(reset_check_time, maintenance::reset_check_time);
-simple!(update_details, maintenance::update_details);
-simple!(update_search_name, maintenance::update_search_name);
-simple!(fix_knaben_names, migrations::names::fix_knaben_names);
-simple!(fix_bitru_names, migrations::names::fix_bitru_names);
-simple!(fix_rudub_relased, migrations::names::fix_rudub_relased);
-simple!(remove_null_values, migrations::cleanup::remove_null_values);
-simple!(fix_empty_search_fields, migrations::cleanup::fix_empty_search_fields);
-simple!(migrate_aniliberty_urls, migrations::aniliberty::migrate_urls);
-simple!(remove_duplicate_aniliberty, migrations::aniliberty::remove_duplicates);
-simple!(fix_animelayer_duplicates, migrations::animelayer::fix_duplicates);
-simple!(fix_kinozal_domain_duplicates, migrations::domain_dups::fix_kinozal);
-simple!(fix_rutracker_domain_duplicates, migrations::domain_dups::fix_rutracker);
-simple!(fix_selezen_domain_duplicates, migrations::domain_dups::fix_selezen);
-simple!(fix_ultradox_domain_duplicates, migrations::domain_dups::fix_ultradox);
-simple!(fix_serial_types, migrations::serial_types::fix_serial_types);
-simple!(fix_rutracker_names, migrations::rutracker_names::fix_rutracker_names);
-simple!(fix_slug_duplicates, migrations::slug_dups::fix_slug_duplicates);
+fixing!(update_details, maintenance::update_details);
+fixing!(update_search_name, maintenance::update_search_name);
+fixing!(fix_knaben_names, migrations::names::fix_knaben_names);
+fixing!(fix_bitru_names, migrations::names::fix_bitru_names);
+fixing!(fix_rudub_relased, migrations::names::fix_rudub_relased);
+fixing!(remove_null_values, migrations::cleanup::remove_null_values);
+fixing!(fix_empty_search_fields, migrations::cleanup::fix_empty_search_fields);
+fixing!(migrate_aniliberty_urls, migrations::aniliberty::migrate_urls);
+fixing!(remove_duplicate_aniliberty, migrations::aniliberty::remove_duplicates);
+fixing!(fix_animelayer_duplicates, migrations::animelayer::fix_duplicates);
+fixing!(fix_kinozal_domain_duplicates, migrations::domain_dups::fix_kinozal);
+fixing!(fix_rutracker_domain_duplicates, migrations::domain_dups::fix_rutracker);
+fixing!(fix_selezen_domain_duplicates, migrations::domain_dups::fix_selezen);
+fixing!(fix_ultradox_domain_duplicates, migrations::domain_dups::fix_ultradox);
+fixing!(fix_serial_types, migrations::serial_types::fix_serial_types);
+fixing!(fix_rutracker_names, migrations::rutracker_names::fix_rutracker_names);
+fixing!(fix_slug_duplicates, migrations::slug_dups::fix_slug_duplicates);
 
 async fn find_corrupt(q: Q) -> Response {
     let n = Params::from_query(q).i32("samplesize", 20);

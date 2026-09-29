@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! Request security: client network context, key validation, access policies,
 //! security headers and the authorization middleware.
 

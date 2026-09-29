@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! crab-ops - sync API + sync workers, tracker announce list worker, FileDB save,
 //! integrity maintenance, ParseAll resume, dev diagnostics/maintenance/migrations
 //! and the headless `maintain` CLI.

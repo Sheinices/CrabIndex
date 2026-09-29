@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! BitRu API category request filter and category/subsection → types mapping.
 
 pub const REQUEST_CATEGORIES: [&str; 3] = ["movie", "serial", "video"];

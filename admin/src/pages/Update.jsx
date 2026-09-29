@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 import { useEffect, useRef, useState } from 'react'
 import { Download, ExternalLink, RefreshCw } from 'lucide-react'
 import { applyUpdate, getSession, getUpdate } from '../lib/api.js'

@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! Integrity check of the local copy against `syncapi`.
 //!
 //! The incremental feed only carries buckets that changed after the client's cursor, so a

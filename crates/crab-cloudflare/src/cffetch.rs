@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! cffetch fast path: `cf_clearance` cookie from FlareSolverr + Chrome TLS via localhost
 //! cffetch (`:8192/fetch`). Cookie jars are merged, a fresh clearance is checked with
 //! [`validate_async`] (failure → [`block_fast_path`]); a bare 403 does not revoke the cookie,

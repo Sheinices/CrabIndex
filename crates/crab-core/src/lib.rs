@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! CrabIndex core: configuration, models, FileDB, HTTP networking, parsing helpers
 //! and tracker sync primitives shared by every other crate.
 #![allow(non_snake_case)]

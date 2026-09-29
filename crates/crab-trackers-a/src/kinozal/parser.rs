@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! Kinozal browse page parsing and page classification.
 //!
 //! Browser-rendered pages (FlareSolverr/Chromium) re-serialize `class='first bg'` / `class=bg`

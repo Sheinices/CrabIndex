@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! Toloka forum listing parser (`/f{cat}` pages).
 
 use chrono::{DateTime, Utc};

@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! Jackett `/api/v2.0/indexers/{status}/results` search pipeline.
 
 use indexmap::IndexMap;

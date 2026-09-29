@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 import { lazy, Suspense, useState } from 'react'
 import { createBrowserRouter, Navigate, RouterProvider } from 'react-router'
 import { AuthProvider, useAuth } from './components/Auth.jsx'

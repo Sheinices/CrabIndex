@@ -1,22 +1,19 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 /** Helpers for the update page (pure, unit-tested). */
 
-export const STAGES = {
-  idle: 'Ожидание',
-  downloading: 'Загрузка архива',
-  verifying: 'Проверка контрольной суммы',
-  installing: 'Установка файлов',
-  restarting: 'Перезапуск службы',
-  error: 'Ошибка',
-}
+import { tGlobal as tg } from '../lang/index.jsx'
 
 export const BUSY_STAGES = new Set(['downloading', 'verifying', 'installing', 'restarting'])
 
+/** Stage name in the current language (unknown stages are shown as is). */
 export function stageLabel(stage) {
-  return STAGES[stage] || stage || STAGES.idle
+  if (stage && !STAGE_KEYS[stage]) return stage
+  return tg(stageKey(stage))
 }
 
-// i18n keys for each stage (see lang/*.js). `stageLabel` above stays for pure callers/tests;
-// the UI uses `t(stageKey(stage))` so stage names follow the selected language.
+// i18n keys for each stage (see lang/*.js).
 export const STAGE_KEYS = {
   idle: 'stage_idle',
   downloading: 'stage_downloading',

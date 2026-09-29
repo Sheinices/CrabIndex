@@ -1,3 +1,8 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
+import { tGlobal as tg } from '../lang/index.jsx'
+
 /** Config editor helpers: path access, sensitive masking, diffs, admin-access changes. */
 
 export const SENSITIVE_FIELD_NAMES = ['apikey', 'devkey', 'cookie', 'u', 'p', 'username', 'password', 'token']
@@ -52,7 +57,7 @@ function isEmpty(v) {
 export function formatValue(value, sensitive = false) {
   if (value === undefined) return '-'
   if (value === null) return 'null'
-  if (sensitive) return isEmpty(value) ? '(пусто)' : MASK
+  if (sensitive) return isEmpty(value) ? tg('cfg_empty') : MASK
   if (typeof value === 'string') return value === '' ? '""' : value
   try {
     return JSON.stringify(value)
@@ -150,11 +155,11 @@ export function validateAdminSection(data) {
   if (!admin || typeof admin !== 'object') return errors
   if (admin.path != null && admin.path !== '') {
     const p = String(admin.path)
-    if (!ADMIN_PATH_RE.test(p)) errors.push('admin.path: один сегмент [a-z0-9_-], 2-32 символа')
-    else if (RESERVED_ADMIN_PATHS.includes(normalizeAdminPath(p))) errors.push(`admin.path: путь ${normalizeAdminPath(p)} зарезервирован`)
+    if (!ADMIN_PATH_RE.test(p)) errors.push(tg('cfg_admin_path_format'))
+    else if (RESERVED_ADMIN_PATHS.includes(normalizeAdminPath(p))) errors.push(tg('cfg_admin_path_reserved', { path: normalizeAdminPath(p) }))
   }
   if (admin.token != null && admin.token !== '' && !ADMIN_TOKEN_RE.test(String(admin.token))) {
-    errors.push('admin.token: ровно 18 символов [A-Za-z0-9]')
+    errors.push(tg('cfg_admin_token_format'))
   }
   return errors
 }
@@ -162,14 +167,20 @@ export function validateAdminSection(data) {
 /** Fallback admin group when the server schema does not describe `admin.*`. */
 export const ADMIN_GROUP = {
   id: 'admin',
-  title: 'Админ-панель',
-  description: 'Путь и токен входа в панель. Изменение меняет адрес входа.',
-  fields: [
-    { key: 'admin.enable', type: 'bool', label: 'Включена', sensitive: false },
-    { key: 'admin.path', type: 'string', label: 'Путь', description: 'Один сегмент, например /admin', sensitive: false },
-    { key: 'admin.token', type: 'password', label: 'Токен входа', description: '18 символов [A-Za-z0-9]', sensitive: true },
-    { key: 'admin.sessionHours', type: 'int', label: 'Сессия (часов)', min: 1, sensitive: false },
-  ],
+  get title() {
+    return tg('cfg_admin_title')
+  },
+  get description() {
+    return tg('cfg_admin_desc')
+  },
+  get fields() {
+    return [
+      { key: 'admin.enable', type: 'bool', label: tg('cfg_admin_enable'), sensitive: false },
+      { key: 'admin.path', type: 'string', label: tg('cfg_admin_path'), description: tg('cfg_admin_path_desc'), sensitive: false },
+      { key: 'admin.token', type: 'password', label: tg('cfg_admin_token'), description: tg('cfg_admin_token_desc'), sensitive: true },
+      { key: 'admin.sessionHours', type: 'int', label: tg('cfg_admin_session'), min: 1, sensitive: false },
+    ]
+  },
 }
 
 export function withAdminGroup(schema) {

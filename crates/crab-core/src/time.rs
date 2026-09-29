@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! Date/time helpers.
 //!
 //! FileDB shards contain ISO dates in three flavours: `...Z` (Utc), `...+03:00` (Local) and no offset (Unspecified).

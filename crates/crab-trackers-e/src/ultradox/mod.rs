@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! ultradox.vip sync: hourly parse, UpdateTasksParse, resumable ParseAllTask and ParseLatest.
 //!
 //! Nginx returns 503 unless the Referer looks like a search engine. Listing magnets are

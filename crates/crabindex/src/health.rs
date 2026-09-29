@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! Health signals for the admin overview and notifications (Telegram / webhook).
 //!
 //! [`issues`] is cheap (a few small files and in-memory counters) and is recomputed on every
@@ -374,7 +377,17 @@ pub async fn send_test(c: &AppOptions) -> Vec<String> {
     errs
 }
 
+/// Non-muted signals as `(errors, warnings)`, for the status the sync client reports to its host.
+pub fn counts() -> (usize, usize) {
+    let c = conf();
+    let list = issues(&c);
+    let errors = list.iter().filter(|i| !i.muted && i.severity == "error").count();
+    let warns = list.iter().filter(|i| !i.muted && i.severity != "error").count();
+    (errors, warns)
+}
+
 pub fn spawn_notifier(ct: CancellationToken) {
+    crab_core::hooks::register_health_counts(counts);
     tokio::spawn(async move {
         tokio::select! {
             _ = ct.cancelled() => return,

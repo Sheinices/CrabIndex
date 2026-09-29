@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! Endpoints that exist only in the admin API: `overview`, `logs`, `logs/{name}`.
 
 use chrono::{DateTime, Utc};

@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! Track file layout under `Data/tracks`: `{aa}/{b}/{rest}.json` (lowercase hex infohash).
 //! Legacy files without `.json` and uppercase layouts are read as a fallback and migrated on backfill.
 

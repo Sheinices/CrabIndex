@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! Rutracker: hourly first-page parse of quick forums, page-map rebuild, resumable ParseAll
 //! and ParseLatest. Topic pages are fetched for magnets (Cloudflare fallback via core HTTP).
 

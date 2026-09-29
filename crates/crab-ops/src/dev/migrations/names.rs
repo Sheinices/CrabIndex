@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! Re-derive name / originalname / year of stored rows with the current title parsing
 //! of knaben, bitru and rudub, moving rows whose bucket key changes.
 

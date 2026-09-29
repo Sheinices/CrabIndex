@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! Tracker name parsing/matching shared by the native, Jackett and Torznab APIs.
 //! Stored `trackerName` may be comma-joined after duplicate merge ("kinozal, rutracker").
 

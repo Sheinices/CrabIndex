@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! Admin API under `{admin.path}/api/waf/…` (session and `X-Crab-Admin` are checked by the
 //! admin middleware before these handlers run).
 

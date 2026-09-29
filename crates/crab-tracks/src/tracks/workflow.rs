@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! Full analysis of one magnet: pick a TorrServer, add the torrent, wait for metadata/peers/buffer,
 //! probe `/ffp`, save the result to `Data/tracks` and update the FileDB attempt counter.
 

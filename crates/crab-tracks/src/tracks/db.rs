@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! In-memory track cache + lookups (streams by magnet, languages, track presence).
 
 use crab_core::conf;

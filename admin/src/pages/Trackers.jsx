@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 import { useId, useMemo, useState } from 'react'
 import { Link } from 'react-router'
 import { Download, FileText, KeyRound, Play, RefreshCw, Search } from 'lucide-react'

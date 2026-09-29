@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! Continue incomplete ParseAll cycles (after restart / deploy).
 //!
 //! A tracker is kicked only when its cycle file exists and still has pending pages;

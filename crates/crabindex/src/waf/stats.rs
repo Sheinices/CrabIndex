@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! In-memory request statistics: ring buffer log, per-IP / per-path / per-origin / per-host
 //! aggregates, per-bot counters (see [`super::bots`]) and a per-minute timeline covering the last
 //! 24 hours. All structures are bounded.

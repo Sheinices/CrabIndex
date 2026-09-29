@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! RuDub browse.php card parser. Keeps only HD 1080 / HD 2160 titles (drops XviD, x264-SD, HD 720).
 
 use chrono::{DateTime, Datelike, NaiveDateTime, TimeZone, Utc};

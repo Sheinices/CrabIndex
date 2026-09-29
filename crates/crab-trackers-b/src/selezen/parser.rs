@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! Selezen release list (`/relizy-ot-selezen/`) and detail page parser.
 
 use crab_core::models::TorrentDetails;

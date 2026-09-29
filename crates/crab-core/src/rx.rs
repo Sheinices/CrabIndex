@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! Regex helpers used by the parsers.
 //!
 //! * Patterns are compiled once and cached (keyed by pattern + flags).

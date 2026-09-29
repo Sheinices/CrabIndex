@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! Series stored as films. rutor (cat 17 "Иностранные релизы"), torrentby (`films`) and selezen
 //! list series in their film sections; the old parsers typed those rows `movie` and, using the
 //! film title patterns, kept an "[S01]" tail in `originalname` - so serial card searches never

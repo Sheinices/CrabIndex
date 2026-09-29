@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! Self-update from GitHub releases, driven from the admin panel.
 //!
 //! `check` asks the GitHub API for the latest release (cached, only when the panel asks).

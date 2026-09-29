@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! Web application firewall: IP and domain lists, bans, bot rules, User-Agent / trap-path
 //! filters, per-IP rate limit and the in-memory request log shown in the admin panel.
 //!

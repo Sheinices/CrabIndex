@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! HTTP client.
 //!
 //! * Proxies: `globalproxy` (regex pattern on URL, all entries tried in random order),

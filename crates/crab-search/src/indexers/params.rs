@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! Query-string helpers for the indexer endpoints (ids, categories, trackers, paging…).
 
 use crab_core::{rx, util::is_blank};

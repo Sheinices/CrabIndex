@@ -1,4 +1,19 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 import { getBase } from './base.js'
+import ru from '../lang/ru.js'
+
+// Messages follow the panel language. `lang/index.jsx` imports this module (getLang), so the
+// translator is injected from there instead of imported here (no import cycle).
+let tg = (key, vars) => {
+  let s = ru[key] == null ? key : ru[key]
+  if (vars) for (const k in vars) s = String(s).split(`{${k}}`).join(vars[k])
+  return s
+}
+export function setApiTranslator(fn) {
+  tg = fn
+}
 
 export class ApiError extends Error {
   constructor(message, status, body) {
@@ -60,9 +75,9 @@ function errorMessage(status, data) {
     if (typeof data.message === 'string' && data.message) return data.message
   }
   if (typeof data === 'string' && data.trim() && data.length < 300) return data.trim()
-  if (status === 404) return 'Не найдено (404)'
-  if (status === 429) return 'Слишком много попыток, подождите'
-  return `Ошибка сервера (${status})`
+  if (status === 404) return tg('api_not_found')
+  if (status === 429) return tg('api_too_many')
+  return tg('api_server_error', { status })
 }
 
 /**
@@ -82,7 +97,7 @@ export async function api(path, { method = 'GET', query, body, signal, silent401
     res = await fetch(apiUrl(path, query), init)
   } catch (err) {
     if (err?.name === 'AbortError') throw err
-    throw new ApiError('Сервер недоступен', 0, null)
+    throw new ApiError(tg('api_unreachable'), 0, null)
   }
   const { data, text } = await readBody(res)
   if (!res.ok) {
@@ -169,7 +184,7 @@ export const del = (path, opts) => api(path, { ...opts, method: 'DELETE' })
  */
 export function ensureOk(res) {
   if (res && typeof res === 'object' && !Array.isArray(res) && res.ok === false) {
-    throw new ApiError(res.error || 'Операция не выполнена', 200, res)
+    throw new ApiError(res.error || tg('api_op_failed'), 200, res)
   }
   return res
 }

@@ -5,7 +5,7 @@ members = ["crates/*"]
 [workspace.package]
 version = "1.2.2"
 edition = "2021"
-license = "MIT"
+license = "AGPL-3.0-or-later"
 
 [workspace.dependencies]
 crab-core = { path = "crates/crab-core" }

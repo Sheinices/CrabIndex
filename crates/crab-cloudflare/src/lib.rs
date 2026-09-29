@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! crab-cloudflare - browser (FlareSolverr) + cffetch fallback for hosts behind Cloudflare.
 //!
 //! * [`clearance`] - per-host FlareSolverr sessions, crawl lane routing, timeout retries/recycle.

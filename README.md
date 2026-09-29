@@ -4,7 +4,7 @@
 
 # CrabIndex
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
 
 Агрегатор торрент-трекеров на Rust для [Prisma](https://t.me/prisma_party), Lampa, Sonarr, Radarr и Prowlarr с API в формате Jackett. Хранит данные в файловой БД (FileDB), умеет синхронизироваться с удалённой базой и самостоятельно парсить трекеры по cron. Один статически собранный бинарник `crabindex` + веб-интерфейс в `wwwroot/`.
 
@@ -321,7 +321,9 @@ waf:
 
 ## Лицензия
 
-MIT License. См. файл [LICENSE](LICENSE).
+GNU Affero General Public License v3.0 или новее. См. файл [LICENSE](LICENSE).
+
+Каждый исходный файл (`.rs`, `.js`, `.jsx`, `.css`) начинается с шапки `SPDX-License-Identifier: AGPL-3.0-or-later`; при добавлении нового файла копируйте её из любого соседнего.
 
 ## Релизы
 

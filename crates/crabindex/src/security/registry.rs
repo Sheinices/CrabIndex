@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! Access policies, path → policy registry and the route catalog used for self-checks.
 
 use once_cell::sync::Lazy;

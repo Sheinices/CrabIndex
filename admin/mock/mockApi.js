@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 /**
  * Dev-only mock of the admin API (see ADMIN_CONTRACT.md). Mounted by
  * vite.config.js in `vite serve` only; never part of the production bundle.
@@ -148,6 +151,13 @@ function dataCheckReport() {
     total,
     trackers,
     fixes: { zeroSize: 'dev/fixzerosizes', dupIds: 'dev/fixslugduplicates', badNames: 'dev/fixrutrackernames', foreignHost: { kinozal: 'dev/fixkinozaldomainduplicates', rutracker: 'dev/fixrutrackerdomainduplicates', selezen: 'dev/fixselezendomainduplicates', ultradox: 'dev/fixultradoxdomainduplicates' } },
+    trigger: 'fix_slug_duplicates',
+    previous: {
+      at: new Date(Date.now() - 3 * 86_400_000).toISOString(),
+      trigger: 'cron',
+      total: { rows: 2_281_228, zeroSize: 505, dupIds: 20_515, foreignHost: 3, badNames: 217_050, issues: 238_073 },
+      trackers: [row('rutracker', 928294, 505, 1214, 3, 217050), row('kinozal', 555321, 0, 7171, 0, 0), row('rutor', 523139, 0, 12681, 0, 0), row('toloka', 57906, 36, 0, 0, 0), row('nnmclub', 145939, 0, 320, 0, 0)],
+    },
   }
 }
 
@@ -155,7 +165,7 @@ function syncPeers() {
   const now = Date.now()
   const ft = (msAgo) => (BigInt(Math.floor((now - msAgo) / 1000)) + 11644473600n) * 10000000n
   return [
-    { ip: '94.156.102.20', version: '1.1.3', firstSeen: new Date(now - 40 * 86_400_000).toISOString(), lastSeen: new Date(now - 6 * 60_000).toISOString(), requests: 48_211, lastCursor: Number(ft(9 * 60_000)), lastSpidr: new Date(now - 3 * 3_600_000).toISOString(), lastCheck: new Date(now - 20 * 3_600_000).toISOString(), lastRefetch: new Date(now - 6 * 60_000).toISOString() },
+    { ip: '94.156.102.20', version: '1.2.3', firstSeen: new Date(now - 40 * 86_400_000).toISOString(), lastSeen: new Date(now - 6 * 60_000).toISOString(), requests: 48_211, lastCursor: Number(ft(9 * 60_000)), lastSpidr: new Date(now - 3 * 3_600_000).toISOString(), lastCheck: new Date(now - 20 * 3_600_000).toISOString(), lastRefetch: new Date(now - 6 * 60_000).toISOString(), status: { buckets: 610_834, issues: 1, errors: 0, idIndex: true, check: { at: new Date(now - 20 * 3_600_000).toISOString(), ok: true, remaining: 0, missing: 140, mismatched: 119, extra: 2 } }, statusAt: new Date(now - 6 * 60_000).toISOString() },
     { ip: '2a01:4f8:c0c:1234::1', version: '1.0.8', firstSeen: new Date(now - 12 * 86_400_000).toISOString(), lastSeen: new Date(now - 5 * 3_600_000).toISOString(), requests: 3_902, lastCursor: Number(ft(5 * 3_600_000)), lastSpidr: null, lastCheck: null, lastRefetch: null },
     { ip: '203.0.113.77', version: '', firstSeen: new Date(now - 3 * 86_400_000).toISOString(), lastSeen: new Date(now - 26 * 3_600_000).toISOString(), requests: 120, lastCursor: 0, lastSpidr: null, lastCheck: null, lastRefetch: null },
   ]
@@ -395,7 +405,7 @@ async function handle(req, res, path, query) {
   }
   if (path === 'cron/cloudflare/stats/reset') return send(res, 200, { ok: true })
   if (path === 'jsondb/save') return send(res, 200, 'work', 'text/plain; charset=utf-8')
-  if (path === 'dev/checkdatastatus') return send(res, 200, { ok: true, last: dataCheckReport() })
+  if (path === 'dev/checkdatastatus') return send(res, 200, { ok: true, running: false, last: dataCheckReport() })
   if (path === 'dev/checkdata') return send(res, 200, dataCheckReport())
   if (path.startsWith('dev/')) {
     await delay(700)

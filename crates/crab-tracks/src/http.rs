@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! HTTP endpoints: `/stats/{torrents,tracks,meta}` and the tracks admin actions under `/dev/`.
 
 use axum::extract::Query;

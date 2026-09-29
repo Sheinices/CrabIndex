@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! rutor: browse pages `/browse/{page}/{cat}/0/0` with magnets in the listing.
 
 pub mod categories;

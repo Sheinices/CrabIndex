@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! Fixture loading for integration tests (`tests/fixtures/<tracker>/<file>`).
 
 pub fn read(relative: &str) -> String {

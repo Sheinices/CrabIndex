@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! ultradox.vip HTML parsing (listing rows, detail magnets, pager, titles).
 //!
 //! The site 307-redirects to numbered `00N.ultradox.vip` mirrors. Listing magnets have an

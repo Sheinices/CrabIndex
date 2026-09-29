@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! Tracks pipeline logging: console (category `tracks`) + optional `Data/log/tracks.log`.
 
 use crab_core::conf;

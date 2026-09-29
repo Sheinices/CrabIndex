@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! ultradox.vip section paths and their content types (single source of truth).
 
 /// Section path → types, in crawl order.

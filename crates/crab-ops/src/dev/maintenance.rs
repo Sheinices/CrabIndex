@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! Bulk FileDB rewrites: size, checkTime, derived details, search names.
 
 use chrono::Duration;

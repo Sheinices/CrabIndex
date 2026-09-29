@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! anifilm.pro listing / detail page parsing.
 
 use chrono::{DateTime, Utc};

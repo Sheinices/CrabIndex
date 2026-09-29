@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 import { RefreshCw, Users } from "lucide-react";
 import { getSyncPeers } from "../lib/api.js";
 import { usePolling } from "../hooks/usePolling.js";
@@ -53,6 +56,8 @@ export function ClientsPage() {
                 <th scope="col">{t("clients_cursor")}</th>
                 <th scope="col">{t("clients_spidr")}</th>
                 <th scope="col">{t("clients_check")}</th>
+                <th scope="col" className="text-right">{t("clients_buckets")}</th>
+                <th scope="col">{t("clients_health")}</th>
                 <th scope="col" className="text-right">{t("clients_requests")}</th>
                 <th scope="col">{t("clients_first_seen")}</th>
               </tr>
@@ -74,7 +79,23 @@ export function ClientsPage() {
                     <td className="text-xs whitespace-nowrap" title={formatDate(p.lastSeen)}>{formatRelative(p.lastSeen)}</td>
                     <td className="text-xs whitespace-nowrap" title={cursor ? formatDate(cursor) : ""}>{cursor ? formatRelative(cursor) : "-"}</td>
                     <td className="text-xs whitespace-nowrap" title={p.lastSpidr ? formatDate(p.lastSpidr) : ""}>{p.lastSpidr ? formatRelative(p.lastSpidr) : "-"}</td>
-                    <td className="text-xs whitespace-nowrap" title={p.lastCheck ? formatDate(p.lastCheck) : ""}>{p.lastCheck ? formatRelative(p.lastCheck) : "-"}</td>
+                    <td className="text-xs whitespace-nowrap" title={p.lastCheck ? formatDate(p.lastCheck) : ""}>
+                      {p.lastCheck ? formatRelative(p.lastCheck) : "-"}
+                      {p.status?.check && Number(p.status.check.remaining) > 0 ? <span className="ml-1 text-warn">{t("clients_check_remaining", { n: formatNumber(p.status.check.remaining) })}</span> : null}
+                    </td>
+                    <td className="text-right text-xs tabular-nums">{p.status && Number.isFinite(Number(p.status.buckets)) ? formatNumber(p.status.buckets) : "-"}</td>
+                    <td className="text-xs whitespace-nowrap">
+                      {p.status ? (
+                        <span title={p.statusAt ? formatDate(p.statusAt) : ""}>
+                          <StatusDot
+                            tone={Number(p.status.errors) > 0 ? "danger" : Number(p.status.issues) > 0 ? "warn" : "ok"}
+                            label={Number(p.status.issues) > 0 ? t("clients_health_issues", { n: p.status.issues, errors: p.status.errors || 0 }) : t("clients_health_ok")}
+                          />
+                        </span>
+                      ) : (
+                        <span className="text-muted">{t("clients_health_unknown")}</span>
+                      )}
+                    </td>
                     <td className="text-right text-xs tabular-nums">{formatNumber(p.requests)}</td>
                     <td className="text-xs whitespace-nowrap text-muted" title={formatDate(p.firstSeen)}>{formatRelative(p.firstSeen)}</td>
                   </tr>

@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! aniliberty: `?hash=` URLs and duplicate rows sharing an infohash.
 
 use chrono::{DateTime, Utc};

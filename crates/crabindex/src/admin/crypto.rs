@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! HMAC-SHA256, random secrets and the per-install admin secret (`Data/temp/admin.secret`).
 
 use once_cell::sync::Lazy;

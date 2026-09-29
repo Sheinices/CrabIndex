@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! BitRu via the official API (`api.php?get=torrents`). Rate limit is 5 requests/s per IP,
 //! so every API call and download waits 250 ms. Live `after_date` means older-than.
 

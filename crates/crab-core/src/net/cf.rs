@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! Cloudflare integration points.
 //!
 //! Core keeps the cheap, pure parts (challenge detection, "guarded host" bookkeeping,

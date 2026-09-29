@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! Normalized indexer search request shared by Jackett, Torznab and Prowlarr endpoints.
 
 #[derive(Clone, Debug, PartialEq)]

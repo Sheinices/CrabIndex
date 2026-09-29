@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! Baibako `browse.php` listing parser (1080p / 720p releases only).
 
 use crab_core::models::TorrentDetails;

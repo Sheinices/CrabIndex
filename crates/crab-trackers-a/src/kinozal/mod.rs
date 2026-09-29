@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! kinozal: `browse.php?c={cat}&page=N[&d={year}&t=1]` listings (cp1251, login cookie),
 //! info hash from `get_srv_details.php`. Task map is nested: category → year arg → pages.
 

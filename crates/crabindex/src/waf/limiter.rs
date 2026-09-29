@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! Per-IP sliding-minute request counter (60 one-second buckets per address).
 
 use dashmap::DashMap;

@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! Turns matched FileDB rows into Jackett result rows: tracker allow/deny, duplicate
 //! merge by infohash, ffprobe/language enrichment and category mapping.
 

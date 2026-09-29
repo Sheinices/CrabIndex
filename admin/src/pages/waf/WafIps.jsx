@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router'
 import { ArrowDown, Ban, Clock, ListFilter, RefreshCw, Search, ShieldCheck, ShieldX, Unlock } from 'lucide-react'

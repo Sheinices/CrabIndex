@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! Admin panel: entry gate, session login and the admin API, all under `admin.path`
 //! (read from the live config on every request, so a saved path applies immediately).
 //!

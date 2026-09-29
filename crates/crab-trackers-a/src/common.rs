@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! Helpers shared by the trackers in this crate: row field matching, title fallback,
 //! task-map persistence, generic flat ParseAllTask / ParseLatest loops, async FileDB upsert
 //! and small HTTP query helpers for the cron routes.

@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! Rutor browse ids → types and title-parse strategy.
 
 use indexmap::IndexMap;

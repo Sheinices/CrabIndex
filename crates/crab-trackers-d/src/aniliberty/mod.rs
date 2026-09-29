@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! aniliberty API - anime torrents from aniliberty.top.
 //!
 //! Route: `GET /cron/aniliberty/parse?parsefrom=1&parseto=5`.

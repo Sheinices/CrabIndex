@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! Persistent ParseAllTask cycle checkpoint: survives shutdown and stall cancel.
 
 use chrono::{DateTime, Utc};

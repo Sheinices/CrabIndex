@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! Admin sessions (in memory, reset on restart) and the login failure limiter.
 
 use once_cell::sync::Lazy;

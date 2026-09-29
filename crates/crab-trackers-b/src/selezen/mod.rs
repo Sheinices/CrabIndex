@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! Selezen: DLE site behind a login; list pages `/relizy-ot-selezen/page/{n}/`, magnet from each detail page.
 
 pub mod parser;

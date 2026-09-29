@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! Minimal bencode decoder for .torrent files: magnet, infohash, total size.
 
 use sha1::{Digest, Sha1};

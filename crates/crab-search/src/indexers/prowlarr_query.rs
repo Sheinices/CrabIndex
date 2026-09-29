@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! Parses Prowlarr Search Feed brace tokens from `query` (e.g. `{TvdbId:71663} {Season:32}`)
 //! and promotes Lampa-style plain queries into card fields (title / title_original / year).
 

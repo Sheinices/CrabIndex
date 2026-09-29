@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 mod common;
 
 use crab_tracks::tracks::db::{next_failure_attempt, the_bad};

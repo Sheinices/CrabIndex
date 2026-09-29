@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! BitRu api.php date cursors.
 //!
 //! Live behaviour (the official docs label these the other way round):

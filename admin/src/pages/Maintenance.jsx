@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 import { useId, useState } from 'react'
 import { ClipboardCheck, CloudLightning, Database, HardDriveDownload, Play, Search, ShieldAlert, Stethoscope } from 'lucide-react'
 import { getDataCheck, runPath } from '../lib/api.js'
@@ -93,11 +96,14 @@ const DATA_COLUMNS = [
 /** Last read-only data-quality report (`/dev/checkdata`, weekly cron) with fix buttons. */
 function DataCheckSection({ busy, onRun, onFix }) {
   const t = useT()
-  const { data, reload } = usePolling(() => getDataCheck().then((r) => r.last || null), 60_000)
-  const last = data && typeof data === 'object' ? data : null
+  const { data, reload } = usePolling(() => getDataCheck().then((r) => ({ last: r.last || null, running: !!r.running })), 15_000)
+  const last = data?.last && typeof data.last === 'object' ? data.last : null
+  const running = !!data?.running
   const fixes = last?.fixes || {}
   const total = last?.total || {}
   const fixFor = (col, tracker) => (col === 'foreignHost' ? fixes.foreignHost?.[tracker] : fixes[col])
+  // previous run (kept by the server when a migration re-checks): "was N" next to each cell
+  const prevByTracker = new Map((last?.previous?.trackers || []).map((r) => [r.tracker, r]))
   return (
     <Section id="mt-data" icon={ClipboardCheck} title={t('mt_data_title')} description={t('mt_data_desc')}>
       <div className="mb-3 flex flex-wrap items-center gap-3 text-sm">
@@ -105,9 +111,11 @@ function DataCheckSection({ busy, onRun, onFix }) {
           {busy ? <Spinner /> : <Play className="size-4" aria-hidden="true" />}
           {t('mt_data_run')}
         </button>
+        {running ? <span className="text-muted">{t('mt_data_running')}</span> : null}
         {last ? (
           <span className="text-muted" title={formatDate(last.at)}>
             {t('mt_data_last', { when: formatRelative(last.at), took: formatNumber(last.tookSec || 0) })}
+            {last.trigger && last.trigger !== 'manual' && last.trigger !== 'cron' ? ` · ${t('mt_data_after_fix', { trigger: last.trigger })}` : ''}
           </span>
         ) : (
           <span className="text-muted">{t('mt_data_never')}</span>
@@ -127,12 +135,14 @@ function DataCheckSection({ busy, onRun, onFix }) {
                 </tr>
               </thead>
               <tbody>
-                {(last.trackers || []).filter((r) => r.issues > 0).map((r) => (
+                {(last.trackers || []).filter((r) => r.issues > 0 || (prevByTracker.get(r.tracker)?.issues || 0) > 0).map((r) => (
                   <tr key={r.tracker}>
                     <td className="font-mono text-xs">{r.tracker}</td>
                     <td className="text-right tabular-nums">{formatNumber(r.rows)}</td>
                     {DATA_COLUMNS.map(([col]) => {
                       const fix = r[col] > 0 ? fixFor(col, r.tracker) : null
+                      const before = prevByTracker.get(r.tracker)
+                      const changed = before && Number(before[col] || 0) !== Number(r[col] || 0)
                       return (
                         <td key={col} className="text-right tabular-nums">
                           {r[col] > 0 ? (
@@ -146,6 +156,7 @@ function DataCheckSection({ busy, onRun, onFix }) {
                           ) : (
                             <span className="text-muted">0</span>
                           )}
+                          {changed ? <span className="ml-1 text-xs text-muted">({t('mt_data_was', { n: formatNumber(before[col] || 0) })})</span> : null}
                         </td>
                       )
                     })}
@@ -155,7 +166,10 @@ function DataCheckSection({ busy, onRun, onFix }) {
             </table>
           </div>
         ) : (
-          <p className="text-sm text-ok">{t('mt_data_clean', { rows: formatNumber(total.rows || 0) })}</p>
+          <p className="text-sm text-ok">
+            {t('mt_data_clean', { rows: formatNumber(total.rows || 0) })}
+            {last.previous && Number(last.previous.total?.issues || 0) > 0 ? <span className="ml-1 text-muted">({t('mt_data_was', { n: formatNumber(last.previous.total.issues) })})</span> : null}
+          </p>
         )
       ) : null}
       <p className="mt-3 text-xs text-muted">{t('mt_data_hint')}</p>

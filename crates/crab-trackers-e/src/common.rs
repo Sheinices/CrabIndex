@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! Small helpers shared by the trackers in this crate.
 
 use std::collections::HashMap;

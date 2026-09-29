@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 use crab_core::config::AppOptions;
 use crab_ops::sync::cron::{filter_incoming, RootIn};
 

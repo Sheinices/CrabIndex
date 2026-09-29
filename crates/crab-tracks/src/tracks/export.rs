@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! Export of all known tracks to a directory (`{aa}/{b}/{rest}.json`) and backfill of `Data/tracks`.
 
 use crab_core::log::{self, cat};

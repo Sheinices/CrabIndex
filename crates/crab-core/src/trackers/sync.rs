@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! Tracker sync shared helpers - parse locks and cron guard patterns.
 //!
 //! * `parse` (hourly): [`ParseLock`] + [`run_parse`] (never blocked by ParseAll/UpdateTasks)

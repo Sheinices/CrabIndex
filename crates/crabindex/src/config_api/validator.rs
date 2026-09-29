@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! Configuration validation and normalisation of user supplied config documents.
 
 use crab_core::config::{self, AppOptions};

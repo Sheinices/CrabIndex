@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! nnmclub: `/forum/portal.php?c={cat}&start={page*25}` portal listings (cp1251) with magnets.
 
 pub mod categories;

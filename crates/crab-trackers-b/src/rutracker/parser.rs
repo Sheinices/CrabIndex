@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! Rutracker HTML parsing: forum listing rows, pager, topic page magnet.
 
 use chrono::{DateTime, Utc};

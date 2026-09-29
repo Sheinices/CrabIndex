@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 // Lightweight i18n for the admin panel - no external dependency, in the spirit of the
 // project. Built-in languages (ru, en) are compiled in; runtime packs from `Data/lang/*.json`
 // are fetched from `GET /api/lang` and merged on top, so a new language can be added on the
@@ -8,7 +11,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState } 
 import meta from './meta.js'
 import ru from './ru.js'
 import en from './en.js'
-import { getLang } from '../lib/api.js'
+import { getLang, setApiTranslator } from '../lib/api.js'
 
 const BUILTIN = { ru, en }
 const STORAGE_KEY = 'crab.lang'
@@ -28,6 +31,16 @@ function baseT(key, vars) {
 
 /** Same fallback for plain (non-hook) helpers that accept an optional `t`. */
 export const tBase = baseT
+
+// Dictionary of the language currently shown. Pure helpers in `lib/*.js` (labels of actions
+// and migrations, validation messages, durations) read it through `tGlobal`, so they follow
+// the selected language without threading `t` through every call; outside a provider (tests,
+// pure callers) it is the Russian base.
+let currentDict = ru
+export function tGlobal(key, vars) {
+  return translate(currentDict, key, vars)
+}
+setApiTranslator(tGlobal)
 
 /** First run: saved choice, else the browser's language if we have it, else Russian. */
 function initialLang() {
@@ -84,6 +97,12 @@ export function LangProvider({ children }) {
   }, [lang, packs])
 
   const t = useCallback((key, vars) => translate(dict, key, vars), [dict])
+  useEffect(() => {
+    currentDict = dict
+    return () => {
+      currentDict = ru
+    }
+  }, [dict])
 
   const setLang = useCallback((code) => {
     try {

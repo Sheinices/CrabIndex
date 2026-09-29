@@ -109,7 +109,7 @@ const config = {
             ],
           },
         ],
-        copyright: `CrabIndex · MIT License · ${new Date().getFullYear()}`,
+        copyright: `CrabIndex · AGPL-3.0 · ${new Date().getFullYear()}`,
       },
       prism: {
         theme: prismThemes.github,

@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! Tracks export statistics cached in `Data/temp/tracks-stats.json`.
 
 use chrono::{DateTime, Local, Utc};

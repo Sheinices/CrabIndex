@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! Application configuration: strongly typed mirror of `init.yaml` / `init.conf`
 //! (models, loader and hot reload).
 //!

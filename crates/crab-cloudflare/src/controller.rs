@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! `/cron/cloudflare/*` - FlareSolverr warm-up, status and controls for the admin panel.
 //!
 //! Solving a challenge takes ~80-180 s and loads the CPU; call warm-up from a separate cron

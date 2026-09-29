@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! Build/version information embedded by `build.rs`.
 
 pub const VERSION: &str = env!("CRABINDEX_VERSION");

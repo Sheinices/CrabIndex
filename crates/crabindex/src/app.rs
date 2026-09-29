@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! HTTP application: route table and middleware pipeline.
 //!
 //! Pipeline, outermost first:

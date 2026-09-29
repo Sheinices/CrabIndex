@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! Lenient query-string binding and small JSON helpers shared by the handlers.
 //!
 //! Query names are matched case-insensitively (the server lowercases them, but direct

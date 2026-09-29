@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! AnimeLayer: authorised listing parse (static cookie or login → `layer_hash`/`layer_id` cookie),
 //! magnets from the `.torrent` download.
 //!

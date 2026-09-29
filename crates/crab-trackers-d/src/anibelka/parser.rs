@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! anibelka.com - anime-only phpBB tracker.
 //! Stays anonymous on purpose: a logged-in .torrent embeds a personal passkey.
 

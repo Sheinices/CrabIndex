@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 /// Install default in-memory config once (skips reading init.yaml from disk).
 pub fn cfg() {
     static ONCE: std::sync::Once = std::sync::Once::new();

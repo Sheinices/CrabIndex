@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! RuDub sync - login/cookie required; browses HD 1080 + HD 2160 only (videoformat 4/5).
 //! Torrent downloads are turned into tracker-less magnets so session passkeys never reach FileDB.
 

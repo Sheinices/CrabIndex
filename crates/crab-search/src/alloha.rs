@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! Alloha TV API v2 title resolver: turns `tt…` / `kp…` / `tmdb…` ids (and
 //! themoviedb.org URLs) into titles usable for FileDB search. Results are cached
 //! in memory under `alloha:title:{id}` for `alloha.cacheHours`.

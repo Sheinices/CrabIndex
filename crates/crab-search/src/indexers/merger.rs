@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! Merges result batches by infohash (fallback: md5 of title|magnet) and sorts by seeders/peers.
 
 use crab_core::models::api::{Result, TorrentInfo};

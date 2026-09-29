@@ -1,68 +1,73 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
+import { tGlobal as tg } from '../lang/index.jsx'
+
 /** `/dev/*` diagnostics and migrations (crates/crab-ops/src/dev). Paths are relative to `{base}/api/`. */
 
 export const DIAGNOSTICS = [
   {
     path: 'dev/findcorrupt',
-    label: 'Повреждённые записи',
-    description: 'Ищет битые бакеты FileDB (только чтение).',
-    params: [{ name: 'samplesize', label: 'Размер выборки', type: 'number', placeholder: '20' }],
+    get label() { return tg('mt_lib_1') },
+    get description() { return tg('mt_lib_2') },
+    params: [{ name: 'samplesize', get label() { return tg('mt_lib_3') }, type: 'number', placeholder: '20' }],
   },
   {
     path: 'dev/findduplicatekeys',
-    label: 'Дубликаты ключей',
-    description: 'Раздачи с одинаковым ключом в разных бакетах (только чтение).',
+    get label() { return tg('mt_lib_4') },
+    get description() { return tg('mt_lib_5') },
     params: [
-      { name: 'tracker', label: 'Трекер', type: 'text', placeholder: 'все' },
-      { name: 'excludenumeric', label: 'Исключить числовые (true/false)', type: 'text', placeholder: 'true' },
+      { name: 'tracker', get label() { return tg('mt_lib_6') }, type: 'text', get placeholder() { return tg('mt_lib_7') } },
+      { name: 'excludenumeric', get label() { return tg('mt_lib_8') }, type: 'text', placeholder: 'true' },
     ],
   },
   {
     path: 'dev/findemptysearchfields',
-    label: 'Пустые поля поиска',
-    description: 'Записи с пустыми _sn/_so (только чтение).',
-    params: [{ name: 'samplesize', label: 'Размер выборки', type: 'number', placeholder: '20' }],
+    get label() { return tg('mt_lib_9') },
+    get description() { return tg('mt_lib_10') },
+    params: [{ name: 'samplesize', get label() { return tg('mt_lib_11') }, type: 'number', placeholder: '20' }],
   },
 ]
 
 export const MIGRATIONS = [
-  { path: 'dev/updatesize', label: 'Пересчитать размеры', description: 'Пересчитывает size из sizeName для всех раздач.' },
-  { path: 'dev/resetchecktime', label: 'Сбросить checkTime', description: 'Ставит checkTime = вчера - все раздачи будут перепроверены.' },
-  { path: 'dev/updatedetails', label: 'Обновить детали', description: 'Пересчитывает качество/озвучки/тип для всех раздач.' },
-  { path: 'dev/updatesearchname', label: 'Обновить поисковые имена', description: 'Пересобирает _sn/_so и переносит записи при смене ключа.' },
-  { path: 'dev/fixemptysearchfields', label: 'Заполнить пустые _sn/_so', description: 'Заполняет пустые поисковые поля и переносит записи.' },
-  { path: 'dev/removenullvalues', label: 'Удалить null-записи', description: 'Удаляет строки, сохранённые как null.' },
-  { path: 'dev/fixknabennames', label: 'knaben: имена', description: 'Имя/год/название из сохранённого заголовка.' },
-  { path: 'dev/fixbitrunames', label: 'bitru: имена', description: 'Убирает сезон/качество из name/originalname.' },
-  { path: 'dev/fixrudubrelased', label: 'rudub: год выпуска', description: 'Заполняет relased и обрезанные имена из заголовков.' },
-  { path: 'dev/migrateanilibertyurls', label: 'aniliberty: URL', description: 'Добавляет hash=<btih> к URL без него.' },
-  { path: 'dev/removeduplicateaniliberty', label: 'aniliberty: дубликаты', description: 'Оставляет самую новую запись на infohash.' },
-  { path: 'dev/fixanimelayerduplicates', label: 'animelayer: дубликаты', description: 'Переносит http:// записи на https://, удаляя дубли.' },
-  { path: 'dev/fixkinozaldomainduplicates', label: 'kinozal: дубли доменов', description: 'Сводит записи со старых доменов к текущему host.' },
-  { path: 'dev/fixultradoxdomainduplicates', label: 'ultradox: дубли доменов', description: 'Сводит записи со старых доменов к текущему host.' },
-  { path: 'dev/fixrutrackerdomainduplicates', label: 'rutracker: дубли доменов', description: 'Сводит записи с rutracker.net и зеркал к текущему host, объединяя сиды и размер.' },
-  { path: 'dev/fixselezendomainduplicates', label: 'selezen: дубли доменов', description: 'Сводит записи с selezen.org и use.selezen.club к текущему host по id релиза.' },
-  { path: 'dev/fixrutrackernames', label: 'rutracker: имена и год', description: 'Заново разбирает заголовки rutracker с вложенными скобками: originalname, name, relased.' },
-  { path: 'dev/fixslugduplicates', label: 'Дубли одной раздачи (старые slug)', description: 'rutor, selezen, nnmclub и др.: одна раздача под несколькими старыми адресами; оставляет самую свежую запись.' },
-  { path: 'dev/fixzerosizes', label: 'Пустой размер раздачи', description: 'Пересчитывает size там, где он 0, а sizeName читается (метки с неразрывным пробелом).' },
+  { path: 'dev/updatesize', get label() { return tg('mt_lib_12') }, get description() { return tg('mt_lib_13') } },
+  { path: 'dev/resetchecktime', get label() { return tg('mt_lib_14') }, get description() { return tg('mt_lib_15') } },
+  { path: 'dev/updatedetails', get label() { return tg('mt_lib_16') }, get description() { return tg('mt_lib_17') } },
+  { path: 'dev/updatesearchname', get label() { return tg('mt_lib_18') }, get description() { return tg('mt_lib_19') } },
+  { path: 'dev/fixemptysearchfields', get label() { return tg('mt_lib_20') }, get description() { return tg('mt_lib_21') } },
+  { path: 'dev/removenullvalues', get label() { return tg('mt_lib_22') }, get description() { return tg('mt_lib_23') } },
+  { path: 'dev/fixknabennames', get label() { return tg('mt_lib_24') }, get description() { return tg('mt_lib_25') } },
+  { path: 'dev/fixbitrunames', get label() { return tg('mt_lib_26') }, get description() { return tg('mt_lib_27') } },
+  { path: 'dev/fixrudubrelased', get label() { return tg('mt_lib_28') }, get description() { return tg('mt_lib_29') } },
+  { path: 'dev/migrateanilibertyurls', label: 'aniliberty: URL', get description() { return tg('mt_lib_30') } },
+  { path: 'dev/removeduplicateaniliberty', get label() { return tg('mt_lib_31') }, get description() { return tg('mt_lib_32') } },
+  { path: 'dev/fixanimelayerduplicates', get label() { return tg('mt_lib_33') }, get description() { return tg('mt_lib_34') } },
+  { path: 'dev/fixkinozaldomainduplicates', get label() { return tg('mt_lib_35') }, get description() { return tg('mt_lib_36') } },
+  { path: 'dev/fixultradoxdomainduplicates', get label() { return tg('mt_lib_37') }, get description() { return tg('mt_lib_38') } },
+  { path: 'dev/fixrutrackerdomainduplicates', get label() { return tg('mt_lib_39') }, get description() { return tg('mt_lib_40') } },
+  { path: 'dev/fixselezendomainduplicates', get label() { return tg('mt_lib_41') }, get description() { return tg('mt_lib_42') } },
+  { path: 'dev/fixrutrackernames', get label() { return tg('mt_lib_43') }, get description() { return tg('mt_lib_44') } },
+  { path: 'dev/fixslugduplicates', get label() { return tg('mt_lib_45') }, get description() { return tg('mt_lib_46') } },
+  { path: 'dev/fixzerosizes', get label() { return tg('mt_lib_47') }, get description() { return tg('mt_lib_48') } },
   {
     path: 'dev/fixserialtypes',
-    label: 'Сериалы, записанные как фильмы',
-    description: 'rutor, torrentby, selezen: раздачи с маркером сезона ([S01], [01x01]) переводит из movie в serial, убирает хвост скобок из originalname, пересчитывает сезоны.',
+    get label() { return tg('mt_lib_49') },
+    get description() { return tg('mt_lib_50') },
   },
   {
     path: 'dev/removebucket',
-    label: 'Удалить/перенести бакет',
-    description: 'Удаляет бакет или переносит его записи под новый ключ name:originalname.',
+    get label() { return tg('mt_lib_51') },
+    get description() { return tg('mt_lib_52') },
     params: [
-      { name: 'key', label: 'Ключ бакета', type: 'text', placeholder: 'name:originalname', required: true },
-      { name: 'migratename', label: 'Перенести в name', type: 'text', placeholder: 'необязательно' },
-      { name: 'migrateoriginalname', label: 'Перенести в originalname', type: 'text', placeholder: 'необязательно' },
+      { name: 'key', get label() { return tg('mt_lib_53') }, type: 'text', placeholder: 'name:originalname', required: true },
+      { name: 'migratename', get label() { return tg('mt_lib_54') }, type: 'text', get placeholder() { return tg('mt_lib_55') } },
+      { name: 'migrateoriginalname', get label() { return tg('mt_lib_56') }, type: 'text', get placeholder() { return tg('mt_lib_57') } },
     ],
   },
 ]
 
 export const CHECK_MODES = [
-  { id: 'report', label: 'Отчёт', description: 'Только проверка, без изменений.', destructive: false },
-  { id: 'safe', label: 'Безопасное исправление', description: 'Удаляет null-строки, заполняет пустые поля поиска, переносит записи; сохраняет БД и перестраивает индекс.', destructive: true },
-  { id: 'full', label: 'Полное исправление', description: 'Всё из безопасного режима плюс удаление ключей без файлов, перенос и удаление некорректных записей.', destructive: true },
+  { id: 'report', get label() { return tg('mt_lib_58') }, get description() { return tg('mt_lib_59') }, destructive: false },
+  { id: 'safe', get label() { return tg('mt_lib_60') }, get description() { return tg('mt_lib_61') }, destructive: true },
+  { id: 'full', get label() { return tg('mt_lib_62') }, get description() { return tg('mt_lib_63') }, destructive: true },
 ]

@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! Console logging with per-category levels. The same lines (after the level filter) also go
 //! to `Data/log/app.log`, the sync categories to `Data/log/sync.log`, so the admin panel can show
 //! them without access to journalctl or `docker logs`. Files rotate once (`app.1.log`) at

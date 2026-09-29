@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! torrent.by listing pager: 0-based `?page=`, chips in `circle_page` spans,
 //! the last chip is often `...` (not the true last page).
 

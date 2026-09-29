@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! Per-tracker statistics: one FileDB pass writes `Data/temp/stats.json` + `stats-meta.json`
 //! and the tracks stats cache (`tracks-stats.json`) with the same `updatedAt`.
 

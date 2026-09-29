@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! LostFilm: `/new/` feed, per-episode V-page expansion to 1080p/2160p rows, movies and season packs.
 //!
 //! Routes (`/cron/lostfilm/*`): `parse`, `parsepages?pagefrom&pageto`, `parseseasonpacks?series`,

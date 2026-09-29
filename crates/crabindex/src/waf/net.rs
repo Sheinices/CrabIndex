@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! IP address and CIDR parsing / matching (IPv4 and IPv6).
 //!
 //! IPv4-mapped IPv6 addresses (`::ffff:a.b.c.d`) are treated as the IPv4 address everywhere.

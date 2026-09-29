@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! Tracker names exposed by `/api/v1.0/trackers`, the Torznab indexer list and `/api/v2.0/indexers`.
 
 use crab_core::conf;

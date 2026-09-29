@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! Request normalisation before routing.
 //!
 //! Routing is case-insensitive: every route is registered in lowercase, so the path is

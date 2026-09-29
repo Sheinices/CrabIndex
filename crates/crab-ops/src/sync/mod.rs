@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! Sync API served to other instances (`/sync/*`) and the sync workers that pull from `syncapi`.
 //!
 //! Wire format (v2): `/sync/fdb/torrents?time=<fileTime>&start=<fileTime>&spidr=<bool>` returns
@@ -148,7 +151,7 @@ pub fn served_trackers() -> Vec<String> {
 }
 
 async fn sync_conf(headers: HeaderMap, peer: Option<ConnectInfo<SocketAddr>>) -> axum::Json<serde_json::Value> {
-    peers::record(&peers::client_ip(&headers, peer.as_ref()), &peers::client_version(&headers), peers::Hit::Conf);
+    peers::record(&peers::client_ip(&headers, peer.as_ref()), &peers::client_version(&headers), peers::Hit::Conf { status: peers::client_status(&headers) });
     // `count` lets a client show how full its copy is versus this host (admin progress only).
     let count = crab_core::index::current_len().unwrap_or(0);
     axum::Json(json!({ "fbd": true, "spidr": true, "version": 2, "count": count, "trackers": served_trackers() }))

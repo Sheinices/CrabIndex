@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! Torznab / Newznab XML output (caps, indexer list, RSS items).
 
 use chrono::{DateTime, Datelike, Utc};

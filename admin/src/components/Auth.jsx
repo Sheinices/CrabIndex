@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import * as apiClient from '../lib/api.js'
 

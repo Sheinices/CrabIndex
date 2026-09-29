@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! le-production sync - category listings → post pages → per-quality rows with magnets.
 //!
 //! Route: `GET /cron/leproduction/parse?limit_page=N` (N ≤ 0 → detect last page).

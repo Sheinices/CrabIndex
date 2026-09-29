@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! Per-host counters for the browser (FlareSolverr) and cffetch paths, plus a ring of
 //! recent browser errors. In memory only, shown in the admin panel (`/cron/cloudflare/status`).
 

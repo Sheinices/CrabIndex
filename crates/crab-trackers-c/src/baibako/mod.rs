@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! Baibako: cookie (config or `takelogin.php`) → `browse.php?page=N` → `.torrent` download.
 //!
 //! Route: `/cron/baibako/parse?parsefrom&parseto` (page numbering starts at 0).

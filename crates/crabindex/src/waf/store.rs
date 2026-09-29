@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! Dynamic WAF lists (IP and domain blacklist / whitelist, bans, bot rules) and their
 //! `Data/waf.json` file.
 

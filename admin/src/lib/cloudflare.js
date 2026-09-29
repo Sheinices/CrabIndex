@@ -1,17 +1,22 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
+import { tGlobal as tg } from '../lang/index.jsx'
+
 /** Helpers for the FlareSolverr page (pure, unit-tested). */
 
 export const ERROR_KINDS = {
-  tabCrashed: { label: 'Вкладка упала', hint: 'браузеру не хватило памяти' },
-  browserTimeout: { label: 'Таймаут браузера', hint: 'не хватает CPU или сайт отвечает медленно' },
-  challengeFailed: { label: 'Проверка не пройдена', hint: 'Cloudflare не пропустил браузер' },
-  sessionError: { label: 'Ошибка сессии', hint: 'сессия браузера потеряна' },
-  unreachable: { label: 'Нет связи', hint: 'FlareSolverr не отвечает' },
-  pageFailed: { label: 'Страница не подошла', hint: 'не 200 или заглушка вместо страницы' },
-  other: { label: 'Другое', hint: '' },
+  tabCrashed: { get label() { return tg('cf_kind_tabCrashed') }, get hint() { return tg('cf_kind_tabCrashed_hint') } },
+  browserTimeout: { get label() { return tg('cf_kind_browserTimeout') }, get hint() { return tg('cf_kind_browserTimeout_hint') } },
+  challengeFailed: { get label() { return tg('cf_kind_challengeFailed') }, get hint() { return tg('cf_kind_challengeFailed_hint') } },
+  sessionError: { get label() { return tg('cf_kind_sessionError') }, get hint() { return tg('cf_kind_sessionError_hint') } },
+  unreachable: { get label() { return tg('cf_kind_unreachable') }, get hint() { return tg('cf_kind_unreachable_hint') } },
+  pageFailed: { get label() { return tg('cf_kind_pageFailed') }, get hint() { return tg('cf_kind_pageFailed_hint') } },
+  other: { get label() { return tg('cf_kind_other') }, get hint() { return tg('cf_kind_other_hint') } },
 }
 
 export function kindLabel(kind) {
-  return ERROR_KINDS[kind]?.label || kind || 'Другое'
+  return ERROR_KINDS[kind]?.label || kind || tg('cf_kind_other')
 }
 
 /** Average browser request time in seconds (one decimal), or null. */
@@ -55,40 +60,35 @@ export function advice(status) {
   if (status.enabled && !status.paused && status.solver && status.solver.reachable === false) {
     out.push({
       tone: 'danger',
-      title: 'FlareSolverr не отвечает',
-      text: `Адрес ${status.settings?.url || ''} недоступен: закрытые Cloudflare трекеры не парсятся. Проверьте контейнер.`,
+      title: tg('cf_adv_down_title'),
+      text: tg('cf_adv_down_text', { url: status.settings?.url || '' }),
       command: 'docker ps -a --filter name=flaresolverr && docker logs --tail 50 flaresolverr',
     })
   }
   if (t.tabCrashed > 0) {
     const worst = hosts.filter((h) => h.tabCrashed > 0).map((h) => h.host)
     const idle = Number(status.settings?.sessionIdleMinutes)
-    const idleNote = Number.isFinite(idle) && idle > 30 ? ` Сейчас sessionIdleMinutes: ${idle}; поставьте 30 в Настройках, это применяется без перезапуска.` : ''
+    const idleNote = Number.isFinite(idle) && idle > 30 ? ' ' + tg('cf_adv_crash_idle', { idle }) : ''
     out.push({
       tone: 'danger',
-      title: `Вкладки браузера падают по памяти: ${t.tabCrashed}`,
-      text:
-        `Контейнеру FlareSolverr не хватает памяти на пиках (${worst.join(', ')}): при проверке Cloudflare и логине через браузер вкладка одного сайта на минуту вырастает на гигабайт, ` +
-        'даже если docker stats в спокойное время показывает треть лимита. Поднимите лимит, это делается без перезапуска. ' +
-        'Проверьте колонку PIDS в docker stats: на один браузер уходит 30-40 процессов, 400-500 при четырёх сессиях значит, что после упавших вкладок остались процессы-сироты; ' +
-        'их убирает закрытие сессий (кнопка «Закрыть сессии» или короткий sessionIdleMinutes: при закрытии Chrome завершается целиком).' +
-        idleNote,
+      title: tg('cf_adv_crash_title', { n: t.tabCrashed }),
+      text: tg('cf_adv_crash_text', { hosts: worst.join(', ') }) + idleNote,
       command: 'docker stats flaresolverr --no-stream && docker update --memory 6g --memory-swap 6g flaresolverr',
     })
   }
   if (t.browserTimeouts >= 3) {
     out.push({
       tone: 'warn',
-      title: `Таймауты браузера: ${t.browserTimeouts}`,
-      text: 'Браузер не успевает пройти проверку. Обычно не хватает процессора: поднимите лимит CPU контейнера или уменьшите число трекеров за Cloudflare.',
+      title: tg('cf_adv_timeout_title', { n: t.browserTimeouts }),
+      text: tg('cf_adv_timeout_text'),
       command: 'docker update --cpus 2 flaresolverr',
     })
   }
   if (t.fastFailed > t.fastOk && t.fastFailed >= 10) {
     out.push({
       tone: 'info',
-      title: 'Быстрый путь (cffetch) чаще не срабатывает',
-      text: 'Страницы идут через браузер, это медленнее и тяжелее. Проверьте, что cffetch запущен и что у него нет лишнего прокси (cffetch.proxy).',
+      title: tg('cf_adv_fast_title'),
+      text: tg('cf_adv_fast_text'),
     })
   }
   return out

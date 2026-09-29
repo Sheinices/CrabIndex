@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! crab-tracks - media track analysis (TorrServer `/ffp`), the `Data/tracks` store,
 //! per-tracker statistics and their HTTP endpoints.
 #![allow(non_snake_case)]

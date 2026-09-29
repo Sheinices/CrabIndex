@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! Post-search result filters (category, year, type, tracker, season/episode) and paging.
 
 use crab_core::models::api::Result;

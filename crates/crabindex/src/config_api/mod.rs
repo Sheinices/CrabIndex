@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! Configuration management API. The handlers are mounted at `/api/v1.0/config/*` but that
 //! prefix is reachable only through the admin panel (`{admin.path}/api/config/*`, see
 //! `crate::admin`); a direct request gets 404.

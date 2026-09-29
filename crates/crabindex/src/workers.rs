@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! Background workers owned by the server: FastDB index refresh, FileDB cron and config hot reload.
 
 use std::time::Duration;

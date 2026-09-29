@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! Shared test configuration: every pipeline test in this binary uses one global config,
 //! so it is set exactly once, before any request.
 

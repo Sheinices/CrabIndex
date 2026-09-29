@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! anifilm sync - category listings, detail page → .torrent → magnet.
 //! Optional login (CSRF form) yields a session cookie; a configured cookie wins.
 //!

@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! masterDb: bucket key → last update time; persisted to `Data/masterDb.bz` with daily backups.
 
 use chrono::{DateTime, Duration, Utc};

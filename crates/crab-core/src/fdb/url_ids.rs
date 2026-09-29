@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! Stable numeric torrent id from tracker URL: lets FileDB
 //! update a row whose slug changed instead of creating a duplicate.
 //!

@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 #[test]
 fn init_registers_parse_all_starters() {
     crab_trackers_a::init();

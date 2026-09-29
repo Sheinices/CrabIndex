@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! Lenient JSON accessors (numbers as strings and vice versa).
 
 use serde_json::Value;

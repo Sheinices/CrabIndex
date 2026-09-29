@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! Embeds version information into the binary.
 //!
 //! Exposed as compile-time env vars: `CRABINDEX_VERSION`, `CRABINDEX_GIT_SHA`,

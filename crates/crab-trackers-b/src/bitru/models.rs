@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! BitRu `api.php?get=torrents` response shapes. The documented error shape is
 //! `{"error":"message"}`; a legacy boolean `error` is also accepted.
 

@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! Indexer search: request parsing, combined search engine, filters and output formats.
 
 pub mod engine;

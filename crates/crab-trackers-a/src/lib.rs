@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! crab-trackers-a - rutor, megapeer, torrentby, kinozal and nnmclub crawlers
 //! (parsers, category maps, task maps, sync jobs and `/cron/<tracker>/<action>` routes).
 #![allow(non_snake_case)]

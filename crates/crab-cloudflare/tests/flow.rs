@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! Fetch flow against local mock FlareSolverr / cffetch servers.
 
 use axum::routing::post;

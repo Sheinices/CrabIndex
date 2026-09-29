@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { api, apiUrl, ApiError, getConfig, login, onUnauthorized, runCron, saveConfig } from './api.js'
 import { setBaseForTests } from './base.js'

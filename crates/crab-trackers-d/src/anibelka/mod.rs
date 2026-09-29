@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! anibelka sync - anonymous only. Never logs in: passkeys must not enter magnets.
 //!
 //! Routes: `/cron/anibelka/{parse,updatetasksparse,parsealltask,parselatest}`.

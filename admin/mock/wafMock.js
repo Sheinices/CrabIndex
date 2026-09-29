@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 /**
  * Dev-only WAF mock (see WAF_CONTRACT.md): a synthetic request log that keeps
  * growing while the dev server runs, dynamic lists/bans and all `waf/*`

@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! Shard rows stored as JSON `null`.
 //!
 //! The shard loader in core silently skips `null` rows. Maintenance and dev tools

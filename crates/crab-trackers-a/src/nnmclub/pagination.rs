@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! The NNMClub portal only serves a limited page window (~500). Older offsets redirect to
 //! the FAQ topic https://nnmclub.to/forum/viewtopic.php?t=1626984
 

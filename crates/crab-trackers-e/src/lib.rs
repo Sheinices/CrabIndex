@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! crab-trackers-e - ultradox, knaben, rudub and subsplease trackers.
 #![allow(non_snake_case)]
 

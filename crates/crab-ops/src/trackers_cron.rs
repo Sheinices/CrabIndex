@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! Hourly announce-list builder: collects `tr=` announce URLs from every magnet in
 //! FileDB, probes them (HTTP HEAD-ish GET / UDP send) and writes the reachable ones to
 //! `wwwroot/trackers.txt`. Runs only when every shard is kept in memory

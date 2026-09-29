@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 import { useId, useState } from 'react'
 import { Eye, EyeOff, Wand2 } from 'lucide-react'
 import { generateToken, stringListToText, textToStringList } from '../../lib/config.js'

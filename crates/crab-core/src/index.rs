@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! Fast search index: search-name token → bucket keys, built from masterDb.
 
 use arc_swap::ArcSwapOption;

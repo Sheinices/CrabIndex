@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! Rutracker forum map: forum id → types, title layout and hourly quick-parse flag.
 
 use indexmap::IndexMap;

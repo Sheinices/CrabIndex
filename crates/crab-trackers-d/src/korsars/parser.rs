@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! korsars.pro - phpBB-mod tracker with inline magnets on forum listings.
 
 use chrono::{DateTime, NaiveDateTime, Utc};

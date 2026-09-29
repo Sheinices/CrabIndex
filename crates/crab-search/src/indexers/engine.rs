@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! Combined indexer search: card (Jackett) search, query variants, native fuzzy (v1)
 //! search and external-id resolution, merged by infohash.
 

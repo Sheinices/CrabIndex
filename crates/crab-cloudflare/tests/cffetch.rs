@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! cffetch jar / mitigation / block-list behaviour.
 
 use crab_cloudflare::cffetch;

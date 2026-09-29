@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! Helpers shared by the trackers in this crate: a small TTL cache for login cookies,
 //! task-map persistence, lenient date parsing and an async FileDB upsert loop.
 

@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 import { useEffect, useState } from "react";
 import { Trash2 } from "lucide-react";
 import { clearFdbLog, getFdbLog, setFdbLog } from "../lib/api.js";

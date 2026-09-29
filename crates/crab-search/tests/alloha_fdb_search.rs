@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! Seeds an isolated FileDB bucket + Alloha cache entries (no live HTTP), then searches
 //! through the native API and the combined indexer path using tt/kp/tmdb ids.
 //!

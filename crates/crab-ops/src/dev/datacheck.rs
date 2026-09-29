@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! Read-only data-quality report over the whole FileDB: what the fix migrations in this
 //! module would touch. Meant for the weekly cron (`/dev/checkdata`) and the admin panel
 //! (**Maintenance → Data check**); nothing is changed here.
@@ -8,11 +11,15 @@
 //! the title has a `/`-separated original (`FixRutrackerNames`).
 
 use std::collections::HashMap;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::Instant;
 
 use chrono::Utc;
+use crab_core::log::{self, cat};
 use crab_core::{conf, fdb, util};
 use serde_json::{json, Value};
+
+static RUNNING: AtomicBool = AtomicBool::new(false);
 
 use super::migrations::parsers::host_of;
 
@@ -61,7 +68,50 @@ pub fn rutracker_name_suspect(title: &str, name: &str, originalname: &str) -> bo
     head.contains(" / ")
 }
 
+/// Slice of a report kept as `previous` in the next one, so the panel shows before / after.
+fn summary_of(r: &Value) -> Value {
+    json!({ "at": r["at"], "total": r["total"], "trackers": r["trackers"], "trigger": r["trigger"] })
+}
+
+/// Run the report in the background (after a fix migration) unless one is running.
+pub fn spawn_after_fix(migration: &'static str) {
+    if RUNNING.load(Ordering::SeqCst) {
+        return;
+    }
+    tokio::spawn(async move {
+        let _ = tokio::task::spawn_blocking(move || run_with_trigger(migration)).await;
+    });
+}
+
+pub fn is_running() -> bool {
+    RUNNING.load(Ordering::SeqCst)
+}
+
 pub fn run() -> Value {
+    run_with_trigger("manual")
+}
+
+/// `trigger`: `manual`, `cron` or the name of the migration that just ran.
+pub fn run_with_trigger(trigger: &str) -> Value {
+    if RUNNING.swap(true, Ordering::SeqCst) {
+        return json!({ "ok": false, "error": "check already running" });
+    }
+    let previous = last_report().map(|r| summary_of(&r));
+    let mut report = run_inner();
+    report["trigger"] = json!(trigger);
+    if let Some(p) = previous {
+        report["previous"] = p;
+    }
+    let _ = std::fs::create_dir_all("Data/temp");
+    if let Ok(s) = serde_json::to_string_pretty(&report) {
+        let _ = std::fs::write(REPORT_PATH, s);
+    }
+    log::info(cat::FDB, format!("data check ({trigger}): issues {} in {}s", report["total"]["issues"], report["tookSec"]));
+    RUNNING.store(false, Ordering::SeqCst);
+    report
+}
+
+fn run_inner() -> Value {
     let sw = Instant::now();
     let hosts = configured_hosts();
     let mut per: HashMap<String, Counts> = HashMap::new();
@@ -128,10 +178,6 @@ pub fn run() -> Value {
             "foreignHost": { "kinozal": "dev/fixkinozaldomainduplicates", "rutracker": "dev/fixrutrackerdomainduplicates", "selezen": "dev/fixselezendomainduplicates", "ultradox": "dev/fixultradoxdomainduplicates" },
         },
     });
-    let _ = std::fs::create_dir_all("Data/temp");
-    if let Ok(s) = serde_json::to_string_pretty(&report) {
-        let _ = std::fs::write(REPORT_PATH, s);
-    }
     report
 }
 
@@ -140,7 +186,7 @@ pub fn last_report() -> Option<Value> {
 }
 
 pub fn status() -> Value {
-    json!({ "ok": true, "last": last_report() })
+    json!({ "ok": true, "running": is_running(), "last": last_report() })
 }
 
 #[cfg(test)]

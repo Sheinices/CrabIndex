@@ -1,3 +1,8 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
+import { tGlobal as tg } from '../lang/index.jsx'
+
 const nf = new Intl.NumberFormat('ru-RU')
 
 export function formatNumber(n) {
@@ -8,7 +13,7 @@ export function formatNumber(n) {
 export function formatBytes(n) {
   const v = Number(n)
   if (!Number.isFinite(v) || v < 0) return '-'
-  const units = ['Б', 'КБ', 'МБ', 'ГБ', 'ТБ']
+  const units = tg('fmt_bytes_units').split(',')
   let i = 0
   let x = v
   while (x >= 1024 && i < units.length - 1) {
@@ -24,10 +29,10 @@ export function formatDuration(seconds) {
   const d = Math.floor(s / 86400)
   const h = Math.floor((s % 86400) / 3600)
   const m = Math.floor((s % 3600) / 60)
-  if (d) return `${d} д ${h} ч`
-  if (h) return `${h} ч ${m} мин`
-  if (m) return `${m} мин`
-  return `${s} с`
+  if (d) return tg('fmt_days_hours', { d, h })
+  if (h) return tg('fmt_hours_minutes', { h, m })
+  if (m) return tg('fmt_minutes', { m })
+  return tg('fmt_seconds', { s })
 }
 
 export function formatDate(value) {
@@ -43,8 +48,8 @@ export function formatRelative(value, now = Date.now()) {
   if (Number.isNaN(t)) return String(value)
   const diff = Math.round((now - t) / 1000)
   if (diff < 0) return formatDate(value)
-  if (diff < 60) return 'только что'
-  return `${formatDuration(diff)} назад`
+  if (diff < 60) return tg('fmt_just_now')
+  return tg('fmt_ago', { duration: formatDuration(diff) })
 }
 
 /** Pretty-print a cron/dev response (JSON or text). */

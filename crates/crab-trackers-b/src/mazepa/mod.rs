@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! Mazepa: login cookie, walks every category page until an empty or repeated page.
 //! Magnets are built from the downloaded .torrent without trackers (announce URLs carry a passkey).
 

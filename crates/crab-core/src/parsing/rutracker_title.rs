@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 CrabIndex contributors
+
 //! rutracker topic titles → `name` / `originalname` / year. Shared by the parser and the
 //! FileDB migrations, so rows parsed before a pattern fix can be healed the same way.
 
