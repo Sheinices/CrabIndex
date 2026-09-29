@@ -44,6 +44,8 @@ PrivateTmp=true
 ProtectSystem=full
 ProtectHome=true
 ReadWritePaths=/opt/crabindex
+# Только если на сервере есть Docker: чтение /var/run/docker.sock для карточки «Ресурсы»
+SupplementaryGroups=docker
 
 [Install]
 WantedBy=multi-user.target
@@ -53,6 +55,8 @@ WantedBy=multi-user.target
 sudo systemctl daemon-reload
 sudo systemctl enable --now crabindex
 ```
+
+Строка `SupplementaryGroups=docker` и членство пользователя `crabindex` в группе сокета (`usermod -aG docker crabindex`) дают панели доступ к Docker API только на чтение: карточка **Ресурсы** на обзоре показывает память и CPU контейнеров FlareSolverr и остальных, а карточка **Здоровье** предупреждает, когда контейнер подходит к лимиту памяти. Установщик делает это сам, когда сокет есть, в том числе при `--update`; без Docker строка не нужна. Доступ к сокету равносилен root на хосте, поэтому панель должна быть закрыта (`admin.path`, devkey, WAF).
 
 Процессу нужна запись в весь рабочий каталог: сервер сохраняет туда `init.yaml` (из админ-панели и при генерации токена) и данные в `Data/`.
 

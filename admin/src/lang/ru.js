@@ -959,6 +959,7 @@ export default {
   res_memory: 'Память',
   res_docker_hint: 'Контейнеры не видны: смонтируйте /var/run/docker.sock в контейнер CrabIndex (только чтение), тогда здесь появятся память и CPU FlareSolverr и остальных',
   res_docker_error: 'Docker API не ответил: {msg}',
+  res_docker_denied: 'Сокет Docker смонтирован, но контейнеру CrabIndex нет доступа: добавьте group_add с gid сокета (stat -c %g /var/run/docker.sock на хосте), см. документацию по Docker',
   issue_container_memory_title: 'Контейнер {name}: {percent}% лимита памяти',
   issue_container_memory_text: 'Занято {percent}% из {limitMb} МБ. Chrome в FlareSolverr при нехватке памяти роняет вкладки: поднимите лимит (docker update --memory) или уменьшите sessionIdleMinutes.',
   issue_test_message_title: 'Тестовое уведомление',

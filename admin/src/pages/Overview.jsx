@@ -391,7 +391,7 @@ export function ResourcesCard() {
               </table>
             </div>
           ) : (
-            <p className="text-xs text-muted">{d.error ? t("res_docker_error", { msg: d.error }) : t("res_docker_hint")}</p>
+            <p className="text-xs text-muted">{d.error ? (/denied/i.test(d.error) ? t("res_docker_denied") : t("res_docker_error", { msg: d.error })) : t("res_docker_hint")}</p>
           )}
         </div>
       )}

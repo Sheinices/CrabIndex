@@ -956,6 +956,7 @@ export default {
   res_memory: 'Memory',
   res_docker_hint: 'Containers are not visible: mount /var/run/docker.sock into the CrabIndex container (read-only) to see FlareSolverr and the others here',
   res_docker_error: 'Docker API did not answer: {msg}',
+  res_docker_denied: 'The Docker socket is mounted but the CrabIndex container may not use it: add group_add with the socket gid (stat -c %g /var/run/docker.sock on the host), see the Docker docs',
   issue_container_memory_title: 'Container {name}: {percent}% of its memory limit',
   issue_container_memory_text: '{percent}% of {limitMb} MB in use. Chrome inside FlareSolverr drops tabs when memory runs out: raise the limit (docker update --memory) or lower sessionIdleMinutes.',
   issue_test_message_title: 'Test notification',

@@ -509,9 +509,40 @@ pub fn counts() -> (usize, usize) {
     (errors, warns)
 }
 
+/// Every signal id the checks can produce; history rows are mapped back to these.
+const ISSUE_IDS: [&str; 12] = [
+    "sync_stale", "sync_unreachable", "sync_check_failed", "sync_check_backlog", "login_missing", "login_failed", "tracker_stale",
+    "fs_tab_crashes", "fs_failing", "waf_users_hit", "data_issues", "container_memory",
+];
+
+/// Signals whose last history row is `appeared`: still active when the process stopped. Seeding
+/// the notifier with them keeps a restart from logging (and notifying) every open signal again;
+/// the ones that are gone get a proper `resolved` row instead.
+fn open_from_history() -> HashMap<String, Issue> {
+    let mut last: HashMap<String, Event> = HashMap::new();
+    for e in HISTORY.history(HISTORY_MAX) {
+        let uid = if e.key.is_empty() { e.id.clone() } else { format!("{}:{}", e.id, e.key) };
+        last.entry(uid).or_insert(e);
+    }
+    last.into_iter()
+        .filter(|(_, e)| e.event == "appeared")
+        .filter_map(|(uid, e)| {
+            let id = ISSUE_IDS.iter().find(|x| **x == e.id)?;
+            let severity = if e.severity == "error" { "error" } else { "warn" };
+            Some((uid, Issue::new(id, e.key, severity, "/", e.params)))
+        })
+        .collect()
+}
+
 pub fn spawn_notifier(ct: CancellationToken) {
     crab_core::hooks::register_health_counts(counts);
     tokio::spawn(async move {
+        if let Ok(open) = tokio::task::spawn_blocking(open_from_history).await {
+            let mut st = STATE.lock();
+            if st.active.is_empty() {
+                st.active = open;
+            }
+        }
         tokio::select! {
             _ = ct.cancelled() => return,
             _ = tokio::time::sleep(Duration::from_secs(120)) => {}
@@ -575,6 +606,24 @@ mod tests {
         let (_, _, _) = diff(&mut st, &[issue("a", "")], t0 + chrono::Duration::minutes(20), 60);
         let (a, n, _) = diff(&mut st, &[issue("a", ""), issue("b", "x")], t0 + chrono::Duration::minutes(90), 60);
         assert_eq!((a.len(), n.len()), (1, 1));
+    }
+
+    #[test]
+    fn open_signals_come_back_from_history() {
+        let path = std::env::temp_dir().join(format!("crab_health_open_{}.json", std::process::id()));
+        let _ = std::fs::remove_file(&path);
+        let store = HistoryStore::new(path.to_string_lossy().to_string());
+        let t0 = Utc::now() - chrono::Duration::minutes(10);
+        store.record(&[issue("login_missing", "mazepa"), issue("data_issues", ""), issue("unknown_id", "")], &[], t0);
+        store.record(&[], &[issue("data_issues", "")], t0 + chrono::Duration::minutes(5));
+        let mut last: HashMap<String, Event> = HashMap::new();
+        for e in store.history(HISTORY_MAX) {
+            let uid = if e.key.is_empty() { e.id.clone() } else { format!("{}:{}", e.id, e.key) };
+            last.entry(uid).or_insert(e);
+        }
+        let open: Vec<String> = last.iter().filter(|(_, e)| e.event == "appeared" && ISSUE_IDS.contains(&e.id.as_str())).map(|(u, _)| u.clone()).collect();
+        assert_eq!(open, vec!["login_missing:mazepa".to_string()]);
+        let _ = std::fs::remove_file(&path);
     }
 
     #[test]

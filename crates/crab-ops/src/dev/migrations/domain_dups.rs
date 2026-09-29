@@ -42,6 +42,10 @@ struct Spec<'a> {
     group_key: &'a dyn Fn(&str) -> Option<String>,
     /// `(group key, kept URL)` → canonical URL.
     canonical_url: &'a dyn Fn(&str, &str) -> Option<String>,
+    /// Base (`https://host`) for rows the group key does not recognise (no release id in the
+    /// path): they cannot be merged, but a foreign host is still rewritten to this one, path
+    /// kept. `None` for trackers whose canonical URL is built from the id alone.
+    rehost_base: Option<String>,
 }
 
 #[derive(Default)]
@@ -94,6 +98,7 @@ fn pick_keep(urls: &[String], db: &fdb::ShardMap, canonical_host: &str) -> Optio
 fn process_shard(db: &mut fdb::ShardMap, spec: &Spec, c: &mut Counts) -> bool {
     let mut groups: IndexMap<String, Vec<String>> = IndexMap::new();
     let mut to_remove = CiSet::default();
+    let mut loose: Vec<String> = Vec::new();
 
     for (url, t) in db.iter() {
         if !t.trackerName.eq_ignore_ascii_case(spec.tracker) {
@@ -105,11 +110,31 @@ fn process_shard(db: &mut fdb::ShardMap, spec: &Spec, c: &mut Counts) -> bool {
             c.removed += 1;
             continue;
         }
-        let Some(gk) = (spec.group_key)(url) else { continue };
+        let Some(gk) = (spec.group_key)(url) else {
+            if spec.rehost_base.is_some() && host_of(url).map(|h| h != spec.canonical_host).unwrap_or(false) {
+                loose.push(url.clone());
+            }
+            continue;
+        };
         groups.entry(gk).or_default().push(url.clone());
     }
 
     let mut to_write: IndexMap<String, (String, TorrentDetails)> = IndexMap::new();
+    // Foreign-host rows without a group key: same path on the configured host, no merge.
+    if let Some(base) = &spec.rehost_base {
+        for url in loose {
+            let Some(canonical) = path_on_host(base, &url) else { continue };
+            if canonical.eq_ignore_ascii_case(&url) || db.contains_key(&canonical) || to_write.contains_key(&canonical.to_lowercase()) {
+                continue;
+            }
+            let mut t = db[&url].clone();
+            to_remove.add(&url);
+            t.url = canonical.clone();
+            t.updateTime = time::now();
+            to_write.insert(canonical.to_lowercase(), (canonical, t));
+            c.rewritten += 1;
+        }
+    }
     for (gk, urls) in &groups {
         let Some(keep_url) = pick_keep(urls, db, &spec.canonical_host) else { continue };
         let Some(canonical) = (spec.canonical_url)(gk, &keep_url) else { continue };
@@ -205,6 +230,7 @@ pub fn fix_kinozal() -> Value {
         drop_userdetails: true,
         group_key: &kinozal_group_key,
         canonical_url: &canonical_url,
+        rehost_base: None,
     })
 }
 
@@ -224,6 +250,7 @@ pub fn fix_rutracker() -> Value {
         drop_userdetails: false,
         group_key: &rutracker_group_key,
         canonical_url: &canonical_url,
+        rehost_base: None,
     })
 }
 
@@ -242,6 +269,7 @@ pub fn fix_selezen() -> Value {
     let host = conf().Selezen.host.clone();
     let canonical_host = host_of(&host).unwrap_or_else(|| "open.selezen.org".into());
     let base = base_or(&host, "https://open.selezen.org");
+    let base2 = base.clone();
     let canonical_url = move |_: &str, keep_url: &str| path_on_host(&base, keep_url);
     run(Spec {
         tracker: "selezen",
@@ -249,6 +277,7 @@ pub fn fix_selezen() -> Value {
         drop_userdetails: false,
         group_key: &selezen_group_key,
         canonical_url: &canonical_url,
+        rehost_base: Some(base2),
     })
 }
 
@@ -271,6 +300,7 @@ pub fn fix_ultradox() -> Value {
         drop_userdetails: false,
         group_key: &ultradox_group_key,
         canonical_url: &canonical_url,
+        rehost_base: None,
     })
 }
 
@@ -284,7 +314,7 @@ mod tests {
     }
 
     fn kinozal_spec<'a>(cu: &'a dyn Fn(&str, &str) -> Option<String>) -> Spec<'a> {
-        Spec { tracker: "kinozal", canonical_host: "kinozal.guru".into(), drop_userdetails: true, group_key: &kinozal_group_key, canonical_url: cu }
+        Spec { tracker: "kinozal", canonical_host: "kinozal.guru".into(), drop_userdetails: true, group_key: &kinozal_group_key, canonical_url: cu, rehost_base: None }
     }
 
     #[test]
@@ -328,7 +358,7 @@ mod tests {
         db.insert(new.into(), b);
 
         let cu = |id: &str, _: &str| Some(format!("https://rutracker.org/forum/viewtopic.php?t={id}"));
-        let spec = Spec { tracker: "rutracker", canonical_host: "rutracker.org".into(), drop_userdetails: false, group_key: &rutracker_group_key, canonical_url: &cu };
+        let spec = Spec { tracker: "rutracker", canonical_host: "rutracker.org".into(), drop_userdetails: false, group_key: &rutracker_group_key, canonical_url: &cu, rehost_base: None };
         let mut c = Counts::default();
         assert!(process_shard(&mut db, &spec, &mut c));
         assert_eq!((c.scanned, c.rewritten, c.merged, c.removed), (2, 0, 1, 1));
@@ -352,14 +382,22 @@ mod tests {
             db.insert(u.into(), r);
         }
         let cu = |_: &str, keep: &str| path_on_host("https://open.selezen.org", keep);
-        let spec = Spec { tracker: "selezen", canonical_host: "open.selezen.org".into(), drop_userdetails: false, group_key: &selezen_group_key, canonical_url: &cu };
+        let spec = Spec { tracker: "selezen", canonical_host: "open.selezen.org".into(), drop_userdetails: false, group_key: &selezen_group_key, canonical_url: &cu, rehost_base: Some("https://open.selezen.org".into()) };
+        // no release id in the path: cannot be grouped, but the foreign host is still rewritten
+        let loose = "https://use.selezen.club/serialy/ostavshiesya-v-zhivyh.html";
+        let mut r = row(loose, "magnet:?xt=urn:btih:bb", 2);
+        r.trackerName = "selezen".into();
+        db.insert(loose.into(), r);
         let mut c = Counts::default();
         assert!(process_shard(&mut db, &spec, &mut c));
-        assert_eq!((c.scanned, c.rewritten, c.merged, c.removed), (3, 1, 1, 1));
-        assert_eq!(db.len(), 2);
+        assert_eq!((c.scanned, c.rewritten, c.merged, c.removed), (4, 2, 1, 1));
+        assert_eq!(db.len(), 3);
         assert_eq!(db[new].sid, 9);
         let moved = "https://open.selezen.org/relizy-ot-selezen/887-holodnoe-serdce.html";
         assert_eq!(db[moved].url, moved);
+        let rehosted = "https://open.selezen.org/serialy/ostavshiesya-v-zhivyh.html";
+        assert_eq!(db[rehosted].url, rehosted);
+        assert!(!db.contains_key(loose));
     }
 
     #[test]

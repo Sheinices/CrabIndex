@@ -1424,11 +1424,42 @@ ensure_user() {
     nologin="$(command -v nologin || echo /usr/sbin/nologin)"
     useradd --system --home-dir "$INSTALL_DIR" --no-create-home --shell "$nologin" "$SERVICE_USER"
   fi
+  grant_docker_socket
+}
+
+# Group that owns /var/run/docker.sock (usually `docker`); empty when there is no socket.
+docker_socket_group() {
+  [[ -S /var/run/docker.sock ]] || return 0
+  stat -c %G /var/run/docker.sock 2>/dev/null || true
+}
+
+# Read-only access to the Docker API for the admin panel (Overview -> Resources: memory and CPU
+# of FlareSolverr and the other containers, a health signal when one nears its memory limit).
+# The service user joins the socket's group and the unit lists it in SupplementaryGroups, so it
+# works right after the install. Applied on install and on --update; no-op without Docker.
+grant_docker_socket() {
+  local grp
+  grp="$(docker_socket_group)"
+  [[ -n "$grp" && "$grp" != "root" ]] || return 0
+  if id -nG "$SERVICE_USER" 2>/dev/null | tr ' ' '\n' | grep -qx "$grp"; then
+    return 0
+  fi
+  info "$(t "Доступ к Docker API для панели: $SERVICE_USER добавлен в группу $grp" "Docker API access for the panel: $SERVICE_USER added to group $grp")"
+  usermod -aG "$grp" "$SERVICE_USER" 2>/dev/null ||
+    warn "$(t "не удалось добавить $SERVICE_USER в группу $grp; ресурсы контейнеров в панели будут недоступны" \
+      "failed to add $SERVICE_USER to group $grp; container resources will be unavailable in the panel")"
 }
 
 write_unit() {
   info "$(t "Установка systemd unit $UNIT_FILE" "Installing systemd unit $UNIT_FILE")"
-  cat >"$UNIT_FILE" <<EOF
+  local grp groups_line=""
+  grp="$(docker_socket_group)"
+  # Docker socket group -> container resources in the panel (see grant_docker_socket)
+  if [[ -n "$grp" && "$grp" != "root" ]]; then
+    groups_line="SupplementaryGroups=$grp"
+  fi
+  {
+    cat <<EOF
 [Unit]
 Description=CrabIndex torrent aggregator
 After=network-online.target
@@ -1450,10 +1481,10 @@ PrivateTmp=true
 ProtectSystem=full
 ProtectHome=true
 ReadWritePaths=$INSTALL_DIR
-
-[Install]
-WantedBy=multi-user.target
 EOF
+    [[ -n "$groups_line" ]] && echo "$groups_line"
+    printf '\n[Install]\nWantedBy=multi-user.target\n'
+  } >"$UNIT_FILE"
 }
 
 copy_bundle() {
@@ -1574,6 +1605,9 @@ do_install() {
       fi
       ;;
   esac
+  # Docker may have appeared just now (install_flaresolverr): grant the socket group before the
+  # unit is written and the service starts.
+  grant_docker_socket
   write_unit
   install_crontab
   systemctl daemon-reload

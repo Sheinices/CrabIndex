@@ -17,6 +17,9 @@ services:
       # Optional: container memory/CPU in the admin panel (Overview → Resources).
       # The socket grants root-equivalent access to the host; keep the panel private.
       # - /var/run/docker.sock:/var/run/docker.sock:ro
+    # ...and the socket's group, the process is not root:  stat -c %g /var/run/docker.sock
+    # group_add:
+    #   - "999"
     environment:
       - TZ=Europe/London
       - UMASK=0027
