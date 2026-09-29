@@ -220,13 +220,15 @@ function DataCheckSection({ busy, onRun, onFix }) {
                     <td className="text-right tabular-nums">{formatNumber(r.rows)}</td>
                     {DATA_COLUMNS.map(([col]) => {
                       const fix = r[col] > 0 ? fixFor(col, r.tracker) : null
+                      const sample = col === 'foreignHost' ? last.samples?.foreignHost?.[r.tracker] : null
+                      const hint = [fix, sample?.length ? sample.join('\n') : null].filter(Boolean).join('\n')
                       const before = prevByTracker.get(r.tracker)
                       const changed = before && Number(before[col] || 0) !== Number(r[col] || 0)
                       return (
                         <td key={col} className="text-right tabular-nums">
                           {r[col] > 0 ? (
                             fix ? (
-                              <button type="button" className="underline decoration-dotted underline-offset-2 hover:text-accent" title={fix} onClick={() => onFix(fix)}>
+                              <button type="button" className="underline decoration-dotted underline-offset-2 hover:text-accent" title={hint} onClick={() => onFix(fix)}>
                                 {formatNumber(r[col])}
                               </button>
                             ) : (

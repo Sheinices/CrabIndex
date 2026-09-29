@@ -24,6 +24,8 @@ static RUNNING: AtomicBool = AtomicBool::new(false);
 use super::migrations::parsers::host_of;
 
 pub const REPORT_PATH: &str = "Data/temp/datacheck.json";
+/// Offending urls kept per tracker in `samples` (foreign host), for diagnosis.
+const SAMPLE_URLS: usize = 5;
 
 /// Trackers whose numeric id names one torrent page (same list as `slug_dups`).
 const ID_TRACKERS: [&str; 14] = [
@@ -115,6 +117,8 @@ fn run_inner() -> Value {
     let sw = Instant::now();
     let hosts = configured_hosts();
     let mut per: HashMap<String, Counts> = HashMap::new();
+    // a few offending urls per tracker, so the panel can show what the count is about
+    let mut samples: HashMap<String, Vec<String>> = HashMap::new();
     let mut ids: HashMap<(String, i32), u32> = HashMap::new();
     let mut buckets = 0i64;
 
@@ -133,6 +137,10 @@ fn run_inner() -> Value {
             if let (Some(want), Some(have)) = (hosts.get(&tracker), host_of(&url)) {
                 if &have != want {
                     c.foreign_host += 1;
+                    let list = samples.entry(tracker.clone()).or_default();
+                    if list.len() < SAMPLE_URLS {
+                        list.push(url.clone());
+                    }
                 }
             }
             if ID_TRACKERS.contains(&tracker.as_str()) {
@@ -170,6 +178,8 @@ fn run_inner() -> Value {
         "buckets": buckets,
         "total": row(&total),
         "trackers": trackers.iter().map(|(t, c)| { let mut v = row(c); v["tracker"] = json!(t); v }).collect::<Vec<_>>(),
+        // up to SAMPLE_URLS foreign-host urls per tracker
+        "samples": { "foreignHost": samples },
         // which migration heals which column
         "fixes": {
             "zeroSize": "dev/fixzerosizes",
