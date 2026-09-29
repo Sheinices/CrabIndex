@@ -164,7 +164,7 @@ curl "http://127.0.0.1:9117/sync/fdb?key=matrix"
 | --- | --- |
 | `GET /cron/sync/peers` | `{ ok, opensync, peers: [{ ip, version, firstSeen, lastSeen, requests, lastCursor, lastSpidr, lastCheck, lastRefetch, status, statusAt }] }` - кто забирал базу с этого сервера. Адрес берётся из `CF-Connecting-IP`, `X-Real-IP`, первого `X-Forwarded-For` или сокета; `version` - заголовок `X-CrabIndex-Version`, который шлёт клиент CrabIndex, пусто для других клиентов. `status` - самоотчёт клиента из заголовка `X-CrabIndex-Status` на `/sync/conf` в начале каждого цикла: `{ buckets, issues, errors, idIndex, check: { at, ok, remaining, missing, mismatched, extra } }`; сервер оставляет только эти поля и не больше 2 КБ. Хранится в `Data/temp/sync_peers.json`, клиенты без запросов 30 дней удаляются |
 | `GET /cron/sync/check` | Запустить сверку с `syncapi` сейчас: `ok`, `work` (уже идёт) или `disabled` (`syncapi` не задан) |
-| `GET /cron/sync/checkstatus` | `{ ok, running, last }` - идёт ли сверка и последний отчёт |
+| `GET /cron/sync/checkstatus` | `{ ok, running, progress, last }` - идёт ли сверка, её ход и последний отчёт. `progress` (только во время сверки): `{ startedAt, phase: conf | digest | compare | fetch | delete | save, done, total, missing, mismatched, extra }`, где `done` / `total` заполнены на фазах `fetch` и `delete`, а числа расхождений появляются после `compare` |
 
 ## GET /sync/torrents
 

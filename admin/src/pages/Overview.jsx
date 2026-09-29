@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (c) 2026 CrabIndex contributors
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router";
 import {
   AlertTriangle,
@@ -12,15 +12,17 @@ import {
   EyeOff,
   Braces,
   Clock,
+  Cpu,
   Database,
   ExternalLink,
   GitCommit,
   HardDrive,
+  History,
   RefreshCw,
   Server,
   Shield,
 } from "lucide-react";
-import { getOverview, getWafOverview, muteIssue, sendTestNotification, startSyncCheck, unmuteIssue } from "../lib/api.js";
+import { getHealthHistory, getOverview, getResources, getWafOverview, muteIssue, sendTestNotification, startSyncCheck, unmuteIssue } from "../lib/api.js";
 import { usePolling } from "../hooks/usePolling.js";
 import {
   ErrorBox,
@@ -30,6 +32,7 @@ import {
   StatusDot,
 } from "../components/ui.jsx";
 import {
+  formatBytes,
   formatDate,
   formatDuration,
   formatNumber,
@@ -55,7 +58,13 @@ function SyncCheckRow({ sync, onDone }) {
     onDone?.();
   };
   let summary;
-  if (running) summary = t("sync_check_running");
+  const pr = sync.checkProgress;
+  if (running && pr) {
+    const base = t(`sync_check_phase_${pr.phase}`) || pr.phase;
+    const counts = pr.total > 0 ? ` ${formatNumber(pr.done)} / ${formatNumber(pr.total)}` : "";
+    const plan = pr.missing != null ? ` · ${t("sync_check_plan", { missing: formatNumber(pr.missing), mismatched: formatNumber(pr.mismatched), extra: formatNumber(pr.extra) })}` : "";
+    summary = `${base}${counts}${plan}`;
+  } else if (running) summary = t("sync_check_running");
   else if (!c) summary = sync.checkMinutes > 0 ? t("sync_check_never") : t("sync_check_off");
   else if (c.ok === false) summary = t("sync_check_failed", { error: c.error || "" });
   else if (c.missing + c.mismatched + c.extra === 0) summary = t("sync_check_clean");
@@ -101,6 +110,18 @@ function HealthCard({ issues, notifyConfigured, onChange }) {
   const [testState, setTestState] = useState(null);
   const [collapsed, setCollapsed] = useState(readCollapsed);
   const [showMuted, setShowMuted] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
+  const [history, setHistory] = useState(null);
+  useEffect(() => {
+    if (!showHistory) return undefined;
+    let alive = true;
+    getHealthHistory(50)
+      .then((r) => alive && setHistory(r?.events || []))
+      .catch(() => alive && setHistory([]));
+    return () => {
+      alive = false;
+    };
+  }, [showHistory, issues]);
   const [busyUid, setBusyUid] = useState(null);
   const visible = issues.filter((i) => !i.muted);
   const muted = issues.filter((i) => i.muted);
@@ -177,6 +198,9 @@ function HealthCard({ issues, notifyConfigured, onChange }) {
             {showMuted ? t("health_hide_muted") : t("health_show_muted", { count: muted.length })}
           </button>
         ) : null}
+        <button type="button" className="text-xs text-muted hover:text-fg" onClick={() => setShowHistory((v) => !v)} aria-expanded={showHistory} aria-controls="ov-health-history">
+          {showHistory ? t("health_hide_history") : t("health_show_history")}
+        </button>
         {notifyConfigured ? (
           <button type="button" className="btn btn-sm btn-ghost ml-auto" onClick={sendTest} disabled={testState === "busy"}>
             <BellRing className="size-3.5" aria-hidden="true" /> {t("health_test_notification")}
@@ -193,6 +217,37 @@ function HealthCard({ issues, notifyConfigured, onChange }) {
           {visible.map((i) => renderIssue(i, false))}
           {showMuted ? muted.map((i) => renderIssue(i, true)) : null}
         </ul>
+      ) : null}
+      {showHistory ? (
+        <div id="ov-health-history" className="mt-3 rounded-xl border border-border bg-surface px-4 py-3 text-sm">
+          <p className="mb-2 flex items-center gap-1 text-xs font-medium text-muted">
+            <History className="size-3.5" aria-hidden="true" /> {t("health_history_title")}
+          </p>
+          {history === null ? (
+            <p className="text-xs text-muted">{t("loading")}</p>
+          ) : history.length === 0 ? (
+            <p className="text-xs text-muted">{t("health_history_empty")}</p>
+          ) : (
+            <ul className="space-y-1">
+              {history.map((e, idx) => {
+                const params = { ...(e.params || {}) };
+                if (typeof params.minutes === "number") params.minutes = formatNumber(params.minutes);
+                if (typeof params.remaining === "number") params.remaining = formatNumber(params.remaining);
+                const resolved = e.event === "resolved";
+                return (
+                  <li key={`${e.at}-${e.id}-${e.key}-${idx}`} className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+                    <span className="text-xs text-muted tabular-nums whitespace-nowrap" title={formatDate(e.at)}>
+                      {formatRelative(e.at)}
+                    </span>
+                    <StatusDot tone={resolved ? "ok" : e.severity === "error" ? "danger" : "warn"} label={resolved ? t("health_event_resolved") : t("health_event_appeared")} />
+                    <span className="min-w-0">{t(`issue_${e.id}_title`, params)}</span>
+                    {resolved && typeof e.minutes === "number" ? <span className="text-xs text-muted">{t("health_event_lasted", { duration: formatDuration(e.minutes * 60) })}</span> : null}
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </div>
       ) : null}
     </section>
   );
@@ -248,6 +303,102 @@ export function JobList({ jobs, empty, hint = true }) {
 }
 
 /** WAF summary for the last 60 minutes (`waf/overview?window=60m`). */
+function UsageBar({ used, limit, label }) {
+  const pct = limit > 0 ? Math.min(100, Math.round((used / limit) * 100)) : null;
+  return (
+    <div>
+      <div className="flex items-baseline justify-between gap-2 text-xs">
+        <span className="text-muted">{label}</span>
+        <span className="tabular-nums">
+          {formatBytes(used)}
+          {limit > 0 ? <span className="text-muted"> / {formatBytes(limit)}</span> : null}
+          {pct != null ? <span className={`ml-1 ${pct >= 90 ? "text-danger" : pct >= 75 ? "text-warn" : "text-muted"}`}>{pct}%</span> : null}
+        </span>
+      </div>
+      {pct != null ? <ProgressBar value={pct} label={label} /> : null}
+    </div>
+  );
+}
+
+/// Process, host and container resources (see crabindex::resources). Containers appear only
+/// when the Docker socket is mounted into the CrabIndex container.
+export function ResourcesCard() {
+  const t = useT();
+  const { data, error, loading } = usePolling(() => getResources(), 10_000);
+  const p = data?.process || {};
+  const h = data?.host || {};
+  const d = data?.docker || {};
+  const hostUsed = h.memTotal && h.memAvailable != null ? h.memTotal - h.memAvailable : null;
+  const nothing = !p.rss && !h.memTotal && !d.available;
+  return (
+    <section className="card p-5" aria-labelledby="ov-res">
+      <h2 id="ov-res" className="mb-3 flex items-center gap-2 font-semibold">
+        <Cpu className="size-4 text-muted" aria-hidden="true" /> {t("res_title")}
+      </h2>
+      {loading && !data ? (
+        <Spinner label={t("loading")} />
+      ) : error && !data ? (
+        <p className="text-sm text-muted">{t("res_unavailable", { msg: error.message })}</p>
+      ) : nothing ? (
+        <p className="text-sm text-muted">{t("res_not_linux")}</p>
+      ) : (
+        <div className="space-y-3 text-sm">
+          {p.rss ? <UsageBar used={p.rss} limit={p.cgroupLimit || h.memTotal || 0} label={p.cgroupLimit ? t("res_process_limit") : t("res_process")} /> : null}
+          {hostUsed != null ? <UsageBar used={hostUsed} limit={h.memTotal} label={t("res_host_mem")} /> : null}
+          {h.diskTotal ? <UsageBar used={h.diskTotal - h.diskFree} limit={h.diskTotal} label={t("res_disk")} /> : null}
+          <dl className="grid grid-cols-2 gap-x-3 gap-y-1 text-xs">
+            {p.cpuPercent != null ? (
+              <>
+                <dt className="text-muted">{t("res_cpu")}</dt>
+                <dd className="tabular-nums">{p.cpuPercent}%{p.cpus ? <span className="text-muted"> / {p.cpus * 100}%</span> : null}</dd>
+              </>
+            ) : null}
+            {h.load ? (
+              <>
+                <dt className="text-muted">{t("res_load")}</dt>
+                <dd className="tabular-nums">{h.load.map((x) => Number(x).toFixed(2)).join(" · ")}</dd>
+              </>
+            ) : null}
+          </dl>
+          {d.available ? (
+            <div className="table-wrap">
+              <table className="table text-xs">
+                <thead>
+                  <tr>
+                    <th scope="col">{t("res_container")}</th>
+                    <th scope="col">{t("res_memory")}</th>
+                    <th scope="col" className="text-right">CPU</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {(d.containers || []).map((c) => {
+                    const pct = c.memLimit > 0 && c.memUsage != null ? Math.round((c.memUsage / c.memLimit) * 100) : null;
+                    return (
+                      <tr key={c.name}>
+                        <td className="font-mono" title={`${c.image} · ${c.status}`}>
+                          <StatusDot tone={c.state === "running" ? "ok" : "muted"} label={c.name} />
+                        </td>
+                        <td className="tabular-nums whitespace-nowrap">
+                          {c.memUsage != null ? formatBytes(c.memUsage) : "-"}
+                          {c.memLimit ? <span className="text-muted"> / {formatBytes(c.memLimit)}</span> : null}
+                          {pct != null ? <span className={`ml-1 ${pct >= 90 ? "text-danger" : pct >= 75 ? "text-warn" : "text-muted"}`}>{pct}%</span> : null}
+                        </td>
+                        <td className="text-right tabular-nums">{c.cpuPercent != null ? `${c.cpuPercent}%` : "-"}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <p className="text-xs text-muted">{d.error ? t("res_docker_error", { msg: d.error }) : t("res_docker_hint")}</p>
+          )}
+        </div>
+      )}
+    </section>
+  );
+}
+
 export function WafCard() {
   const t = useT();
   const { data, error, loading } = usePolling(
@@ -416,6 +567,7 @@ export function OverviewPage() {
 
             <div className="space-y-6">
               <WafCard />
+              <ResourcesCard />
               <section className="card p-5" aria-labelledby="ov-sync">
                 <h2 id="ov-sync" className="mb-3 font-semibold">
                   {t("sync_title")}

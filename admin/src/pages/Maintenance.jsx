@@ -2,8 +2,8 @@
 // Copyright (c) 2026 CrabIndex contributors
 
 import { useId, useState } from 'react'
-import { ClipboardCheck, CloudLightning, Database, HardDriveDownload, Play, Search, ShieldAlert, Stethoscope } from 'lucide-react'
-import { getDataCheck, runPath } from '../lib/api.js'
+import { ClipboardCheck, CloudLightning, Database, HardDriveDownload, Play, Search, ShieldAlert, Stethoscope, Wand2 } from 'lucide-react'
+import { getDataCheck, runPath, startFixAll } from '../lib/api.js'
 import { CHECK_MODES, DIAGNOSTICS, MIGRATIONS } from '../lib/maintenance.js'
 import { cleanParams } from '../lib/actions.js'
 import { usePolling } from '../hooks/usePolling.js'
@@ -94,9 +94,88 @@ const DATA_COLUMNS = [
 ]
 
 /** Last read-only data-quality report (`/dev/checkdata`, weekly cron) with fix buttons. */
+/// "Fix all": every migration the last report asks for, one after another on the server
+/// (`dev/fixall`), then the check runs again. Progress comes with the check status.
+function FixAllRow({ fixAll, running, reload }) {
+  const t = useT()
+  const confirm = useConfirm()
+  const [error, setError] = useState(null)
+  const plan = fixAll?.plan || []
+  const steps = fixAll?.steps || []
+  const labelOf = (path) => MIGRATIONS.find((m) => m.path === path)?.label || path
+  const start = async () => {
+    const ok = await confirm({
+      title: t('mt_data_fix_all'),
+      message: (
+        <>
+          <p>{t('mt_data_fix_all_confirm', { n: plan.length })}</p>
+          <ol className="list-decimal pl-5">
+            {plan.map((p) => (
+              <li key={p}>
+                {labelOf(p)} <span className="font-mono text-xs text-muted">{p}</span>
+              </li>
+            ))}
+          </ol>
+          <p className="text-muted">{t('mt_data_fix_all_note')}</p>
+        </>
+      ),
+      danger: true,
+      confirmLabel: t('execute'),
+    })
+    if (!ok) return
+    setError(null)
+    try {
+      const r = await startFixAll()
+      if (r && r.ok === false) setError(r.error || 'error')
+    } catch (e) {
+      setError(String(e?.message || e))
+    }
+    setTimeout(reload, 500)
+  }
+  if (fixAll?.running) {
+    const idx = steps.findIndex((s) => s.status === 'running')
+    const done = steps.filter((s) => s.status === 'done' || s.status === 'failed').length
+    return (
+      <p className="flex flex-wrap items-center gap-2 text-sm text-muted">
+        <Spinner />
+        {fixAll.phase === 'checking'
+          ? t('mt_data_fix_all_checking', { n: steps.length })
+          : t('mt_data_fix_all_progress', { n: done + 1, total: steps.length, step: idx >= 0 ? labelOf(steps[idx].path) : '…' })}
+      </p>
+    )
+  }
+  const finished = fixAll?.phase === 'done' && steps.length
+  return (
+    <div className="flex flex-wrap items-center gap-3 text-sm">
+      {plan.length ? (
+        <button type="button" className="btn" onClick={start} disabled={running}>
+          <Wand2 className="size-4" aria-hidden="true" />
+          {t('mt_data_fix_all')} <span className="text-xs opacity-70">({plan.length})</span>
+        </button>
+      ) : null}
+      {finished ? (
+        <span className="text-muted" title={steps.map((s) => `${s.path}: ${s.status}${s.result ? ' ' + JSON.stringify(s.result) : ''}`).join('\n')}>
+          {steps.some((s) => s.status === 'failed')
+            ? t('mt_data_fix_all_failed', { failed: steps.filter((s) => s.status === 'failed').map((s) => labelOf(s.path)).join(', ') })
+            : t('mt_data_fix_all_done', { n: steps.length, when: formatRelative(fixAll.finishedAt) })}
+        </span>
+      ) : null}
+      {error ? <span className="text-danger">{error}</span> : null}
+    </div>
+  )
+}
+
 function DataCheckSection({ busy, onRun, onFix }) {
   const t = useT()
-  const { data, reload } = usePolling(() => getDataCheck().then((r) => ({ last: r.last || null, running: !!r.running })), 15_000)
+  const [fast, setFast] = useState(false)
+  const { data, reload } = usePolling(
+    () =>
+      getDataCheck().then((r) => {
+        setFast(!!r.fixAll?.running)
+        return { last: r.last || null, running: !!r.running, fixAll: r.fixAll || null }
+      }),
+    fast ? 3_000 : 15_000,
+  )
   const last = data?.last && typeof data.last === 'object' ? data.last : null
   const running = !!data?.running
   const fixes = last?.fixes || {}
@@ -172,6 +251,7 @@ function DataCheckSection({ busy, onRun, onFix }) {
           </p>
         )
       ) : null}
+      {last ? <div className="mt-3"><FixAllRow fixAll={data?.fixAll} running={running || busy} reload={reload} /></div> : null}
       <p className="mt-3 text-xs text-muted">{t('mt_data_hint')}</p>
     </Section>
   )

@@ -28,6 +28,7 @@ const state = {
   checkRunning: false,
   syncCheckRunning: false,
   mutedIssues: new Set(),
+  fixAll: null,
 }
 
 const TRACKERS = [
@@ -139,6 +140,11 @@ function trackerLogin(slug) {
   return { required: true, configured, canCheck: ['kinozal', 'selezen', 'anifilm'].includes(slug), status: loginState[slug] || null }
 }
 
+function fixAllStatus() {
+  const st = state.fixAll || { running: false, steps: [] }
+  return st.running ? st : { ...st, plan: ['dev/fixrutrackerdomainduplicates', 'dev/fixslugduplicates', 'dev/fixrutrackernames', 'dev/fixzerosizes'] }
+}
+
 function dataCheckReport() {
   const row = (tracker, rows, zeroSize, dupIds, foreignHost, badNames) => ({ tracker, rows, zeroSize, dupIds, foreignHost, badNames, issues: zeroSize + dupIds + foreignHost + badNames })
   const trackers = [row('rutracker', 928294, 505, 1214, 3, 21044), row('kinozal', 555321, 0, 651, 0, 0), row('rutor', 523139, 0, 49, 0, 0), row('toloka', 57906, 36, 0, 0, 0), row('nnmclub', 145939, 0, 0, 0, 0)]
@@ -207,6 +213,7 @@ function overview() {
       remoteTorrents: 3_620_842,
       check: { at: new Date(Date.now() - 5 * 3_600_000).toISOString(), ok: true, tookSec: 412, hostBuckets: 603_000, localBuckets: 599_600, missing: 3_400, mismatched: 12_800, extra: 190, fetchedBuckets: 16_200, importedRows: 41_300, prunedRows: 880, deletedBuckets: 150, keptLocalBuckets: 40, remaining: 0 },
       checkRunning: !!state.syncCheckRunning,
+      checkProgress: state.syncCheckRunning ? { startedAt: new Date(Date.now() - 20_000).toISOString(), phase: 'fetch', done: 118, total: 258, missing: 140, mismatched: 119, extra: 2 } : null,
       checkMinutes: 1440,
     },
     config: { path: 'init.yaml', format: 'yaml' },
@@ -337,6 +344,21 @@ async function handle(req, res, path, query) {
   if (waf) return send(res, waf[0], waf[1])
 
   if (path === 'overview') return send(res, 200, overview())
+  if (path === 'resources') {
+    const gb = 1024 ** 3
+    return send(res, 200, {
+      at: new Date().toISOString(),
+      process: { rss: Math.round(1.9 * gb), cpuPercent: 37.5, cgroupUsage: Math.round(2.1 * gb), cgroupLimit: 4 * gb, cpus: 4 },
+      host: { memTotal: 16 * gb, memAvailable: Math.round(6.4 * gb), load: [1.42, 1.1, 0.96], diskFree: 61 * gb, diskTotal: 150 * gb },
+      docker: { available: true, containers: [
+        { name: 'flaresolverr', image: 'ghcr.io/flaresolverr/flaresolverr:latest', state: 'running', status: 'Up 3 days', memUsage: Math.round(5.6 * gb), memLimit: 6 * gb, cpuPercent: 84.2 },
+        { name: 'crabindex', image: 'ghcr.io/sheinices/crabindex:latest', state: 'running', status: 'Up 3 days', memUsage: Math.round(2.1 * gb), memLimit: 4 * gb, cpuPercent: 37.5 },
+        { name: 'flaresolverr-crawl', image: 'ghcr.io/flaresolverr/flaresolverr:latest', state: 'running', status: 'Up 3 days', memUsage: Math.round(0.7 * gb), memLimit: 1 * gb, cpuPercent: 2.1 },
+        { name: 'cffetch', image: 'ghcr.io/jacred-fdb/cffetch:latest', state: 'running', status: 'Up 3 days', memUsage: 48 * 1024 * 1024, memLimit: 256 * 1024 * 1024, cpuPercent: 0.3 },
+        { name: 'warp', image: 'caomingjun/warp', state: 'exited', status: 'Exited (1) 2 hours ago' },
+      ] },
+    })
+  }
   if (path === 'update') {
     return send(res, 200, {
       current: '1.4.0-dev',
@@ -365,6 +387,17 @@ async function handle(req, res, path, query) {
     const ok = slug !== 'selezen'
     loginState[slug] = { ok, at: new Date().toISOString(), error: ok ? '' : 'TakeLogin failed: no PHPSESSID (403)' }
     return send(res, 200, ok ? { ok: true, tracker: slug, status: loginState[slug] } : { ok: false, tracker: slug, error: loginState[slug].error, status: loginState[slug] })
+  }
+  if (path === 'health/history') {
+    const now = Date.now()
+    const ev = (minAgo, event, id, key, severity, params, minutes) => ({ at: new Date(now - minAgo * 60_000).toISOString(), event, id, key, severity, params, ...(minutes == null ? {} : { minutes }) })
+    return send(res, 200, { ok: true, events: [
+      ev(12, 'resolved', 'fs_tab_crashes', 'open.selezen.org', 'warn', { host: 'open.selezen.org', crashes: 23 }, 310),
+      ev(95, 'appeared', 'login_failed', 'selezen', 'error', { tracker: 'selezen', error: 'TakeLogin failed: no PHPSESSID (403)' }),
+      ev(322, 'appeared', 'fs_tab_crashes', 'open.selezen.org', 'warn', { host: 'open.selezen.org', crashes: 20 }),
+      ev(1440, 'resolved', 'sync_stale', '', 'warn', { minutes: 130, limit: 90 }, 40),
+      ev(1480, 'appeared', 'sync_stale', '', 'warn', { minutes: 91, limit: 90 }),
+    ].slice(0, Number(query.get('limit') || 50)) })
   }
   if ((path === 'health/mute' || path === 'health/unmute') && method === 'POST') {
     const uid = query.get('uid') || ''
@@ -405,7 +438,20 @@ async function handle(req, res, path, query) {
   }
   if (path === 'cron/cloudflare/stats/reset') return send(res, 200, { ok: true })
   if (path === 'jsondb/save') return send(res, 200, 'work', 'text/plain; charset=utf-8')
-  if (path === 'dev/checkdatastatus') return send(res, 200, { ok: true, running: false, last: dataCheckReport() })
+  if (path === 'dev/checkdatastatus') return send(res, 200, { ok: true, running: false, last: dataCheckReport(), fixAll: fixAllStatus() })
+  if (path === 'dev/fixall') {
+    if (state.fixAll?.running) return send(res, 200, { ok: false, error: 'fix all is already running' })
+    const steps = ['dev/fixrutrackerdomainduplicates', 'dev/fixslugduplicates', 'dev/fixrutrackernames', 'dev/fixzerosizes']
+    state.fixAll = { running: true, startedAt: new Date().toISOString(), phase: 'fixing', steps: steps.map((p) => ({ path: p, status: 'pending' })) }
+    steps.forEach((p, i) => {
+      setTimeout(() => { state.fixAll.steps[i].status = 'running' }, i * 4000)
+      setTimeout(() => { state.fixAll.steps[i] = { path: p, status: 'done', tookSec: 4, result: { ok: true, fixed: 12 * (i + 1) } } }, (i + 1) * 4000)
+    })
+    setTimeout(() => { state.fixAll.phase = 'checking' }, steps.length * 4000)
+    setTimeout(() => { state.fixAll = { ...state.fixAll, running: false, phase: 'done', finishedAt: new Date().toISOString() } }, steps.length * 4000 + 5000)
+    return send(res, 200, { ok: true, steps })
+  }
+  if (path === 'dev/fixallstatus') return send(res, 200, fixAllStatus())
   if (path === 'dev/checkdata') return send(res, 200, dataCheckReport())
   if (path.startsWith('dev/')) {
     await delay(700)

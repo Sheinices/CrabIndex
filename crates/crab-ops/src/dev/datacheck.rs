@@ -186,7 +186,7 @@ pub fn last_report() -> Option<Value> {
 }
 
 pub fn status() -> Value {
-    json!({ "ok": true, "running": is_running(), "last": last_report() })
+    json!({ "ok": true, "running": is_running(), "last": last_report(), "fixAll": super::fixall::status() })
 }
 
 #[cfg(test)]

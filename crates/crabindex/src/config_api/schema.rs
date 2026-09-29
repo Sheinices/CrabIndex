@@ -149,7 +149,8 @@ pub fn get() -> Value {
             field("logging.cronSkipFastMs", "int", "Cron: быстрые 200 → Debug", Some("HTTP /cron/ быстрее N ms, 0 - логировать все"), min(0)),
             fd("logging.categories", "json", "Уровни по категориям", Some("JSON: tracks, sync, sync_spidr, cron, fdb, stats, parsers (None = выкл.)")),
             fd("logging.files", "bool", "Лог в файлы", Some("Data/log/app.log и sync.log: те же строки, что в консоли, после фильтра уровней. Видны в разделе Логи")),
-            field("logging.fileMaxMb", "int", "Размер файла лога (MB)", Some("При превышении файл переименовывается в app.1.log / sync.1.log и начинается заново; 0 - без ротации"), min(0)),
+            field("logging.fileMaxMb", "int", "Размер файла лога (MB)", Some("При превышении app.log переименовывается в app.1.log и начинается заново; 0 - без ротации"), min(0)),
+            field("logging.syncFileMaxMb", "int", "Размер sync.log (MB)", Some("То же для sync.log, он подробнее (каждая страница и бакет), поэтому лимит больше; 0 - без ротации"), min(0)),
         ]),
         group("tracks", "Tracks (ffprobe)", None, vec![
             fd("tracks", "bool", "Включить tracks", Some("Сбор метаданных через tsuri")),

@@ -6,7 +6,9 @@
 //! [`issues`] is cheap (a few small files and in-memory counters) and is recomputed on every
 //! overview request. [`spawn_notifier`] re-evaluates every 5 minutes and sends new and
 //! resolved signals to the channels configured in `notify:`; a signal that flaps is not
-//! repeated more often than `notify.cooldownMinutes`.
+//! repeated more often than `notify.cooldownMinutes`. Every appearance and resolution is also
+//! appended to the history (`Data/temp/health_history.json`, see [`history`]), with or without
+//! notification channels.
 
 use std::collections::HashMap;
 use std::time::Duration;
@@ -29,6 +31,8 @@ const STALE_TRACKER_DAYS: i64 = 14;
 /// FlareSolverr: minimum browser requests before the failure share counts.
 const FS_MIN_REQUESTS: u64 = 20;
 const FS_TAB_CRASH_LIMIT: u64 = 20;
+/// A container using this share of its memory limit is about to have processes killed.
+const CONTAINER_MEM_PERCENT: u64 = 90;
 
 #[derive(Clone, Debug, Serialize, PartialEq)]
 #[serde(rename_all = "camelCase")]
@@ -145,6 +149,18 @@ pub fn issues(c: &AppOptions) -> Vec<Issue> {
         }
     }
 
+    // --- containers (Docker socket mounted, see resources.rs) ------------------------------
+    if let Some(r) = crate::resources::last() {
+        for ct in r["docker"]["containers"].as_array().map(|a| a.as_slice()).unwrap_or(&[]) {
+            if let (Some(u), Some(l)) = (ct["memUsage"].as_u64(), ct["memLimit"].as_u64()) {
+                if l > 0 && u * 100 / l >= CONTAINER_MEM_PERCENT {
+                    let name = ct["name"].as_str().unwrap_or("");
+                    out.push(Issue::new("container_memory", name, "warn", "/", json!({ "name": name, "percent": u * 100 / l, "limitMb": l / 1024 / 1024 })));
+                }
+            }
+        }
+    }
+
     // --- FlareSolverr -------------------------------------------------------------------
     if c.flaresolverr.enable {
         for h in crab_cloudflare::stats::hosts() {
@@ -248,6 +264,109 @@ fn uptime_minutes() -> i64 {
     STARTED.elapsed().as_secs() as i64 / 60
 }
 
+// ---------------------------------------------------------------- history
+
+pub const HISTORY_PATH: &str = "Data/temp/health_history.json";
+const HISTORY_MAX: usize = 1000;
+const HISTORY_DAYS: i64 = 90;
+
+/// One history row: a signal appeared or went away.
+#[derive(Clone, Debug, Serialize, serde::Deserialize, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub struct Event {
+    pub at: DateTime<Utc>,
+    /// `appeared` or `resolved`.
+    pub event: String,
+    pub id: String,
+    pub key: String,
+    pub severity: String,
+    pub params: Value,
+    /// For `resolved`: how long the signal was active.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub minutes: Option<i64>,
+}
+
+/// Event log with an in-memory copy; the file is read once and rewritten on every change.
+pub struct HistoryStore {
+    path: String,
+    cache: Mutex<Option<Vec<Event>>>,
+}
+
+static HISTORY: Lazy<HistoryStore> = Lazy::new(|| HistoryStore::new(HISTORY_PATH));
+
+impl HistoryStore {
+    pub fn new(path: impl Into<String>) -> Self {
+        HistoryStore { path: path.into(), cache: Mutex::new(None) }
+    }
+
+    fn all(&self) -> Vec<Event> {
+        let mut g = self.cache.lock();
+        if g.is_none() {
+            let loaded: Vec<Event> = std::fs::read_to_string(&self.path).ok().and_then(|s| serde_json::from_str(&s).ok()).unwrap_or_default();
+            *g = Some(loaded);
+        }
+        g.clone().unwrap_or_default()
+    }
+
+    fn save(&self, list: &[Event]) {
+        *self.cache.lock() = Some(list.to_vec());
+        if let Ok(s) = serde_json::to_string(list) {
+            if let Some(dir) = std::path::Path::new(&self.path).parent() {
+                let _ = std::fs::create_dir_all(dir);
+            }
+            let _ = std::fs::write(&self.path, s);
+        }
+    }
+
+    /// Newest first, at most `limit` rows.
+    pub fn history(&self, limit: usize) -> Vec<Event> {
+        let mut list = self.all();
+        list.reverse();
+        list.truncate(limit);
+        list
+    }
+
+    /// Append `appeared` rows for `new` and `resolved` rows for `resolved` (with the active
+    /// duration taken from the matching `appeared` row), then trim to 90 days / 1000 rows.
+    pub fn record(&self, new: &[Issue], resolved: &[Issue], now: DateTime<Utc>) {
+        if new.is_empty() && resolved.is_empty() {
+            return;
+        }
+        let mut list = self.all();
+        for i in resolved {
+            let since = list.iter().rev().find(|e| e.event == "appeared" && e.id == i.id && e.key == i.key).map(|e| e.at);
+            list.push(Event {
+                at: now,
+                event: "resolved".into(),
+                id: i.id.into(),
+                key: i.key.clone(),
+                severity: i.severity.into(),
+                params: i.params.clone(),
+                minutes: since.map(|t| (now - t).num_minutes().max(0)),
+            });
+        }
+        for i in new {
+            list.push(Event { at: now, event: "appeared".into(), id: i.id.into(), key: i.key.clone(), severity: i.severity.into(), params: i.params.clone(), minutes: None });
+        }
+        let cutoff = now - chrono::Duration::days(HISTORY_DAYS);
+        list.retain(|e| e.at >= cutoff);
+        if list.len() > HISTORY_MAX {
+            let drop = list.len() - HISTORY_MAX;
+            list.drain(..drop);
+        }
+        self.save(&list);
+    }
+}
+
+/// Newest first, at most `limit` rows (`GET {admin}/api/health/history`).
+pub fn history(limit: usize) -> Vec<Event> {
+    HISTORY.history(limit)
+}
+
+pub fn record_history(new: &[Issue], resolved: &[Issue], now: DateTime<Utc>) {
+    HISTORY.record(new, resolved, now)
+}
+
 // ---------------------------------------------------------------- notifications
 
 struct NotifyState {
@@ -273,28 +392,32 @@ pub fn describe(i: &Issue) -> String {
         "fs_failing" => format!("FlareSolverr: {} не проходит проверку ({} из {} запросов)", p["host"].as_str().unwrap_or(""), p["failed"], p["requests"]),
         "waf_users_hit" => format!("WAF: под бан попали клиенты поиска: {} ({})", p["count"], p["sample"].as_str().unwrap_or("")),
         "data_issues" => format!("Проверка данных нашла записей к исправлению: {}", p["count"]),
+        "container_memory" => format!("Контейнер {} занял {}% лимита памяти ({} МБ)", p["name"].as_str().unwrap_or(""), p["percent"], p["limitMb"]),
         "test_message" => "Тестовое уведомление CrabIndex".to_string(),
         other => format!("{other}: {p}"),
     }
 }
 
-/// Diff against the previous evaluation: `(new, resolved)` honouring the cooldown.
-fn diff(state: &mut NotifyState, current: &[Issue], now: DateTime<Utc>, cooldown_min: i64) -> (Vec<Issue>, Vec<Issue>) {
+/// Diff against the previous evaluation: `(appeared, notify, resolved)`. `appeared` is every
+/// signal not active last time (history); `notify` is the subset outside the cooldown.
+fn diff(state: &mut NotifyState, current: &[Issue], now: DateTime<Utc>, cooldown_min: i64) -> (Vec<Issue>, Vec<Issue>, Vec<Issue>) {
     let cur: HashMap<String, Issue> = current.iter().map(|i| (i.uid(), i.clone())).collect();
-    let mut new = Vec::new();
+    let mut appeared = Vec::new();
+    let mut notify = Vec::new();
     for (uid, i) in &cur {
         if state.active.contains_key(uid) {
             continue;
         }
+        appeared.push(i.clone());
         let recently = state.sent_at.get(uid).map(|t| (now - *t).num_minutes() < cooldown_min).unwrap_or(false);
         if !recently {
-            new.push(i.clone());
+            notify.push(i.clone());
             state.sent_at.insert(uid.clone(), now);
         }
     }
     let resolved: Vec<Issue> = state.active.iter().filter(|(uid, _)| !cur.contains_key(*uid)).map(|(_, i)| i.clone()).collect();
     state.active = cur;
-    (new, resolved)
+    (appeared, notify, resolved)
 }
 
 fn host_label(c: &AppOptions) -> String {
@@ -395,24 +518,27 @@ pub fn spawn_notifier(ct: CancellationToken) {
         }
         loop {
             let c = conf();
-            if c.notify.enable {
-                let current: Vec<Issue> = issues(&c).into_iter().filter(|i| !i.muted).collect();
-                let (new, resolved) = {
-                    let mut st = STATE.lock();
-                    diff(&mut st, &current, Utc::now(), c.notify.cooldownMinutes.max(0) as i64)
-                };
-                if !new.is_empty() || !resolved.is_empty() {
-                    for i in &new {
-                        log::warn(cat::HOST, format!("health: {}", describe(i)));
-                    }
-                    for i in &resolved {
-                        log::info(cat::HOST, format!("health: resolved - {}", describe(i)));
-                    }
-                    let has_channel = !util::is_blank(&c.notify.webhookUrl) || (!util::is_blank(&c.notify.telegramToken) && !util::is_blank(&c.notify.telegramChatId));
-                    if has_channel {
-                        for e in notify(&c, &new, &resolved, &current).await {
-                            log::warn(cat::HOST, format!("health: notification failed: {e}"));
-                        }
+            let current: Vec<Issue> = issues(&c).into_iter().filter(|i| !i.muted).collect();
+            let now = Utc::now();
+            let (appeared, new, resolved) = {
+                let mut st = STATE.lock();
+                diff(&mut st, &current, now, c.notify.cooldownMinutes.max(0) as i64)
+            };
+            if !appeared.is_empty() || !resolved.is_empty() {
+                for i in &appeared {
+                    log::warn(cat::HOST, format!("health: {}", describe(i)));
+                }
+                for i in &resolved {
+                    log::info(cat::HOST, format!("health: resolved - {}", describe(i)));
+                }
+                let h = (appeared.clone(), resolved.clone());
+                let _ = tokio::task::spawn_blocking(move || record_history(&h.0, &h.1, now)).await;
+            }
+            if c.notify.enable && (!new.is_empty() || !resolved.is_empty()) {
+                let has_channel = !util::is_blank(&c.notify.webhookUrl) || (!util::is_blank(&c.notify.telegramToken) && !util::is_blank(&c.notify.telegramChatId));
+                if has_channel {
+                    for e in notify(&c, &new, &resolved, &current).await {
+                        log::warn(cat::HOST, format!("health: notification failed: {e}"));
                     }
                 }
             }
@@ -434,24 +560,46 @@ mod tests {
 
     #[test]
     fn diff_reports_new_and_resolved_with_cooldown() {
-        let mut st = NotifyState { active: HashMap::new(), sent_at: HashMap::new() };
         let t0 = Utc::now();
-        let (n, r) = diff(&mut st, &[issue("a", ""), issue("b", "x")], t0, 60);
-        assert_eq!((n.len(), r.len()), (2, 0));
-        // unchanged: nothing to send
-        let (n, r) = diff(&mut st, &[issue("a", ""), issue("b", "x")], t0, 60);
-        assert_eq!((n.len(), r.len()), (0, 0));
-        // b resolved
-        let (n, r) = diff(&mut st, &[issue("a", "")], t0, 60);
-        assert_eq!((n.len(), r.len()), (0, 1));
+        let mut st = NotifyState { active: HashMap::new(), sent_at: HashMap::new() };
+        let (a, n, r) = diff(&mut st, &[issue("a", ""), issue("b", "x")], t0, 60);
+        assert_eq!((a.len(), n.len(), r.len()), (2, 2, 0));
+        let (a, n, r) = diff(&mut st, &[issue("a", ""), issue("b", "x")], t0, 60);
+        assert_eq!((a.len(), n.len(), r.len()), (0, 0, 0));
+        let (a, n, r) = diff(&mut st, &[issue("a", "")], t0, 60);
+        assert_eq!((a.len(), n.len()), (0, 0));
         assert_eq!(r[0].uid(), "b:x");
-        // b flaps back within the cooldown: active again but not re-sent
-        let (n, _) = diff(&mut st, &[issue("a", ""), issue("b", "x")], t0 + chrono::Duration::minutes(10), 60);
-        assert!(n.is_empty() && st.active.contains_key("b:x"));
-        // after the cooldown it is sent again
-        let (_, _) = diff(&mut st, &[issue("a", "")], t0 + chrono::Duration::minutes(20), 60);
-        let (n, _) = diff(&mut st, &[issue("a", ""), issue("b", "x")], t0 + chrono::Duration::minutes(90), 60);
-        assert_eq!(n.len(), 1);
+        // Flapping inside the cooldown: shown in history (appeared) but not notified.
+        let (a, n, _) = diff(&mut st, &[issue("a", ""), issue("b", "x")], t0 + chrono::Duration::minutes(10), 60);
+        assert_eq!((a.len(), n.len()), (1, 0));
+        let (_, _, _) = diff(&mut st, &[issue("a", "")], t0 + chrono::Duration::minutes(20), 60);
+        let (a, n, _) = diff(&mut st, &[issue("a", ""), issue("b", "x")], t0 + chrono::Duration::minutes(90), 60);
+        assert_eq!((a.len(), n.len()), (1, 1));
+    }
+
+    #[test]
+    fn history_records_duration_and_trims() {
+        let path = std::env::temp_dir().join(format!("crab_health_history_{}.json", std::process::id()));
+        let _ = std::fs::remove_file(&path);
+        let store = HistoryStore::new(path.to_string_lossy().to_string());
+        let t0 = Utc::now() - chrono::Duration::minutes(45);
+        store.record(&[issue("a", ""), issue("b", "x")], &[], t0);
+        store.record(&[], &[issue("b", "x")], t0 + chrono::Duration::minutes(30));
+        let h = store.history(10);
+        assert_eq!(h.len(), 3);
+        assert_eq!((h[0].event.as_str(), h[0].id.as_str(), h[0].minutes), ("resolved", "b", Some(30)));
+        assert_eq!(h[2].event, "appeared");
+        // Reload from disk.
+        let again = HistoryStore::new(path.to_string_lossy().to_string());
+        assert_eq!(again.history(10).len(), 3);
+        assert_eq!(again.history(1).len(), 1);
+        // Old rows are dropped on the next write.
+        let mut list = again.all();
+        list[0].at = Utc::now() - chrono::Duration::days(HISTORY_DAYS + 1);
+        again.save(&list);
+        again.record(&[issue("c", "")], &[], Utc::now());
+        assert_eq!(again.history(10).len(), 3);
+        let _ = std::fs::remove_file(&path);
     }
 
     #[test]
@@ -483,7 +631,7 @@ mod tests {
 
     #[test]
     fn describe_covers_every_id() {
-        for id in ["sync_stale", "sync_unreachable", "sync_check_failed", "sync_check_backlog", "login_missing", "login_failed", "tracker_stale", "fs_tab_crashes", "fs_failing", "waf_users_hit", "data_issues"] {
+        for id in ["sync_stale", "sync_unreachable", "sync_check_failed", "sync_check_backlog", "login_missing", "login_failed", "tracker_stale", "fs_tab_crashes", "fs_failing", "waf_users_hit", "data_issues", "container_memory"] {
             let i = Issue::new(id, "k", "warn", "/", json!({ "minutes": 1, "limit": 2, "syncapi": "s", "error": "e", "remaining": 3, "tracker": "t", "days": 4, "host": "h", "crashes": 5, "failed": 6, "requests": 7 }));
             assert!(!describe(&i).contains(id), "{id} should read as text");
         }

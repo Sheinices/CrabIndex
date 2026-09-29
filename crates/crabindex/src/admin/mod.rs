@@ -370,9 +370,22 @@ async fn api_request(mut req: Request, next: Next, c: &AppOptions, base: &str, s
             }
             return json_response(StatusCode::OK, json!({ "ok": true, "uid": uid.trim(), "muted": !sub.ends_with("unmute") }));
         }
+        ("GET", "health/history") => {
+            let limit = req
+                .uri()
+                .query()
+                .and_then(|q| url::form_urlencoded::parse(q.as_bytes()).find(|(k, _)| k == "limit").and_then(|(_, v)| v.parse::<usize>().ok()))
+                .unwrap_or(100)
+                .clamp(1, 1000);
+            let events = tokio::task::spawn_blocking(move || crate::health::history(limit)).await.unwrap_or_default();
+            return json_response(StatusCode::OK, json!({ "ok": true, "events": events }));
+        }
         ("POST", "notify/test") => {
             let errors = crate::health::send_test(c).await;
             return json_response(StatusCode::OK, json!({ "ok": errors.is_empty(), "errors": errors }));
+        }
+        ("GET", "resources") => {
+            return json_response(StatusCode::OK, crate::resources::snapshot().await);
         }
         ("GET", "logs/fdb") => {
             let c = crate::conf();

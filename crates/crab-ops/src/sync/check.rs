@@ -45,6 +45,43 @@ static WANT_NOW: AtomicBool = AtomicBool::new(false);
 /// Unix seconds of the last run start (0 = never in this process).
 static LAST_RUN: AtomicI64 = AtomicI64::new(0);
 
+/// Where the running check is (`/cron/sync/checkstatus` → `progress`), `None` when idle.
+static PROGRESS: parking_lot::Mutex<Option<Progress>> = parking_lot::Mutex::new(None);
+
+#[derive(Clone, serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Progress {
+    pub started_at: chrono::DateTime<Utc>,
+    /// `conf`, `digest`, `compare`, `fetch`, `delete`, `save`.
+    pub phase: &'static str,
+    /// Items done / planned in the current phase (`fetch`, `delete`); zero elsewhere.
+    pub done: usize,
+    pub total: usize,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub missing: Option<usize>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub mismatched: Option<usize>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub extra: Option<usize>,
+}
+
+fn set_phase(phase: &'static str, total: usize) {
+    if let Some(p) = PROGRESS.lock().as_mut() {
+        p.phase = phase;
+        p.done = 0;
+        p.total = total;
+    }
+}
+
+/// Live progress with `done` taken from the refetch counter while fetching.
+pub fn progress() -> Option<Progress> {
+    let mut p = PROGRESS.lock().clone()?;
+    if p.phase == "fetch" {
+        p.done = cron::REFETCH_DONE.load(Ordering::Relaxed).min(p.total);
+    }
+    Some(p)
+}
+
 #[derive(Deserialize, Default)]
 #[serde(default)]
 struct DigestIn {
@@ -141,6 +178,7 @@ pub async fn run_worker(ct: CancellationToken) {
         }
         LAST_RUN.store(Utc::now().timestamp(), Ordering::Relaxed);
         let report = run_check(&c, &syncapi, &ct).await;
+        *PROGRESS.lock() = None;
         let _ = std::fs::create_dir_all("Data/temp");
         if let Ok(s) = serde_json::to_string_pretty(&report) {
             let _ = std::fs::write(REPORT_PATH, s);
@@ -152,6 +190,7 @@ pub async fn run_worker(ct: CancellationToken) {
 async fn run_check(c: &AppOptions, syncapi: &str, ct: &CancellationToken) -> Value {
     let sw = Instant::now();
     let at = Utc::now();
+    *PROGRESS.lock() = Some(Progress { started_at: at, phase: "conf", done: 0, total: 0, missing: None, mismatched: None, extra: None });
     log::info(cat::SYNC, "check: start");
     let fail = |error: &str| {
         log::warn(cat::SYNC, format!("check: {error}"));
@@ -162,6 +201,7 @@ async fn run_check(c: &AppOptions, syncapi: &str, ct: &CancellationToken) -> Val
     let Some(served) = cron::served_from_conf(conf_json.as_ref()) else {
         return fail("host does not report served trackers (/sync/conf without `trackers`) - upgrade syncapi host");
     };
+    set_phase("digest", 0);
     let req = cron::sync_req(900, 500_000_000).cancel(ct);
     let Some(digest) = net::get_json::<DigestIn>(&format!("{syncapi}/sync/fdb/digest"), &req).await else {
         return fail("digest request failed (/sync/fdb/digest)");
@@ -170,8 +210,14 @@ async fn run_check(c: &AppOptions, syncapi: &str, ct: &CancellationToken) -> Val
         return fail("empty digest (opensync off on the host?)");
     }
 
+    set_phase("compare", 0);
     let local: HashMap<String, i64> = fdb::master_db_snapshot().into_iter().map(|(k, s)| (k, s.fileTime)).collect();
     let p = plan(&digest.buckets, &local);
+    if let Some(pr) = PROGRESS.lock().as_mut() {
+        pr.missing = Some(p.missing.len());
+        pr.mismatched = Some(p.mismatched.len());
+        pr.extra = Some(p.extra.len());
+    }
     log::info(
         cat::SYNC,
         format!("check: host {} buckets, local {}, missing {}, mismatched {}, extra {}", digest.count, local.len(), p.missing.len(), p.mismatched.len(), p.extra.len()),
@@ -181,6 +227,8 @@ async fn run_check(c: &AppOptions, syncapi: &str, ct: &CancellationToken) -> Val
     let planned_fetch = to_fetch.len();
     let host_ft: HashMap<&str, i64> = digest.buckets.iter().map(|(k, ft)| (k.as_str(), *ft)).collect();
     let stamps: Vec<(String, i64)> = to_fetch.iter().filter_map(|k| host_ft.get(k.as_str()).map(|ft| (k.clone(), *ft))).collect();
+    cron::REFETCH_DONE.store(0, Ordering::Relaxed);
+    set_phase("fetch", planned_fetch);
     let (fetched, rows, pruned) = cron::refetch_buckets(syncapi, to_fetch, c, ct, Some(&served)).await;
     // Refetched buckets now equal the host's: carry its stamp so the next digest matches.
     tokio::task::spawn_blocking(move || cron::mirror_bucket_stamps(stamps)).await.ok();
@@ -188,11 +236,15 @@ async fn run_check(c: &AppOptions, syncapi: &str, ct: &CancellationToken) -> Val
     let mut deleted = 0usize;
     let mut kept_local = 0usize;
     let mut considered = 0usize;
+    set_phase("delete", p.extra.len().min(MAX_DELETE));
     for key in p.extra.iter().take(MAX_DELETE) {
         if ct.is_cancelled() {
             break;
         }
         considered += 1;
+        if let Some(pr) = PROGRESS.lock().as_mut() {
+            pr.done = considered;
+        }
         let key = key.clone();
         let served2 = served.clone();
         let c2 = c.clone();
@@ -211,6 +263,7 @@ async fn run_check(c: &AppOptions, syncapi: &str, ct: &CancellationToken) -> Val
             None => kept_local += 1,
         }
     }
+    set_phase("save", 0);
     tokio::task::spawn_blocking(fdb::save_changes_to_file).await.ok();
 
     let remaining = (p.missing.len() + p.mismatched.len()).saturating_sub(planned_fetch) + p.extra.len().saturating_sub(considered);

@@ -154,6 +154,7 @@ pub fn overview(c: &AppOptions) -> Value {
             // Last integrity check against syncapi (Data/temp/sync_check.json) and whether one runs now.
             "check": crab_ops::sync::check::last_report(),
             "checkRunning": crab_ops::sync::check::is_running(),
+            "checkProgress": crab_ops::sync::check::progress(),
             "checkMinutes": c.timeSyncCheck,
         },
         "config": { "path": info.path, "format": info.format },

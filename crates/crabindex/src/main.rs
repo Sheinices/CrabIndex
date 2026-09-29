@@ -12,6 +12,7 @@ mod app;
 mod config_api;
 mod controllers;
 mod health;
+mod resources;
 mod normalize;
 mod openapi;
 mod security;

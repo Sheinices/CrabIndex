@@ -4,7 +4,7 @@
 //! Console logging with per-category levels. The same lines (after the level filter) also go
 //! to `Data/log/app.log`, the sync categories to `Data/log/sync.log`, so the admin panel can show
 //! them without access to journalctl or `docker logs`. Files rotate once (`app.1.log`) at
-//! `logging.fileMaxMb`.
+//! `logging.fileMaxMb` (`logging.syncFileMaxMb` for `sync.log`, 50 MB by default).
 
 use arc_swap::ArcSwap;
 use once_cell::sync::Lazy;
@@ -67,6 +67,7 @@ pub struct LogSettings {
     pub category_levels: Option<HashMap<String, Level>>,
     pub files: bool,
     pub file_max_bytes: u64,
+    pub sync_file_max_bytes: u64,
 }
 
 pub const LOG_DIR: &str = "Data/log";
@@ -140,6 +141,7 @@ impl Default for LogSettings {
             category_levels: Some(m),
             files: true,
             file_max_bytes: 20 * 1024 * 1024,
+            sync_file_max_bytes: 50 * 1024 * 1024,
         }
     }
 }
@@ -185,6 +187,7 @@ pub fn apply(conf: &AppOptions) {
         category_levels,
         files: o.files,
         file_max_bytes: (o.fileMaxMb.max(0) as u64) * 1024 * 1024,
+        sync_file_max_bytes: (o.syncFileMaxMb.max(0) as u64) * 1024 * 1024,
     }));
 }
 
@@ -217,7 +220,7 @@ pub fn write(category: &str, level: Level, message: impl AsRef<str>) {
     if s.files {
         if let Some(file) = file_for(category) {
             let file_line = format!("{} [{}] {category}: {message}", chrono::Local::now().format("%Y-%m-%d %H:%M:%S"), level_tag(level));
-            append_file(file, &file_line, s.file_max_bytes);
+            append_file(file, &file_line, if file == SYNC_LOG { s.sync_file_max_bytes } else { s.file_max_bytes });
         }
     }
 }

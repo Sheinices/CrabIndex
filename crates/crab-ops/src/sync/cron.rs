@@ -231,6 +231,9 @@ async fn buckets_with_unknown_slim(cols: &[CollectionIn]) -> Vec<String> {
     .unwrap_or_default()
 }
 
+/// Buckets already processed by the running [`refetch_buckets`] (progress for the check).
+pub(super) static REFETCH_DONE: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
+
 /// Fetch the named buckets in full and import their rows. With `prune`, local rows of those
 /// served trackers that the fetched bucket no longer has are dropped (the bucket is
 /// authoritative). Returns `(buckets fetched, rows imported, rows pruned)`.
@@ -242,10 +245,11 @@ pub(super) async fn refetch_buckets(
     prune: Option<&HashSet<String>>,
 ) -> (usize, usize, usize) {
     let (mut fetched, mut rows, mut pruned) = (0usize, 0usize, 0usize);
-    for key in keys {
+    for (idx, key) in keys.into_iter().enumerate() {
         if ct.is_cancelled() {
             break;
         }
+        REFETCH_DONE.store(idx, Ordering::Relaxed);
         let url = format!("{syncapi}/sync/fdb?key={}", urlencoding::encode(&key));
         let req = sync_req(120, 100_000_000).cancel(ct);
         let Some(items) = net::get_json::<Vec<BucketIn>>(&url, &req).await else { continue };

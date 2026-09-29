@@ -112,7 +112,7 @@ async fn cron_check() -> String {
 }
 
 async fn cron_check_status() -> axum::Json<serde_json::Value> {
-    axum::Json(json!({ "ok": true, "running": check::is_running(), "last": check::last_report() }))
+    axum::Json(json!({ "ok": true, "running": check::is_running(), "progress": check::progress(), "last": check::last_report() }))
 }
 
 /// `[[key, fileTime], ...]` for every bucket: the integrity check on a client compares it with

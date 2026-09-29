@@ -105,6 +105,8 @@ curl --max-time 3600 -H "X-Dev-Key: YOUR_DEV_KEY" \
 | `GET /dev/FixRutrackerNames` | Rutracker: заново разбирает заголовки с вложенными скобками в блоке режиссёра (`Матрица / The Matrix (Братья Вачовски (…) / The Wachowski Brothers (…)) [1999, …]`), у которых `originalname` совпал с русским названием, а `relased` остался 0; переносит записи в новый бакет и обновляет `updateTime` | `{ ok, processed, fixed, migrated }` |
 | `GET /dev/FixSlugDuplicates` | Трекеры с числовым id в адресе (rutor, selezen, nnmclub, megapeer, torrentby, kinozal, rutracker и др.): одна раздача под несколькими старыми slug, обычно в разных бакетах (у старой копии `originalname` равен старому заголовку целиком); два прохода по базе: подсчёт `(трекер, id)`, затем сбор повторов; оставляет самую свежую запись, берёт из удаляемых magnet, если у неё пустой, и поднимает затронутые бакеты для sync | `{ ok, groups, removed, magnetTaken, buckets, trackers }` |
 | `GET /dev/FixUltradoxDomainDuplicates` | Ultradox: переписывает URL на домен из `Ultradox.host` и сливает дубли по пути и фрагменту | `{ ok, scanned, rewritten, merged, removed, canonicalHost }` |
+| `GET /dev/FixAll` | Запускает в фоне все миграции, которые нужны по последнему отчёту `CheckData`, затем перезапускает проверку (см. [Обслуживание](../operations/maintenance.md#проверка-данных)) | `{ ok, steps }` или `{ ok: false, error }` |
+| `GET /dev/FixAllStatus` | Прогресс текущего или последнего `FixAll` | `{ running, phase, startedAt, finishedAt, steps, plan }` |
 
 При слиянии дублей сохраняются лучшие `sid`/`pir`, самый свежий `updateTime` и магнит, если у оставляемой записи его не было.
 

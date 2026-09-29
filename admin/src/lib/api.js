@@ -136,10 +136,13 @@ export const checkTrackerLogin = (slug) => post('trackers/checklogin', undefined
 export const sendTestNotification = () => post('notify/test')
 export const muteIssue = (uid) => post('health/mute', undefined, { query: { uid } })
 export const unmuteIssue = (uid) => post('health/unmute', undefined, { query: { uid } })
+export const getHealthHistory = (limit = 50) => get('health/history', { query: { limit } })
+export const getResources = (opts) => get('resources', opts)
 
 // --- Data quality check (weekly cron, read-only) -----------------------------------
 export const getDataCheck = (opts) => get('dev/checkdatastatus', opts)
 export const runDataCheck = () => get('dev/checkdata', { raw: true })
+export const startFixAll = () => get('dev/fixall')
 
 // --- Trackers ------------------------------------------------------------
 export const runCron = (slug, action, query) =>

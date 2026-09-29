@@ -295,6 +295,8 @@ pub struct LoggingOptions {
     pub files: bool,
     /// Rotate a log file (`app.log` → `app.1.log`) once it exceeds this many MB.
     pub fileMaxMb: i32,
+    /// Same for `sync.log`, which is chattier (every page and bucket); larger by default.
+    pub syncFileMaxMb: i32,
 }
 
 impl Default for LoggingOptions {
@@ -307,6 +309,7 @@ impl Default for LoggingOptions {
             cronSkipFastMs: 100,
             files: true,
             fileMaxMb: 20,
+            syncFileMaxMb: 50,
         }
     }
 }

@@ -13,6 +13,15 @@ import { highlight, levelClass } from '../lib/highlight.jsx'
 import { useT } from '../lang/index.jsx'
 
 const LINE_OPTIONS = [100, 300, 1000, 3000]
+const LEVELS = ['all', 'warn', 'error']
+
+/** `warn` keeps warnings and errors, `error` only errors; other lines are hidden. */
+function passesLevel(line, level) {
+  if (level === 'all') return true
+  const cls = levelClass(line)
+  if (level === 'error') return cls === 'text-danger'
+  return cls === 'text-danger' || cls === 'text-warn'
+}
 
 function LogViewer({ name }) {
   const t = useT()
@@ -20,6 +29,7 @@ function LogViewer({ name }) {
   const [live, setLive] = useState(false)
   const [query, setQuery] = useState('')
   const [onlyMatches, setOnlyMatches] = useState(false)
+  const [level, setLevel] = useState('all')
   const [follow, setFollow] = useState(true)
   const boxRef = useRef(null)
   const { data, error, loading, reload } = usePolling(() => getLog(name, lines), live ? 5000 : 0, { enabled: live })
@@ -30,7 +40,10 @@ function LogViewer({ name }) {
 
   const all = useMemo(() => (Array.isArray(data?.lines) ? data.lines : []), [data])
   const needle = query.trim().toLowerCase()
-  const shown = useMemo(() => (onlyMatches && needle ? all.filter((l) => l.toLowerCase().includes(needle)) : all), [all, onlyMatches, needle])
+  const shown = useMemo(
+    () => all.filter((l) => passesLevel(l, level) && (!onlyMatches || !needle || l.toLowerCase().includes(needle))),
+    [all, onlyMatches, needle, level],
+  )
   const matches = useMemo(() => (needle ? all.filter((l) => l.toLowerCase().includes(needle)).length : 0), [all, needle])
 
   useEffect(() => {
@@ -62,6 +75,16 @@ function LogViewer({ name }) {
           <input type="search" className="input pl-9" placeholder={t('logs_search')} aria-label={t('logs_search')} value={query} onChange={(e) => setQuery(e.target.value)} />
         </div>
         <Toggle id="log-only" checked={onlyMatches} onChange={setOnlyMatches} label={t('logs_only_matches')} />
+        <label className="flex items-center gap-2 text-sm">
+          <span className="text-muted">{t('logs_level')}</span>
+          <select className="input w-auto py-1.5" value={level} onChange={(e) => setLevel(e.target.value)} aria-label={t('logs_level')}>
+            {LEVELS.map((l) => (
+              <option key={l} value={l}>
+                {t(`logs_level_${l}`)}
+              </option>
+            ))}
+          </select>
+        </label>
         <Toggle id="log-follow" checked={follow} onChange={setFollow} label={<span className="inline-flex items-center gap-1"><ArrowDownToLine className="size-3.5" aria-hidden="true" />{t('logs_follow')}</span>} />
         {needle ? (
           <span className="text-xs text-muted" aria-live="polite">
@@ -86,7 +109,7 @@ function LogViewer({ name }) {
             </div>
           ))
         ) : (
-          <p className="text-muted">{all.length ? t('logs_no_matches') : t('logs_empty')}</p>
+          <p className="text-muted">{all.length ? (level !== 'all' && !needle ? t('logs_no_level', { level: t(`logs_level_${level}`) }) : t('logs_no_matches')) : t('logs_empty')}</p>
         )}
       </div>
     </div>
