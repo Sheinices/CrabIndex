@@ -81,6 +81,12 @@ jobs:
         with:
           key: ${{ matrix.target }}
 
+      # A tag made right after a version bump may carry a Cargo.lock that still lists the old
+      # workspace version; syncing only the workspace members keeps dependencies pinned.
+      - name: Sync workspace versions in Cargo.lock
+        shell: bash
+        run: cargo update --workspace
+
       - name: Build
         shell: bash
         run: cargo build --release --locked -p crabindex --target ${{ matrix.target }}

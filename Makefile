@@ -33,6 +33,9 @@ release: ## Optimized server binary (TARGET= optional)
 	$(CARGO) build --release --locked -p crabindex $(TARGET_FLAG)
 	@echo "Binary: $(RELEASE_DIR)/crabindex"
 
+bump: ## Set the workspace version and refresh Cargo.lock (make bump VERSION=1.2.3)
+	@scripts/bump-version.sh $(VERSION)
+
 test: ## Run all Rust tests
 	$(CARGO) test --workspace
 

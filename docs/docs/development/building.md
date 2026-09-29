@@ -173,6 +173,18 @@ cp Data/example.yaml init.yaml
 3. К релизу прикрепляются архивы `crabindex-<платформа>.tar.gz` / `.zip` (имена без версии, поэтому ссылка `/releases/latest/download/<имя>` всегда ведёт на последнюю сборку) и `SHA256SUMS`.
 4. Публикуется Docker-образ `ghcr.io/sheinices/crabindex:<версия>` и `:latest` для amd64 и arm64 (`Dockerfile.release`, из готовых бинарников).
 
+### Смена версии
+
+Версия workspace живёт в `Cargo.toml` (`[workspace.package] version`) и дублируется в `Cargo.lock` для каждого крейта. Если поднять её руками и не пересобрать, `cargo … --locked` в CI и в сборке релиза падает с «cannot update the lock file». Поэтому версию меняет скрипт:
+
+```bash
+scripts/bump-version.sh 1.2.3          # или: make bump VERSION=1.2.3
+git add Cargo.toml Cargo.lock && git commit -m "v1.2.3"
+git tag v1.2.3 && git push origin main v1.2.3
+```
+
+Скрипт правит `Cargo.toml`, выполняет `cargo update --workspace` (обновляет в `Cargo.lock` только крейты workspace, сторонние зависимости не трогает) и проверяет `cargo metadata --locked`. CI отдельным шагом проверяет, что `Cargo.lock` не отстал, и пишет понятную ошибку; сборка релиза перед `cargo build --locked` сама синхронизирует версии крейтов workspace в `Cargo.lock`, так что тег на свежем коммите с поднятой версией соберётся даже без обновлённого lock-файла.
+
 Версия берётся из тега и видна в баннере, `/version`, админ-панели и Swagger. Пересобрать уже существующий тег можно вручную: Actions → Release → «Run workflow» с указанием тега.
 
 На каждый push в `main` и pull request `.github/workflows/ci.yml` запускает тесты Rust, сайта и админ-панели, сборку документации и shellcheck скриптов.

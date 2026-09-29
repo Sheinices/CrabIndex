@@ -19,6 +19,12 @@ jobs:
           fetch-depth: 0
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
+      - name: Cargo.lock in step with Cargo.toml
+        run: |
+          if ! cargo metadata --locked --format-version 1 >/dev/null 2>&1; then
+            echo "::error::Cargo.lock is stale (version bump without refreshing the lock?). Run scripts/bump-version.sh <version> or 'cargo update --workspace' and commit Cargo.lock."
+            exit 1
+          fi
       - run: cargo test --workspace --locked
 
   frontend:
