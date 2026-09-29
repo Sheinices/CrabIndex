@@ -20,8 +20,9 @@ current=$(sed -n 's/^version = "\([^"]*\)"/\1/p' Cargo.toml | head -1)
 if [[ "$current" == "$version" ]]; then
   echo "Cargo.toml already at $version"
 else
-  # first `version = "..."` in Cargo.toml is [workspace.package]
-  sed -i.bak "0,/^version = \"$current\"/s//version = \"$version\"/" Cargo.toml && rm -f Cargo.toml.bak
+  # first `version = "..."` in Cargo.toml is [workspace.package]; awk instead of sed's `0,/re/`,
+  # which BSD sed (macOS) does not support
+  awk -v cur="$current" -v new="$version" '!done && $0 == "version = \"" cur "\"" { $0 = "version = \"" new "\""; done = 1 } { print }' Cargo.toml > Cargo.toml.tmp && mv Cargo.toml.tmp Cargo.toml
   echo "Cargo.toml: $current -> $version"
 fi
 
