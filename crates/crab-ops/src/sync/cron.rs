@@ -350,7 +350,7 @@ pub(super) async fn import(torrents: Vec<TorrentDetails>) {
 
 /// Request to the sync host, tagged with this client's version (the host lists its clients).
 pub(super) fn sync_req(timeout: u64, max_size: usize) -> Req {
-    let req = Req::new().timeout(timeout).max_size(max_size).header(super::peers::VERSION_HEADER, env!("CARGO_PKG_VERSION"));
+    let req = Req::new().timeout(timeout).max_size(max_size).header(super::peers::VERSION_HEADER, crab_core::hooks::app_version());
     match conf().syncKey.as_deref().map(str::trim).filter(|k| !k.is_empty()) {
         Some(key) => req.header(super::keys::KEY_HEADER, key),
         None => req,

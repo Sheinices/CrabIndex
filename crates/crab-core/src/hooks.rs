@@ -75,3 +75,17 @@ pub fn register_health_counts(f: HealthCounts) {
 pub fn health_counts() -> Option<(usize, usize)> {
     HEALTH.get().map(|f| f())
 }
+
+// ---------------------------------------------------------------- app version
+
+static APP_VERSION: OnceCell<&'static str> = OnceCell::new();
+
+/// The build's version as the server shows it (`/version`, git tag); registered by the binary.
+pub fn register_app_version(v: &'static str) {
+    let _ = APP_VERSION.set(v);
+}
+
+/// Registered build version, else this crate's package version.
+pub fn app_version() -> &'static str {
+    APP_VERSION.get().copied().unwrap_or(env!("CARGO_PKG_VERSION"))
+}

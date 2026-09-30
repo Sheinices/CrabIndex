@@ -600,6 +600,7 @@ fn open_from_history() -> HashMap<String, (Issue, bool)> {
 
 pub fn spawn_notifier(ct: CancellationToken) {
     crab_core::hooks::register_health_counts(counts);
+    crab_core::hooks::register_app_version(crate::version::VERSION);
     tokio::spawn(async move {
         if let Ok(open) = tokio::task::spawn_blocking(open_from_history).await {
             let mut st = STATE.lock();
