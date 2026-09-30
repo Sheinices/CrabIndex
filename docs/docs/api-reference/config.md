@@ -104,11 +104,15 @@ curl -b jar "$BASE/api/config?format=yaml"
 
 Файл выбирается так: если конфиг уже существует, перезаписывается он. Иначе создаётся `init.yaml` (или `init.conf` при `format: json`). Формат вывода - `format` из запроса, иначе формат существующего файла, иначе YAML.
 
+:::warning[Внимание]
+`data` без `merge` это **весь документ**: каждый ключ, которого в нём нет, вернётся к значению по умолчанию, включая `admin.path`, `admin.token`, `devkey` и настройки трекеров. Панель отправляет полный документ. Скрипту, который меняет пару ключей, нужен `"merge": true`: тогда `data` накладывается на текущий конфиг. Предыдущая версия файла остаётся рядом как `init.yaml.bak` (одна копия, перезаписывается при каждом сохранении).
+:::
+
 ```bash
-# Изменить пару ключей
+# Изменить пару ключей: merge накладывает data на текущий конфиг
 curl -b jar -X POST "$BASE/api/config" \
   -H "X-Crab-Admin: 1" -H "Content-Type: application/json" \
-  -d '{"data": {"openstats": false, "Rutor": {"reqMinute": 6}}}'
+  -d '{"data": {"openstats": false, "Rutor": {"reqMinute": 6}}, "merge": true}'
 
 # Сохранить YAML-текст
 curl -b jar -X POST "$BASE/api/config" \

@@ -22,6 +22,7 @@ pub fn router() -> Router {
         .route("/stats/torrents", any(stats_torrents))
         .route("/stats/tracks", any(stats_tracks))
         .route("/stats/meta", any(stats_meta))
+        .route("/stats/history", any(stats_history))
         .route("/dev/tracksstats", any(dev_tracks_stats))
         .route("/dev/exporttracks", any(dev_export_tracks))
         .route("/dev/exporttracksstatus", any(dev_export_tracks_status))
@@ -119,6 +120,22 @@ async fn stats_torrents(Query(q): Query<StatsQuery>) -> Response {
             .into_response();
     }
     ([(header::CONTENT_TYPE, "application/json; charset=utf-8")], body).into_response()
+}
+
+#[derive(Deserialize, Default)]
+#[serde(default)]
+struct HistoryQuery {
+    days: Option<usize>,
+}
+
+/// `GET /stats/history?days=30` - new torrents per day per tracker (see `stats::history_json`).
+async fn stats_history(Query(q): Query<HistoryQuery>) -> Response {
+    if !conf().openstats {
+        return axum::Json(json!({ "days": [], "trackers": {} })).into_response();
+    }
+    let n = q.days.unwrap_or(30);
+    let v = blocking(move || stats::history_json(n)).await.unwrap_or(json!({ "days": [], "trackers": {} }));
+    axum::Json(v).into_response()
 }
 
 #[derive(Deserialize, Default)]

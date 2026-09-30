@@ -67,6 +67,7 @@ FlareSolverr запускает настоящий браузер Chrome. Реш
 3. Если cffetch недоступен или снова получил challenge, CrabIndex просит FlareSolverr открыть страницу в браузере, забирает из ответа cookie и User-Agent и запоминает их.
 4. Следующие запросы снова идут через cffetch с новой cookie. Заголовки `Referer`, `Accept` и `Accept-Language` передаются только в cffetch (FlareSolverr их не поддерживает).
 5. Хост остаётся «защищённым» `guardedHours` часов; раз в `recheckMinutes` минут CrabIndex пробует обычный запрос - вдруг защиту сняли.
+6. Если браузерные запросы к сайту в основном проваливаются (challenge не решается, вкладки падают, таймауты), сайт уходит на паузу `backoffMinutes`, и FlareSolverr не получает новой работы по нему; пауза удваивается после каждой неудачной пробы до `backoffMaxMinutes`, успешный запрос её снимает. Паузы видны в разделе **FlareSolverr** (кнопка **снять**) и в карточке **Здоровье**; API: `POST /cron/cloudflare/backoff/clear?host=`.
 
 У каждого хоста своя сессия браузера в FlareSolverr: `crabindex-rutracker_org`, `crabindex-kinozal_guru` и т. д.
 
@@ -85,6 +86,9 @@ flaresolverr:
   recycleAfterTimeouts: 3
   guardedHours: 6
   recheckMinutes: 30
+  backoff: true
+  backoffMinutes: 15
+  backoffMaxMinutes: 120
 
 cffetch:
   enable: true
@@ -109,6 +113,9 @@ cffetch:
 | `recycleAfterTimeouts` | `3` | Пересоздавать сессию только после N таймаутов подряд |
 | `guardedHours` | `6` | Сколько часов хост считается защищённым после challenge |
 | `recheckMinutes` | `30` | Как часто пробовать защищённый хост обычным запросом |
+| `backoff` | `true` | Пауза браузера для сайта, у которого за последние полчаса успешных браузерных запросов не больше четверти (при 8 и больше запросах). Быстрый путь cffetch продолжает работать, парсер получает отказ сразу, без ожидания FlareSolverr |
+| `backoffMinutes` | `15` | Первая пауза; после неё пропускается одна проба, неудачная проба удваивает паузу |
+| `backoffMaxMinutes` | `120` | Предел паузы. Любой успешный запрос снимает паузу и сбрасывает лестницу |
 
 ### cffetch
 

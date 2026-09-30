@@ -179,6 +179,9 @@ pub fn issues(c: &AppOptions) -> Vec<Issue> {
 
     // --- FlareSolverr -------------------------------------------------------------------
     if c.flaresolverr.enable {
+        for b in crab_cloudflare::backoff::active() {
+            out.push(Issue::new("fs_backoff", &b.host, "warn", "/cloudflare", json!({ "host": b.host, "until": b.until, "level": b.level + 1, "okPercent": (b.ok_ratio * 100.0).round() as i64, "requests": b.window_requests })));
+        }
         for h in crab_cloudflare::stats::hosts() {
             if h.tab_crashed >= FS_TAB_CRASH_LIMIT {
                 out.push(Issue::new("fs_tab_crashes", &h.host, "warn", "/cloudflare", json!({ "host": h.host, "crashes": h.tab_crashed })));
@@ -448,6 +451,7 @@ pub fn describe(i: &Issue) -> String {
         "data_issues" => format!("Проверка данных нашла записей к исправлению: {}", p["count"]),
         "container_memory" => format!("Контейнер {} занял {}% лимита памяти ({} МБ)", p["name"].as_str().unwrap_or(""), p["percent"], p["limitMb"]),
         "client_stale" => format!("Клиент sync {} не приходил {} ч (порог {} ч)", p["client"].as_str().unwrap_or(""), p["hours"], p["limit"]),
+        "fs_backoff" => format!("FlareSolverr: {} на паузе до {} (успешных {}% из {})", p["host"].as_str().unwrap_or(""), p["until"].as_str().map(|u| &u[11..16]).unwrap_or(""), p["okPercent"], p["requests"]),
         "test_message" => "Тестовое уведомление CrabIndex".to_string(),
         other => format!("{other}: {p}"),
     }
@@ -565,9 +569,9 @@ pub fn counts() -> (usize, usize) {
 }
 
 /// Every signal id the checks can produce; history rows are mapped back to these.
-const ISSUE_IDS: [&str; 13] = [
+const ISSUE_IDS: [&str; 14] = [
     "sync_stale", "sync_unreachable", "sync_check_failed", "sync_check_backlog", "login_missing", "login_failed", "tracker_stale",
-    "fs_tab_crashes", "fs_failing", "waf_users_hit", "data_issues", "container_memory", "client_stale",
+    "fs_tab_crashes", "fs_failing", "waf_users_hit", "data_issues", "container_memory", "client_stale", "fs_backoff",
 ];
 
 /// Signals whose last history row is `appeared`: still active when the process stopped. Seeding
@@ -777,7 +781,7 @@ mod tests {
 
     #[test]
     fn describe_covers_every_id() {
-        for id in ["sync_stale", "sync_unreachable", "sync_check_failed", "sync_check_backlog", "login_missing", "login_failed", "tracker_stale", "fs_tab_crashes", "fs_failing", "waf_users_hit", "data_issues", "container_memory", "client_stale"] {
+        for id in ["sync_stale", "sync_unreachable", "sync_check_failed", "sync_check_backlog", "login_missing", "login_failed", "tracker_stale", "fs_tab_crashes", "fs_failing", "waf_users_hit", "data_issues", "container_memory", "client_stale", "fs_backoff"] {
             let i = Issue::new(id, "k", "warn", "/", json!({ "minutes": 1, "limit": 2, "syncapi": "s", "error": "e", "remaining": 3, "tracker": "t", "days": 4, "host": "h", "crashes": 5, "failed": 6, "requests": 7 }));
             assert!(!describe(&i).contains(id), "{id} should read as text");
         }

@@ -118,7 +118,8 @@ pub(crate) fn add_or_update_master_db(t: &TorrentDetails) {
 /// Persist masterDb + daily backup, drop the 3-days-old backup.
 pub fn save_changes_to_file() {
     let snapshot: HashMap<String, MasterDbShard> = MASTER_DB.iter().map(|e| (e.key().clone(), e.value().clone())).collect();
-    write_gz_json("Data/masterDb.bz", &snapshot);
+    // fastest gzip level: this file is rewritten every few minutes and read once at start
+    write_gz_json_fast("Data/masterDb.bz", &snapshot);
     DIRTY.store(false, Ordering::SeqCst);
     let today = dated_name(0);
     if !std::path::Path::new(&today).exists() {

@@ -4,7 +4,7 @@
 import { useId, useMemo, useState } from 'react'
 import { Link } from 'react-router'
 import { Download, FileText, KeyRound, Play, RefreshCw, Search } from 'lucide-react'
-import { checkTrackerLogin, getOverview, runCron } from '../lib/api.js'
+import { checkTrackerLogin, getOverview, getStatsHistory, runCron } from '../lib/api.js'
 import { actionsFor, cleanParams, hasParseAll, TRACKER_ACTIONS, trackerLogName } from '../lib/actions.js'
 import { usePolling } from '../hooks/usePolling.js'
 import { useResult } from '../components/ResultDrawer.jsx'
@@ -78,6 +78,40 @@ function ParamsDialog({ state, onClose, onRun }) {
 }
 
 /** Login state of a tracker that needs an account, with the on-demand check button. */
+/// New torrents per day for one tracker over the last month: thin bars, one hue, the day and
+/// value on hover; the total and the best day as text so the number is never color-alone.
+function FillSparkline({ days, values, t }) {
+  const nums = (values || []).map((v) => (Number.isFinite(Number(v)) ? Number(v) : null))
+  const known = nums.filter((v) => v != null)
+  if (!days?.length || known.length === 0) return <span className="text-xs text-muted">{t('tr_fill_none')}</span>
+  const max = Math.max(1, ...known)
+  const total = known.reduce((a, b) => a + b, 0)
+  const w = 3
+  const gap = 2
+  const h = 22
+  const width = days.length * (w + gap) - gap
+  return (
+    <div className="flex items-center gap-2">
+      <svg width={width} height={h} viewBox={`0 0 ${width} ${h}`} role="img" aria-label={t('tr_fill_aria', { total: formatNumber(total), days: days.length })} className="shrink-0 text-accent">
+        <line x1="0" y1={h - 0.5} x2={width} y2={h - 0.5} stroke="currentColor" strokeOpacity="0.25" strokeWidth="1" />
+        {nums.map((v, i) => {
+          const x = i * (w + gap)
+          if (v == null) return <rect key={days[i]} x={x} y={h - 2} width={w} height={1} fill="currentColor" fillOpacity="0.2" />
+          const bh = Math.max(1, Math.round((v / max) * (h - 2)))
+          return (
+            <rect key={days[i]} x={x} y={h - 1 - bh} width={w} height={bh} rx="1" fill="currentColor" fillOpacity={v === max ? 1 : 0.7}>
+              <title>{`${days[i]}: ${formatNumber(v)}`}</title>
+            </rect>
+          )
+        })}
+      </svg>
+      <span className="text-xs tabular-nums whitespace-nowrap text-muted" title={t('tr_fill_max', { n: formatNumber(max) })}>
+        {formatNumber(total)}
+      </span>
+    </div>
+  )
+}
+
 function LoginCell({ tracker, busy, onCheck }) {
   const t = useT()
   const l = tracker.login
@@ -121,6 +155,8 @@ function LoginCell({ tracker, busy, onCheck }) {
 export function TrackersPage() {
   const t = useT()
   const { data, error, loading, reload } = usePolling(() => getOverview(), 15_000)
+  const history = usePolling(() => getStatsHistory(30), 5 * 60_000)
+  const hist = history.data && typeof history.data === 'object' ? history.data : null
   const { run } = useResult()
   const confirm = useConfirm()
   const [query, setQuery] = useState('')
@@ -209,6 +245,7 @@ export function TrackersPage() {
                 <th scope="col" className="min-w-44">
                   ParseAll
                 </th>
+                <th scope="col">{t('tr_col_fill')}</th>
                 <th scope="col">{t('tr_col_actions')}</th>
               </tr>
             </thead>
@@ -240,6 +277,9 @@ export function TrackersPage() {
                       ) : (
                         <span className="text-xs text-muted">-</span>
                       )}
+                    </td>
+                    <td>
+                      <FillSparkline days={hist?.days} values={hist?.trackers?.[tr.slug]?.new} t={t} />
                     </td>
                     <td>
                       <div className="flex flex-wrap gap-1.5">

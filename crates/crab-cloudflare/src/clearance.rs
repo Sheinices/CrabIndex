@@ -185,6 +185,12 @@ pub async fn fetch_async(url: &str, cookie: Option<&str>, referer: Option<&str>,
         }
     }
 
+    if let Some(until) = crate::backoff::skip(&host) {
+        // most recent browser requests to this site failed: do not feed FlareSolverr more work
+        log::debug(cat::HOST, format!("{host}: browser backoff until {}", until.format("%H:%M:%S")));
+        return None;
+    }
+
     let session = session_for_host(&v, &host);
     let _gate = session.gate.lock().await;
     let _renew = RenewRelease(host.clone());
@@ -474,8 +480,28 @@ async fn request(v: &View, session: &BrowserSession, url: &str, cookie: Option<&
     let started = std::time::Instant::now();
     let r = request_inner(v, session, url, cookie).await;
     let ms = started.elapsed().as_millis() as u64;
-    stats::browser(&session.host, ms, if r.0 == FetchOutcome::Ok { None } else { Some(r.2.as_deref().unwrap_or("failed")) });
+    let ok = r.0 == FetchOutcome::Ok;
+    stats::browser(&session.host, ms, if ok { None } else { Some(r.2.as_deref().unwrap_or("failed")) });
+    note_backoff(&session.host, ok);
     r
+}
+
+/// Feed the backoff ladder and log when a site is paused.
+fn note_backoff(host: &str, ok: bool) {
+    if crate::backoff::note(host, ok) {
+        if let Some(b) = crate::backoff::active().into_iter().find(|b| b.host == host.to_lowercase()) {
+            log::warn(
+                cat::HOST,
+                format!(
+                    "{host}: браузерные запросы приостановлены до {} (успешных за 30 мин: {:.0}% из {}, пауза №{})",
+                    b.until.format("%H:%M"),
+                    b.ok_ratio * 100.0,
+                    b.window_requests,
+                    b.entered
+                ),
+            );
+        }
+    }
 }
 
 async fn request_inner(v: &View, session: &BrowserSession, url: &str, cookie: Option<&str>) -> (FetchOutcome, Option<String>, Option<String>) {
@@ -797,6 +823,7 @@ async fn post_once(v: &View, session: &BrowserSession, host: &str, url: &str, fo
     if !val_str(root.get("status")).map(|s| s.eq_ignore_ascii_case("ok")).unwrap_or(false) {
         let message = val_str(root.get("message")).unwrap_or_default();
         stats::browser(host, ms, Some(&message));
+        note_backoff(host, false);
         log::error(cat::HOST, format!("{host}: FlareSolverr POST отказал: {message}"));
         if is_session_broken_message(&message) {
             session.set_alive(false);
@@ -805,6 +832,7 @@ async fn post_once(v: &View, session: &BrowserSession, host: &str, url: &str, fo
         return PostOutcome::Failed;
     }
     stats::browser(host, ms, None);
+    note_backoff(host, true);
     PostOutcome::Ok(root)
 }
 

@@ -3,8 +3,8 @@
 
 import { useState } from 'react'
 import { Link } from 'react-router'
-import { Pause, Play, RefreshCw, RotateCcw, Settings, XCircle } from 'lucide-react'
-import { closeBrowserSessions, getCloudflareStatus, pauseCloudflare, resetCloudflareStats } from '../lib/api.js'
+import { Pause, Play, RefreshCw, RotateCcw, Settings, XCircle, PauseCircle } from 'lucide-react'
+import { closeBrowserSessions, getCloudflareStatus, pauseCloudflare, clearCloudflareBackoff, resetCloudflareStats } from '../lib/api.js'
 import { advice, avgSeconds, failRate, hostTone, kindLabel, totals } from '../lib/cloudflare.js'
 import { usePolling } from '../hooks/usePolling.js'
 import { useConfirm } from '../components/Confirm.jsx'
@@ -103,6 +103,8 @@ export function CloudflarePage() {
 
   const d = st.data
   const hosts = d?.stats?.hosts || []
+  const backoffByHost = Object.fromEntries((d?.backoff || []).map((b) => [b.host, b]))
+  const clearBackoff = (host) => act(`backoff:${host}`, () => clearCloudflareBackoff(host), () => t('cf_backoff_cleared', { host }))
   const tot = totals(hosts)
   const errors = d?.stats?.recentErrors || []
   const sessions = d?.sessions || []
@@ -203,6 +205,15 @@ export function CloudflarePage() {
                               <StatusDot tone={TONE_DOT[hostTone(h)]} />
                               {h.host}
                             </span>
+                            {backoffByHost[h.host] ? (
+                              <span className="mt-1 flex flex-wrap items-center gap-1 text-xs text-warn">
+                                <PauseCircle className="size-3.5" aria-hidden="true" />
+                                {t('cf_backoff_until', { time: formatDate(backoffByHost[h.host].until), level: backoffByHost[h.host].level + 1, ok: Math.round(backoffByHost[h.host].okRatio * 100), n: backoffByHost[h.host].windowRequests })}
+                                <button type="button" className="underline decoration-dotted hover:text-fg" onClick={() => clearBackoff(h.host)} disabled={!!busy}>
+                                  {t('cf_backoff_clear')}
+                                </button>
+                              </span>
+                            ) : null}
                           </td>
                           <td className="text-right tabular-nums">{formatNumber(h.browserRequests)}</td>
                           <td className="text-right tabular-nums">
@@ -320,6 +331,8 @@ export function CloudflarePage() {
                 [t('cf_s_guarded_hours'), t('cf_hours', { n: d.settings?.guardedHours })],
                 ['cffetch', d.cffetch?.enabled ? `${d.cffetch.url} · ${d.cffetch.impersonate}` : t('cf_off')],
                 [t('cf_s_guarded_hosts'), (d.guarded || []).map((g) => g.host).join(', ') || t('cf_none')],
+                [t('cf_s_backoff'), d.settings?.backoff ? t('cf_backoff_setting', { min: d.settings?.backoffMinutes, max: d.settings?.backoffMaxMinutes }) : t('cf_off')],
+                [t('cf_s_backoff_hosts'), (d.backoff || []).map((b) => b.host).join(', ') || t('cf_none')],
               ].map(([k, v]) => (
                 <div key={k} className="flex justify-between gap-3 border-b border-border py-1.5">
                   <dt className="text-muted">{k}</dt>

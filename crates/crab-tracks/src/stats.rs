@@ -20,6 +20,9 @@ use crate::tracks::{db, index, stats_cache};
 
 pub const STATS_PATH: &str = "Data/temp/stats.json";
 pub const STATS_META_PATH: &str = "Data/temp/stats-meta.json";
+/// Per-day, per-tracker `new` (torrents created that day) and `all` counts, kept 60 days.
+pub const STATS_HISTORY_PATH: &str = "Data/temp/stats-history.json";
+const HISTORY_DAYS: i64 = 60;
 
 static COLLECT_LOCK: Mutex<()> = parking_lot::const_mutex(());
 static LAST_COLLECTED_AT: Mutex<Option<DateTime<Utc>>> = parking_lot::const_mutex(None);
@@ -85,6 +88,7 @@ pub fn collect_and_write(force: bool) -> Option<DateTime<Utc>> {
 
     let scan = scan_fdb(today);
     write_tracker_stats(&scan.trackers, updated_at);
+    write_history(&scan.trackers, updated_at);
     stats_cache::publish_export_stats_cache(updated_at, &scan);
 
     *LAST_COLLECTED_AT.lock() = Some(updated_at);
@@ -206,6 +210,53 @@ fn write_tracker_stats(trackers: &IndexMap<String, TrackerStatsRow>, updated_at:
             log::error(cat::STATS, format!("error / {e}"));
         }
     }
+}
+
+fn read_history_file() -> serde_json::Map<String, serde_json::Value> {
+    std::fs::read_to_string(STATS_HISTORY_PATH)
+        .ok()
+        .and_then(|s| serde_json::from_str::<serde_json::Value>(&s).ok())
+        .and_then(|v| v.get("days").and_then(|d| d.as_object().cloned()))
+        .unwrap_or_default()
+}
+
+/// Today's row of the history: the last collection of a day is its final value (`newtor`
+/// counts rows created that day, so it only grows during the day). Older days are kept as
+/// written; days beyond [`HISTORY_DAYS`] are dropped.
+fn write_history(trackers: &IndexMap<String, TrackerStatsRow>, updated_at: DateTime<Utc>) {
+    let mut days = read_history_file();
+    let today = updated_at.format("%Y-%m-%d").to_string();
+    let mut row = serde_json::Map::new();
+    for (slug, r) in trackers {
+        row.insert(slug.clone(), json!({ "new": r.new_tor, "all": r.all_torrents }));
+    }
+    days.insert(today, serde_json::Value::Object(row));
+    let cutoff = (updated_at - chrono::Duration::days(HISTORY_DAYS)).format("%Y-%m-%d").to_string();
+    days.retain(|d, _| d.as_str() >= cutoff.as_str());
+    if let Ok(text) = serde_json::to_string(&json!({ "days": days })) {
+        if let Err(e) = write_text_atomic(STATS_HISTORY_PATH, &text) {
+            log::error(cat::STATS, format!("history: {e}"));
+        }
+    }
+}
+
+/// `{ days: [dates asc], trackers: { slug: { new: [...], all: [...] } } }` for the last `n`
+/// days (gaps are `null`), for the fill charts in the admin panel.
+pub fn history_json(n: usize) -> serde_json::Value {
+    let days = read_history_file();
+    let mut dates: Vec<&String> = days.keys().collect();
+    dates.sort();
+    let n = n.clamp(1, HISTORY_DAYS as usize);
+    let dates: Vec<&String> = dates.into_iter().rev().take(n).rev().collect();
+    let mut slugs: Vec<String> = days.values().filter_map(|v| v.as_object()).flat_map(|o| o.keys().cloned()).collect();
+    slugs.sort();
+    slugs.dedup();
+    let mut trackers = serde_json::Map::new();
+    for slug in slugs {
+        let pick = |field: &str| -> Vec<serde_json::Value> { dates.iter().map(|d| days[*d].get(&slug).and_then(|r| r.get(field)).cloned().unwrap_or(serde_json::Value::Null)).collect() };
+        trackers.insert(slug.clone(), json!({ "new": pick("new"), "all": pick("all") }));
+    }
+    json!({ "days": dates, "trackers": trackers })
 }
 
 /// Write via `{path}.tmp` + rename.

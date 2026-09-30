@@ -138,6 +138,7 @@ export const getSyncCheckStatus = (opts) => get('cron/sync/checkstatus', opts)
 
 // --- Health / notifications ------------------------------------------------------
 export const checkTrackerLogin = (slug) => post('trackers/checklogin', undefined, { query: { tracker: slug } })
+export const getStatsHistory = (days = 30) => get('stats/history', { query: { days } })
 export const sendTestNotification = () => post('notify/test')
 export const muteIssue = (uid) => post('health/mute', undefined, { query: { uid } })
 export const unmuteIssue = (uid) => post('health/unmute', undefined, { query: { uid } })
@@ -179,6 +180,7 @@ export const getCloudflareStatus = (opts) => get('cron/cloudflare/status', opts)
 export const closeBrowserSessions = (host) => post('cron/cloudflare/sessions/close', undefined, { query: { host } }).then(ensureOk)
 export const pauseCloudflare = (value) => post('cron/cloudflare/pause', undefined, { query: { value } }).then(ensureOk)
 export const resetCloudflareStats = () => post('cron/cloudflare/stats/reset').then(ensureOk)
+export const clearCloudflareBackoff = (host) => post('cron/cloudflare/backoff/clear', undefined, { query: { host } }).then(ensureOk)
 
 // --- Maintenance / dev ---------------------------------------------------------
 export const runPath = (path, query) => get(path, { query, raw: true })

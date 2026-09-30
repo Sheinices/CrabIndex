@@ -86,6 +86,9 @@ async fn status_handler() -> Json<Value> {
             "recycleAfterTimeouts": fs.recycleAfterTimeouts,
             "guardedHours": fs.guardedHours,
             "recheckMinutes": fs.recheckMinutes,
+            "backoff": fs.backoff,
+            "backoffMinutes": fs.backoffMinutes,
+            "backoffMaxMinutes": fs.backoffMaxMinutes,
         },
         "solver": solver,
         "crawlSolver": crawl,
@@ -99,6 +102,7 @@ async fn status_handler() -> Json<Value> {
         },
         "sessions": clearance::sessions_snapshot(),
         "guarded": guarded,
+        "backoff": crate::backoff::active(),
         "stats": {
             "since": stats::since(),
             "hosts": stats::hosts(),
@@ -135,6 +139,16 @@ async fn pause_handler(Query(q): Query<PauseQuery>) -> Json<Value> {
     Json(json!({ "ok": true, "paused": pause, "closed": closed, "busy": busy }))
 }
 
+/// `POST /cron/cloudflare/backoff/clear?host=` - end the browser pause for a site now.
+async fn backoff_clear_handler(Query(q): Query<HostQuery>) -> Json<Value> {
+    let host = q.host.clone().unwrap_or_default();
+    let ok = crate::backoff::clear(&host);
+    if ok {
+        log::info(cat::HOST, format!("{host}: пауза браузера снята из админ-панели"));
+    }
+    Json(json!({ "ok": ok, "host": host }))
+}
+
 /// `POST /cron/cloudflare/stats/reset`
 async fn reset_stats_handler() -> Json<Value> {
     stats::reset();
@@ -148,4 +162,5 @@ pub fn router() -> Router {
         .route("/cron/cloudflare/sessions/close", post(close_sessions_handler))
         .route("/cron/cloudflare/pause", post(pause_handler))
         .route("/cron/cloudflare/stats/reset", post(reset_stats_handler))
+        .route("/cron/cloudflare/backoff/clear", post(backoff_clear_handler))
 }

@@ -49,6 +49,10 @@ pub struct ConfigSaveRequest {
     pub content: Option<String>,
     pub format: Option<String>,
     pub data: Option<Value>,
+    /// `data` holds only the keys to change: they are merged into the current config. Without
+    /// it `data` (or `content`) is the whole document and every key left out returns to its
+    /// default - the admin panel sends full documents, scripts should send `merge: true`.
+    pub merge: bool,
 }
 
 /// `Ok(None)` for an empty body or a non-object root; `Err` for malformed JSON.
@@ -71,7 +75,25 @@ pub fn parse_request_body(text: &str) -> Result<Option<ConfigSaveRequest>, Strin
         Some(v @ Value::Object(_)) => Some(v.clone()),
         _ => None,
     };
-    Ok(Some(ConfigSaveRequest { content, format, data }))
+    let merge = matches!(obj.get("merge"), Some(Value::Bool(true)));
+    Ok(Some(ConfigSaveRequest { content, format, data, merge }))
+}
+
+/// Objects merge key by key, everything else (scalars, arrays) is replaced by `patch`.
+pub fn deep_merge(base: &mut Value, patch: &Value) {
+    match (base, patch) {
+        (Value::Object(b), Value::Object(p)) => {
+            for (k, v) in p {
+                match b.get_mut(k) {
+                    Some(slot) if slot.is_object() && v.is_object() => deep_merge(slot, v),
+                    _ => {
+                        b.insert(k.clone(), v.clone());
+                    }
+                }
+            }
+        }
+        (b, p) => *b = p.clone(),
+    }
 }
 
 fn read_body(bytes: &Bytes) -> Result<Option<ConfigSaveRequest>, Response> {
@@ -84,6 +106,12 @@ fn read_body(bytes: &Bytes) -> Result<Option<ConfigSaveRequest>, Response> {
 
 fn resolve_payload(body: &ConfigSaveRequest) -> Result<Value, String> {
     if let Some(d) = &body.data {
+        if body.merge {
+            // patch over the running config, so a two-key request keeps everything else
+            let mut current = validator::options_to_value(&crab_core::conf());
+            deep_merge(&mut current, d);
+            return Ok(current);
+        }
         return Ok(d.clone());
     }
     match body.content.as_deref().filter(|c| !c.trim().is_empty()) {
@@ -239,6 +267,13 @@ pub fn save_config_object(data: &Value, format: Option<&str>) -> Result<config::
         if output_format == "json" { config::CONFIG_FILE_JSON } else { config::CONFIG_FILE_YAML }.to_string()
     });
     let serialized = config::render_config_value(&jo, &output_format);
+    // the previous document survives one save as `{path}.bak`: a wrong full-document write
+    // (a script that meant to change one key) is undone by copying it back
+    if let Ok(prev) = std::fs::read_to_string(&target) {
+        if prev != serialized {
+            let _ = config::write_atomically(&format!("{target}.bak"), &prev);
+        }
+    }
     config::write_atomically(&target, &serialized).map_err(|e| e.to_string())?;
     config::reload_from_disk(&target)?;
     Ok(config::get_config_source_info())
@@ -285,6 +320,18 @@ mod tests {
         assert_eq!(b.content.as_deref(), Some("a: 1"));
         assert_eq!(b.format.as_deref(), Some("yaml"));
         assert!(b.data.is_none());
+    }
+
+    #[test]
+    fn merge_patches_objects_and_replaces_the_rest() {
+        let mut base = json!({ "a": 1, "admin": { "path": "/x", "token": "t" }, "list": [1, 2] });
+        deep_merge(&mut base, &json!({ "a": 2, "admin": { "path": "/y" }, "list": [3], "new": true }));
+        assert_eq!(base, json!({ "a": 2, "admin": { "path": "/y", "token": "t" }, "list": [3], "new": true }));
+        let b = parse_request_body(r#"{"data":{"opensync":false},"merge":true}"#).unwrap().unwrap();
+        assert!(b.merge);
+        let merged = resolve_payload(&b).unwrap();
+        assert_eq!(merged["opensync"], false);
+        assert!(merged.get("listenport").is_some(), "the rest of the config is kept");
     }
 
     #[test]

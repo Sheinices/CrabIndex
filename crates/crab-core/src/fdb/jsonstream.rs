@@ -33,6 +33,16 @@ pub fn read_gz_json<T: DeserializeOwned>(path: &str) -> Option<T> {
 
 /// Write gzip JSON atomically (temp + rename). Errors are logged at debug level.
 pub fn write_gz_json<T: Serialize + ?Sized>(path: &str, value: &T) {
+    write_gz_json_level(path, value, Compression::default())
+}
+
+/// Same with the fastest gzip level: for big files rewritten often (masterDb, ~60 MB of JSON
+/// every few minutes) the write takes a third of the time for a file about a fifth larger.
+pub fn write_gz_json_fast<T: Serialize + ?Sized>(path: &str, value: &T) {
+    write_gz_json_level(path, value, Compression::fast())
+}
+
+fn write_gz_json_level<T: Serialize + ?Sized>(path: &str, value: &T, level: Compression) {
     let gate = lock_for(path);
     let _g = gate.lock();
     let started = Instant::now();
@@ -44,7 +54,7 @@ pub fn write_gz_json<T: Serialize + ?Sized>(path: &str, value: &T) {
             }
         }
         let f = std::fs::File::create(&tmp)?;
-        let mut enc = GzEncoder::new(BufWriter::new(f), Compression::default());
+        let mut enc = GzEncoder::new(BufWriter::new(f), level);
         serde_json::to_writer(&mut enc, value).map_err(std::io::Error::other)?;
         let mut w = enc.finish()?;
         w.flush()?;

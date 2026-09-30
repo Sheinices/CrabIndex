@@ -225,6 +225,9 @@ pub fn get() -> Value {
             field("flaresolverr.recycleAfterTimeouts", "int", "Recycle после N timeout", Some("Destroy сессии после N подряд browser timeout (дефолт 3)"), min(1)),
             field("flaresolverr.guardedHours", "int", "Guarded hours", Some("Сколько помнить CF на хосте"), min(1)),
             field("flaresolverr.recheckMinutes", "int", "Recheck (мин)", Some("Как часто пробовать обычный GET"), min(1)),
+            fd("flaresolverr.backoff", "bool", "Пауза при отказах", Some("Если за полчаса успешных браузерных запросов к сайту меньше четверти (не меньше 8 запросов), браузер к нему не ходит backoffMinutes; каждая неудачная проба удваивает паузу до backoffMaxMinutes. Быстрый путь cffetch работает")),
+            field("flaresolverr.backoffMinutes", "int", "Первая пауза (мин)", None, min(1)),
+            field("flaresolverr.backoffMaxMinutes", "int", "Максимальная пауза (мин)", None, min(1)),
         ]),
         group("cffetch", "cffetch", Some("Быстрый путь после CF: ghcr.io/jacred-fdb/cffetch на :8192, тот же SOCKS что у FlareSolverr"), vec![
             fd("cffetch.enable", "bool", "Включить", Some("После solve ходить без page.goto")),

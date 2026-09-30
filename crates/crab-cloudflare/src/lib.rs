@@ -10,6 +10,7 @@
 
 use std::sync::Arc;
 
+pub mod backoff;
 pub mod cffetch;
 pub mod clearance;
 pub mod controller;

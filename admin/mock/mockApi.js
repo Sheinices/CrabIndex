@@ -348,6 +348,12 @@ async function handle(req, res, path, query) {
   if (waf) return send(res, waf[0], waf[1])
 
   if (path === 'overview') return send(res, 200, overview())
+  if (path === 'stats/history') {
+    const n = Number(query.get('days') || 30)
+    const days = Array.from({ length: n }, (_, i) => new Date(Date.now() - (n - 1 - i) * 86_400_000).toISOString().slice(0, 10))
+    const series = (base, jitter) => days.map((d, i) => (i === 3 ? null : Math.max(0, Math.round(base + Math.sin(i / 3) * jitter + (i % 7 === 0 ? jitter : 0)))))
+    return send(res, 200, { days, trackers: { rutor: { new: series(380, 120), all: [] }, rutracker: { new: series(900, 300), all: [] }, kinozal: { new: series(420, 150), all: [] }, nnmclub: { new: series(160, 60), all: [] }, selezen: { new: series(6, 5), all: [] }, toloka: { new: days.map(() => 0), all: [] } } })
+  }
   if (path === 'resources') {
     const gb = 1024 ** 3
     return send(res, 200, {

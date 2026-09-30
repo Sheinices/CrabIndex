@@ -164,6 +164,13 @@ pub struct FlareSolverrSettings {
     pub recycleAfterTimeouts: i32,
     pub guardedHours: i32,
     pub recheckMinutes: i32,
+    /// Pause browser requests to a site whose recent browser requests mostly fail (see
+    /// `crab_cloudflare::backoff`); the cffetch fast path keeps working.
+    pub backoff: bool,
+    /// First pause, minutes; doubles on every failed probe.
+    pub backoffMinutes: i32,
+    /// Longest pause, minutes.
+    pub backoffMaxMinutes: i32,
 }
 
 impl Default for FlareSolverrSettings {
@@ -178,6 +185,9 @@ impl Default for FlareSolverrSettings {
             recycleAfterTimeouts: 3,
             guardedHours: 6,
             recheckMinutes: 30,
+            backoff: true,
+            backoffMinutes: 15,
+            backoffMaxMinutes: 120,
         }
     }
 }
