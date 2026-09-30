@@ -893,6 +893,8 @@ export default {
   health_history_empty: 'Событий пока нет: история пишется с момента запуска этой версии, проверка каждые 5 минут',
   health_event_appeared: 'появился',
   health_event_resolved: 'исчез',
+  health_event_muted: 'скрыт',
+  health_event_unmuted: 'снова показан',
   health_event_lasted: 'держался {duration}',
   issue_mute: 'Скрыть',
   issue_unmute: 'Показывать',

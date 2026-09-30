@@ -275,7 +275,7 @@ const HISTORY_DAYS: i64 = 90;
 #[serde(rename_all = "camelCase")]
 pub struct Event {
     pub at: DateTime<Utc>,
-    /// `appeared` or `resolved`.
+    /// `appeared`, `resolved`, `muted` or `unmuted`.
     pub event: String,
     pub id: String,
     pub key: String,
@@ -326,13 +326,25 @@ impl HistoryStore {
         list
     }
 
-    /// Append `appeared` rows for `new` and `resolved` rows for `resolved` (with the active
-    /// duration taken from the matching `appeared` row), then trim to 90 days / 1000 rows.
+    /// [`record_all`](Self::record_all) without mute rows.
+    #[cfg(test)]
     pub fn record(&self, new: &[Issue], resolved: &[Issue], now: DateTime<Utc>) {
-        if new.is_empty() && resolved.is_empty() {
+        self.record_all(new, resolved, &[], &[], now)
+    }
+
+    /// Append `appeared` rows for `new`, `resolved` rows for `resolved` (with the active duration
+    /// taken from the matching `appeared` row) and `muted` / `unmuted` rows for signals the
+    /// operator hid or showed again while they stayed active; then trim to 90 days / 1000 rows.
+    pub fn record_all(&self, new: &[Issue], resolved: &[Issue], muted: &[Issue], unmuted: &[Issue], now: DateTime<Utc>) {
+        if new.is_empty() && resolved.is_empty() && muted.is_empty() && unmuted.is_empty() {
             return;
         }
         let mut list = self.all();
+        for (event, items) in [("muted", muted), ("unmuted", unmuted)] {
+            for i in items {
+                list.push(Event { at: now, event: event.into(), id: i.id.into(), key: i.key.clone(), severity: i.severity.into(), params: i.params.clone(), minutes: None });
+            }
+        }
         for i in resolved {
             let since = list.iter().rev().find(|e| e.event == "appeared" && e.id == i.id && e.key == i.key).map(|e| e.at);
             list.push(Event {
@@ -363,19 +375,45 @@ pub fn history(limit: usize) -> Vec<Event> {
     HISTORY.history(limit)
 }
 
-pub fn record_history(new: &[Issue], resolved: &[Issue], now: DateTime<Utc>) {
-    HISTORY.record(new, resolved, now)
+pub fn record_history(new: &[Issue], resolved: &[Issue], muted: &[Issue], unmuted: &[Issue], now: DateTime<Utc>) {
+    HISTORY.record_all(new, resolved, muted, unmuted, now)
 }
 
 // ---------------------------------------------------------------- notifications
 
 struct NotifyState {
+    /// Non-muted signals seen last time (notifications).
     active: HashMap<String, Issue>,
     /// uid → when a message about it was last sent (cooldown).
     sent_at: HashMap<String, DateTime<Utc>>,
+    /// Every signal seen last time, muted ones included, with its muted flag (history).
+    seen: HashMap<String, (Issue, bool)>,
 }
 
-static STATE: Lazy<Mutex<NotifyState>> = Lazy::new(|| Mutex::new(NotifyState { active: HashMap::new(), sent_at: HashMap::new() }));
+static STATE: Lazy<Mutex<NotifyState>> = Lazy::new(|| Mutex::new(NotifyState { active: HashMap::new(), sent_at: HashMap::new(), seen: HashMap::new() }));
+
+/// History diff over all signals: `(appeared, resolved, muted, unmuted)`. A signal hidden by
+/// the operator stays "active" here, so hiding is not mistaken for the problem going away.
+fn diff_all(state: &mut NotifyState, all: &[Issue]) -> (Vec<Issue>, Vec<Issue>, Vec<Issue>, Vec<Issue>) {
+    let cur: HashMap<String, (Issue, bool)> = all.iter().map(|i| (i.uid(), (i.clone(), i.muted))).collect();
+    let (mut appeared, mut muted, mut unmuted) = (Vec::new(), Vec::new(), Vec::new());
+    for (uid, (i, m)) in &cur {
+        match state.seen.get(uid) {
+            None => appeared.push(i.clone()),
+            Some((_, was)) if was != m => {
+                if *m {
+                    muted.push(i.clone())
+                } else {
+                    unmuted.push(i.clone())
+                }
+            }
+            _ => {}
+        }
+    }
+    let resolved: Vec<Issue> = state.seen.iter().filter(|(uid, _)| !cur.contains_key(*uid)).map(|(_, (i, _))| i.clone()).collect();
+    state.seen = cur;
+    (appeared, resolved, muted, unmuted)
+}
 
 /// Human text for a signal (notifications are plain text; the panel has its own translations).
 pub fn describe(i: &Issue) -> String {
@@ -518,18 +556,23 @@ const ISSUE_IDS: [&str; 12] = [
 /// Signals whose last history row is `appeared`: still active when the process stopped. Seeding
 /// the notifier with them keeps a restart from logging (and notifying) every open signal again;
 /// the ones that are gone get a proper `resolved` row instead.
-fn open_from_history() -> HashMap<String, Issue> {
+fn open_from_history() -> HashMap<String, (Issue, bool)> {
+    // newest row per signal decides whether it is still open; `muted` / `unmuted` rows keep it
+    // open and only set the flag
     let mut last: HashMap<String, Event> = HashMap::new();
     for e in HISTORY.history(HISTORY_MAX) {
         let uid = if e.key.is_empty() { e.id.clone() } else { format!("{}:{}", e.id, e.key) };
         last.entry(uid).or_insert(e);
     }
     last.into_iter()
-        .filter(|(_, e)| e.event == "appeared")
+        .filter(|(_, e)| e.event != "resolved")
         .filter_map(|(uid, e)| {
             let id = ISSUE_IDS.iter().find(|x| **x == e.id)?;
             let severity = if e.severity == "error" { "error" } else { "warn" };
-            Some((uid, Issue::new(id, e.key, severity, "/", e.params)))
+            let muted = e.event == "muted";
+            let mut issue = Issue::new(id, e.key, severity, "/", e.params);
+            issue.muted = muted;
+            Some((uid, (issue, muted)))
         })
         .collect()
 }
@@ -539,8 +582,9 @@ pub fn spawn_notifier(ct: CancellationToken) {
     tokio::spawn(async move {
         if let Ok(open) = tokio::task::spawn_blocking(open_from_history).await {
             let mut st = STATE.lock();
-            if st.active.is_empty() {
-                st.active = open;
+            if st.seen.is_empty() {
+                st.active = open.iter().filter(|(_, (_, m))| !m).map(|(u, (i, _))| (u.clone(), i.clone())).collect();
+                st.seen = open;
             }
         }
         tokio::select! {
@@ -549,21 +593,31 @@ pub fn spawn_notifier(ct: CancellationToken) {
         }
         loop {
             let c = conf();
-            let current: Vec<Issue> = issues(&c).into_iter().filter(|i| !i.muted).collect();
+            let all = issues(&c);
+            let current: Vec<Issue> = all.iter().filter(|i| !i.muted).cloned().collect();
             let now = Utc::now();
-            let (appeared, new, resolved) = {
+            // notifications: non-muted signals with the cooldown; history: every signal
+            let (new, resolved, h) = {
                 let mut st = STATE.lock();
-                diff(&mut st, &current, now, c.notify.cooldownMinutes.max(0) as i64)
+                let (_, new, resolved) = diff(&mut st, &current, now, c.notify.cooldownMinutes.max(0) as i64);
+                let h = diff_all(&mut st, &all);
+                (new, resolved, h)
             };
-            if !appeared.is_empty() || !resolved.is_empty() {
+            let (appeared, gone, muted, unmuted) = h;
+            if !appeared.is_empty() || !gone.is_empty() || !muted.is_empty() || !unmuted.is_empty() {
                 for i in &appeared {
                     log::warn(cat::HOST, format!("health: {}", describe(i)));
                 }
-                for i in &resolved {
+                for i in &gone {
                     log::info(cat::HOST, format!("health: resolved - {}", describe(i)));
                 }
-                let h = (appeared.clone(), resolved.clone());
-                let _ = tokio::task::spawn_blocking(move || record_history(&h.0, &h.1, now)).await;
+                for i in &muted {
+                    log::info(cat::HOST, format!("health: muted - {}", describe(i)));
+                }
+                for i in &unmuted {
+                    log::info(cat::HOST, format!("health: shown again - {}", describe(i)));
+                }
+                let _ = tokio::task::spawn_blocking(move || record_history(&appeared, &gone, &muted, &unmuted, now)).await;
             }
             if c.notify.enable && (!new.is_empty() || !resolved.is_empty()) {
                 let has_channel = !util::is_blank(&c.notify.webhookUrl) || (!util::is_blank(&c.notify.telegramToken) && !util::is_blank(&c.notify.telegramChatId));
@@ -592,7 +646,7 @@ mod tests {
     #[test]
     fn diff_reports_new_and_resolved_with_cooldown() {
         let t0 = Utc::now();
-        let mut st = NotifyState { active: HashMap::new(), sent_at: HashMap::new() };
+        let mut st = NotifyState { active: HashMap::new(), sent_at: HashMap::new(), seen: HashMap::new() };
         let (a, n, r) = diff(&mut st, &[issue("a", ""), issue("b", "x")], t0, 60);
         assert_eq!((a.len(), n.len(), r.len()), (2, 2, 0));
         let (a, n, r) = diff(&mut st, &[issue("a", ""), issue("b", "x")], t0, 60);
@@ -609,6 +663,28 @@ mod tests {
     }
 
     #[test]
+    fn history_diff_tells_muting_from_resolving() {
+        let mut st = NotifyState { active: HashMap::new(), sent_at: HashMap::new(), seen: HashMap::new() };
+        let (a, r, m, u) = diff_all(&mut st, &[issue("a", ""), issue("b", "x")]);
+        assert_eq!((a.len(), r.len(), m.len(), u.len()), (2, 0, 0, 0));
+        let mut hidden = issue("b", "x");
+        hidden.muted = true;
+        let (a, r, m, u) = diff_all(&mut st, &[issue("a", ""), hidden.clone()]);
+        assert_eq!((a.len(), r.len(), m.len(), u.len()), (0, 0, 1, 0));
+        assert_eq!(m[0].uid(), "b:x");
+        let (a, r, m, u) = diff_all(&mut st, &[issue("a", ""), issue("b", "x")]);
+        assert_eq!((a.len(), r.len(), m.len(), u.len()), (0, 0, 0, 1));
+        let (a, r, _, _) = diff_all(&mut st, &[issue("a", "")]);
+        assert_eq!((a.len(), r.len()), (0, 1));
+        assert_eq!(r[0].uid(), "b:x");
+        // a hidden signal that stays hidden across ticks is neither new nor resolved
+        let (a, r, m, u) = diff_all(&mut st, &[issue("a", ""), hidden.clone()]);
+        assert_eq!((a.len(), r.len(), m.len(), u.len()), (1, 0, 0, 0));
+        let (a, r, m, u) = diff_all(&mut st, &[issue("a", ""), hidden]);
+        assert_eq!((a.len(), r.len(), m.len(), u.len()), (0, 0, 0, 0));
+    }
+
+    #[test]
     fn open_signals_come_back_from_history() {
         let path = std::env::temp_dir().join(format!("crab_health_open_{}.json", std::process::id()));
         let _ = std::fs::remove_file(&path);
@@ -621,8 +697,12 @@ mod tests {
             let uid = if e.key.is_empty() { e.id.clone() } else { format!("{}:{}", e.id, e.key) };
             last.entry(uid).or_insert(e);
         }
-        let open: Vec<String> = last.iter().filter(|(_, e)| e.event == "appeared" && ISSUE_IDS.contains(&e.id.as_str())).map(|(u, _)| u.clone()).collect();
+        let open: Vec<String> = last.iter().filter(|(_, e)| e.event != "resolved" && ISSUE_IDS.contains(&e.id.as_str())).map(|(u, _)| u.clone()).collect();
         assert_eq!(open, vec!["login_missing:mazepa".to_string()]);
+        // a muted row keeps the signal open with the flag set
+        store.record_all(&[], &[], &[issue("login_missing", "mazepa")], &[], t0 + chrono::Duration::minutes(6));
+        let newest = store.history(1).remove(0);
+        assert_eq!((newest.event.as_str(), newest.key.as_str()), ("muted", "mazepa"));
         let _ = std::fs::remove_file(&path);
     }
 

@@ -234,12 +234,13 @@ function HealthCard({ issues, notifyConfigured, onChange }) {
                 if (typeof params.minutes === "number") params.minutes = formatNumber(params.minutes);
                 if (typeof params.remaining === "number") params.remaining = formatNumber(params.remaining);
                 const resolved = e.event === "resolved";
+                const muteEvent = e.event === "muted" || e.event === "unmuted";
                 return (
                   <li key={`${e.at}-${e.id}-${e.key}-${idx}`} className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
                     <span className="text-xs text-muted tabular-nums whitespace-nowrap" title={formatDate(e.at)}>
                       {formatRelative(e.at)}
                     </span>
-                    <StatusDot tone={resolved ? "ok" : e.severity === "error" ? "danger" : "warn"} label={resolved ? t("health_event_resolved") : t("health_event_appeared")} />
+                    <StatusDot tone={resolved ? "ok" : muteEvent ? "muted" : e.severity === "error" ? "danger" : "warn"} label={t(`health_event_${e.event}`)} />
                     <span className="min-w-0">{t(`issue_${e.id}_title`, params)}</span>
                     {resolved && typeof e.minutes === "number" ? <span className="text-xs text-muted">{t("health_event_lasted", { duration: formatDuration(e.minutes * 60) })}</span> : null}
                   </li>

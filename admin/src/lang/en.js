@@ -890,6 +890,8 @@ export default {
   health_history_empty: 'No events yet: the history starts with this version, evaluated every 5 minutes',
   health_event_appeared: 'appeared',
   health_event_resolved: 'resolved',
+  health_event_muted: 'hidden',
+  health_event_unmuted: 'shown again',
   health_event_lasted: 'lasted {duration}',
   issue_mute: 'Hide',
   issue_unmute: 'Show',
