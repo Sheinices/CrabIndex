@@ -39,8 +39,13 @@ pub fn spawn_id_index(ct: CancellationToken) {
         }
         loop {
             let started = std::time::Instant::now();
-            let n = tokio::task::spawn_blocking(crab_core::fdb::id_index::build).await.unwrap_or(0);
-            log::info(cat::FDB, format!("id index: {n} rows in {:.0}s", started.elapsed().as_secs_f64()));
+            let (n, dups) = tokio::task::spawn_blocking(crab_core::fdb::id_index::build).await.unwrap_or((0, Vec::new()));
+            log::info(cat::FDB, format!("id index: {n} rows in {:.0}s, duplicate ids {}", started.elapsed().as_secs_f64(), dups.len()));
+            if !dups.is_empty() {
+                // copies written while the index was not ready yet: newest row wins
+                let removed = tokio::task::spawn_blocking(move || crab_core::fdb::dedupe_ids(&dups)).await.unwrap_or(0);
+                log::info(cat::FDB, format!("id index: removed {removed} duplicate rows"));
+            }
             tokio::select! {
                 _ = ct.cancelled() => break,
                 _ = tokio::time::sleep(Duration::from_secs(24 * 3600)) => {}

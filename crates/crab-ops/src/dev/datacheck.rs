@@ -24,7 +24,7 @@ static RUNNING: AtomicBool = AtomicBool::new(false);
 use super::migrations::parsers::host_of;
 
 pub const REPORT_PATH: &str = "Data/temp/datacheck.json";
-/// Offending urls kept per tracker in `samples` (foreign host), for diagnosis.
+/// Offending urls kept per tracker in `samples` (foreign host, duplicate ids), for diagnosis.
 const SAMPLE_URLS: usize = 5;
 
 /// Trackers whose numeric id names one torrent page (same list as `slug_dups`).
@@ -127,7 +127,10 @@ fn run_inner() -> Value {
     let mut per: HashMap<String, Counts> = HashMap::new();
     // a few offending urls per tracker, so the panel can show what the count is about
     let mut samples: HashMap<String, Vec<String>> = HashMap::new();
+    let mut dup_samples: HashMap<String, Vec<Value>> = HashMap::new();
     let mut ids: HashMap<(String, i32), u32> = HashMap::new();
+    // first url of every (tracker, id), so duplicates can be shown with an example url
+    let mut first_url: HashMap<(String, i32), String> = HashMap::new();
     let mut buckets = 0i64;
 
     for (key, _) in fdb::master_db_snapshot() {
@@ -154,7 +157,16 @@ fn run_inner() -> Value {
             if ID_TRACKERS.contains(&tracker.as_str()) {
                 let id = fdb::torrent_id_from_url(&tracker, &url);
                 if id > 0 {
-                    *ids.entry((tracker.clone(), id)).or_default() += 1;
+                    let n = ids.entry((tracker.clone(), id)).or_default();
+                    *n += 1;
+                    if *n == 1 {
+                        first_url.insert((tracker.clone(), id), url.clone());
+                    } else if *n == 2 {
+                        let list = dup_samples.entry(tracker.clone()).or_default();
+                        if list.len() < SAMPLE_URLS {
+                            list.push(json!({ "id": id, "urls": [first_url.get(&(tracker.clone(), id)).cloned().unwrap_or_default(), url.clone()] }));
+                        }
+                    }
                 }
             }
             if tracker == "rutracker" && rutracker_name_suspect(&t.types, &t.title, &t.name, &t.originalname) {
@@ -187,7 +199,7 @@ fn run_inner() -> Value {
         "total": row(&total),
         "trackers": trackers.iter().map(|(t, c)| { let mut v = row(c); v["tracker"] = json!(t); v }).collect::<Vec<_>>(),
         // up to SAMPLE_URLS foreign-host urls per tracker
-        "samples": { "foreignHost": samples },
+        "samples": { "foreignHost": samples, "dupIds": dup_samples },
         // which migration heals which column
         "fixes": {
             "zeroSize": "dev/fixzerosizes",

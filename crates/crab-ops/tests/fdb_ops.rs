@@ -236,8 +236,9 @@ fn id_index_scenario() {
     fdb::add_or_update(&[row("rutor", "http://rutor.info/torrent/777/druzja-1938", "Друзья 1938", "Друзья 1938")]);
     assert!(fdb::master_db().contains_key("друзья1938:друзья1938"));
 
-    let _ = fdb::id_index::build();
+    let (_, dups) = fdb::id_index::build();
     assert!(fdb::id_index::is_ready());
+    assert!(dups.iter().all(|d| d.id != 777), "no duplicate for a single row");
     assert_eq!(fdb::id_index::lookup("rutor", 777).as_deref(), Some("друзья1938:друзья1938"));
 
     fdb::add_or_update(&[row("rutor", "http://rutor.info/torrent/777/druzja-1939", "Друзья", "Friends")]);
@@ -248,4 +249,32 @@ fn id_index_scenario() {
     assert_eq!(new.len(), 1);
     assert_eq!(fdb::id_index::lookup("rutor", 777).as_deref(), Some("друзья:friends"));
     assert_eq!(fdb::remove_by_id("друзья:friends", "kinozal", 777), 0);
+
+    // Two copies of one id in two buckets (written while the index was not ready): the scan
+    // reports them and dedupe_ids keeps the newest row.
+    let mut old_copy = row("rutor", "http://rutor.info/torrent/778/matrica-1999", "Матрица 1999", "Матрица 1999");
+    old_copy.updateTime = chrono::Utc::now() - chrono::Duration::days(3);
+    let mut new_copy = row("rutor", "http://rutor.info/torrent/778/matrica", "Матрица", "The Matrix");
+    new_copy.updateTime = chrono::Utc::now();
+    // both copies go in directly (add_or_update would consult the index and stamp updateTime)
+    fdb::open_write("матрица1999:матрица1999").modify(|db| {
+        db.insert(old_copy.url.clone(), old_copy.clone());
+        true
+    });
+    fdb::open_write("матрица:thematrix").modify(|db| {
+        db.insert(new_copy.url.clone(), new_copy.clone());
+        true
+    });
+    // a bucket written this way is not in masterDb yet (add_or_update does that); register both
+    fdb::set_shard("матрица1999:матрица1999", old_copy.updateTime);
+    fdb::set_shard("матрица:thematrix", new_copy.updateTime);
+    fdb::save_changes_to_file();
+    let (_, dups) = fdb::id_index::build();
+    let d = dups.iter().find(|d| d.id == 778).expect("duplicate 778 reported");
+    assert_eq!(d.keys.len(), 2);
+    assert_eq!(fdb::dedupe_ids(&dups), 1);
+    assert!(fdb::open_read("матрица1999:матрица1999", false, false).is_empty(), "older copy dropped");
+    // the bucket may hold rows from earlier scenarios of this binary: only the kept copy matters
+    assert!(fdb::open_read("матрица:thematrix", false, false).contains_key(&new_copy.url));
+    assert_eq!(fdb::id_index::lookup("rutor", 778).as_deref(), Some("матрица:thematrix"));
 }

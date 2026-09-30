@@ -198,6 +198,70 @@ impl FileDb {
     }
 }
 
+/// Resolve duplicates the index scan found ([`id_index::build`]): for each `(tracker, id)` keep
+/// the row with the newest `updateTime` (a row with a magnet beats one without) and drop the
+/// other copies. Returns the number of rows removed.
+pub fn dedupe_ids(dups: &[id_index::Duplicate]) -> usize {
+    let mut removed = 0usize;
+    for d in dups {
+        // (bucket, url, has magnet, updateTime) of every copy
+        let mut copies: Vec<(Arc<str>, String, bool, chrono::DateTime<chrono::Utc>)> = Vec::new();
+        for key in &d.keys {
+            for (url, t) in open_read(key, false, false) {
+                if t.trackerName.eq_ignore_ascii_case(&d.tracker) && torrent_id_from_url(&d.tracker, &url) == d.id {
+                    copies.push((key.clone(), url, !is_blank(&t.magnet), t.updateTime));
+                }
+            }
+        }
+        if copies.len() < 2 {
+            continue;
+        }
+        copies.sort_by(|a, b| b.2.cmp(&a.2).then_with(|| b.3.cmp(&a.3)));
+        let keep_key = copies[0].0.clone();
+        let mut per_key: std::collections::HashMap<Arc<str>, Vec<String>> = std::collections::HashMap::new();
+        for (k, u, _, _) in copies.into_iter().skip(1) {
+            per_key.entry(k).or_default().push(u);
+        }
+        for (k, urls) in per_key {
+            removed += remove_urls(&k, &urls);
+        }
+        id_index::record(&d.tracker, d.id, &keep_key);
+    }
+    if removed > 0 {
+        save_changes_to_file();
+    }
+    removed
+}
+
+/// Drop the given urls from bucket `key`; the bucket is re-stamped (or persisted empty and
+/// dropped from masterDb) exactly like [`remove_by_id`], so sync clients follow.
+pub fn remove_urls(key: &str, urls: &[String]) -> usize {
+    if key.is_empty() || urls.is_empty() || !MASTER_DB.contains_key(key) {
+        return 0;
+    }
+    let w = open_write(key);
+    let mut removed = 0usize;
+    let mut now_empty = false;
+    w.modify(|db| {
+        for u in urls {
+            if db.shift_remove(u).is_some() {
+                removed += 1;
+            }
+        }
+        now_empty = db.is_empty();
+        removed > 0
+    });
+    if removed > 0 {
+        if now_empty {
+            w.save_now();
+            remove_key_from_master_db(key);
+        } else {
+            set_shard(key, time::now());
+        }
+    }
+    removed
+}
+
 /// Drop every row of `tracker` with torrent id `id` from bucket `key` (another bucket now holds
 /// the torrent). The bucket is re-stamped so sync clients receive it and prune the same rows.
 pub fn remove_by_id(key: &str, tracker: &str, id: i32) -> usize {

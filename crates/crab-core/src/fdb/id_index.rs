@@ -91,13 +91,25 @@ pub fn forget(tracker: &str, id: i32) {
     INDEX.remove(&slot(tracker, id));
 }
 
-/// Full scan of the FileDB. Returns the number of indexed rows; a second concurrent call
-/// returns immediately with 0.
-pub fn build() -> usize {
+/// One torrent id found in several buckets during [`build`].
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Duplicate {
+    pub tracker: String,
+    pub id: i32,
+    pub keys: Vec<Arc<str>>,
+}
+
+/// Full scan of the FileDB: returns the number of indexed rows and every `(tracker, id)` that
+/// sits in more than one bucket, i.e. duplicates that slipped in while the index was not ready
+/// (rows written in the first minutes after a start) - [`super::dedupe_ids`] removes them. A
+/// second concurrent call returns immediately with `(0, [])`.
+pub fn build() -> (usize, Vec<Duplicate>) {
     if BUILDING.swap(true, Ordering::SeqCst) {
-        return 0;
+        return (0, Vec::new());
     }
     let fresh: DashMap<u64, u32> = DashMap::new();
+    // slot → (tracker, id, buckets) for ids seen in more than one bucket
+    let dups: DashMap<u64, (String, i32, Vec<u32>)> = DashMap::new();
     let mut n = 0usize;
     for (key, _) in super::master_db_snapshot() {
         let idx = intern(&key);
@@ -107,23 +119,48 @@ pub fn build() -> usize {
             }
             let id = torrent_id_from_url(&t.trackerName, &url);
             if id > 0 {
-                fresh.insert(slot(&t.trackerName, id), idx);
+                let sl = slot(&t.trackerName, id);
                 n += 1;
+                if let Some(prev) = fresh.insert(sl, idx) {
+                    if prev != idx {
+                        let mut e = dups.entry(sl).or_insert_with(|| (t.trackerName.to_lowercase(), id, vec![prev]));
+                        if !e.2.contains(&idx) {
+                            e.2.push(idx);
+                        }
+                    }
+                }
             }
         }
     }
-    // swap in: entries recorded while scanning win over the scan (they are newer)
+    // swap in: entries recorded while scanning win over the scan (they are newer); when the
+    // scan saw the same id elsewhere, that older copy is a duplicate too
     let live: Vec<(u64, u32)> = INDEX.iter().map(|e| (*e.key(), *e.value())).collect();
     INDEX.clear();
-    for e in fresh.into_iter() {
-        INDEX.insert(e.0, e.1);
+    for e in fresh.iter() {
+        INDEX.insert(*e.key(), *e.value());
     }
     for (k, v) in live {
+        if let Some(scanned) = fresh.get(&k) {
+            if *scanned != v {
+                if let Some(mut e) = dups.get_mut(&k) {
+                    if !e.2.contains(&v) {
+                        e.2.push(v);
+                    }
+                }
+                // a duplicate only known from the live entry: tracker name is not at hand, the
+                // daily rebuild catches it once both copies are on disk
+            }
+        }
         INDEX.insert(k, v);
     }
     READY.store(true, Ordering::SeqCst);
     BUILDING.store(false, Ordering::SeqCst);
-    n
+    let list = dups
+        .into_iter()
+        .map(|(_, (tracker, id, idxs))| Duplicate { tracker, id, keys: idxs.into_iter().filter_map(key_of).collect() })
+        .filter(|d| d.keys.len() > 1)
+        .collect();
+    (n, list)
 }
 
 #[cfg(test)]
