@@ -116,6 +116,22 @@ pub fn issues(c: &AppOptions) -> Vec<Issue> {
         }
     }
 
+    // --- sync host: a known client went silent -------------------------------------------
+    if c.opensync && c.syncClientStaleHours > 0 {
+        let limit = chrono::Duration::hours(c.syncClientStaleHours as i64);
+        for p in crab_ops::sync::peers::list() {
+            // CrabIndex clients (version header) or keyed ones; anonymous third-party pulls are not tracked
+            if p.version.is_empty() && p.name.is_empty() {
+                continue;
+            }
+            let silent = now - p.lastSeen;
+            if silent > limit {
+                let who = if p.name.is_empty() { p.ip.clone() } else { p.name.clone() };
+                out.push(Issue::new("client_stale", &who, "warn", "/clients", json!({ "client": who, "ip": p.ip, "hours": silent.num_hours(), "limit": c.syncClientStaleHours })));
+            }
+        }
+    }
+
     // --- trackers: logins ---------------------------------------------------------------
     for slug in AUTH_TRACKERS {
         if !parsed_here(c, slug) {
@@ -431,6 +447,7 @@ pub fn describe(i: &Issue) -> String {
         "waf_users_hit" => format!("WAF: под бан попали клиенты поиска: {} ({})", p["count"], p["sample"].as_str().unwrap_or("")),
         "data_issues" => format!("Проверка данных нашла записей к исправлению: {}", p["count"]),
         "container_memory" => format!("Контейнер {} занял {}% лимита памяти ({} МБ)", p["name"].as_str().unwrap_or(""), p["percent"], p["limitMb"]),
+        "client_stale" => format!("Клиент sync {} не приходил {} ч (порог {} ч)", p["client"].as_str().unwrap_or(""), p["hours"], p["limit"]),
         "test_message" => "Тестовое уведомление CrabIndex".to_string(),
         other => format!("{other}: {p}"),
     }
@@ -548,9 +565,9 @@ pub fn counts() -> (usize, usize) {
 }
 
 /// Every signal id the checks can produce; history rows are mapped back to these.
-const ISSUE_IDS: [&str; 12] = [
+const ISSUE_IDS: [&str; 13] = [
     "sync_stale", "sync_unreachable", "sync_check_failed", "sync_check_backlog", "login_missing", "login_failed", "tracker_stale",
-    "fs_tab_crashes", "fs_failing", "waf_users_hit", "data_issues", "container_memory",
+    "fs_tab_crashes", "fs_failing", "waf_users_hit", "data_issues", "container_memory", "client_stale",
 ];
 
 /// Signals whose last history row is `appeared`: still active when the process stopped. Seeding
@@ -760,7 +777,7 @@ mod tests {
 
     #[test]
     fn describe_covers_every_id() {
-        for id in ["sync_stale", "sync_unreachable", "sync_check_failed", "sync_check_backlog", "login_missing", "login_failed", "tracker_stale", "fs_tab_crashes", "fs_failing", "waf_users_hit", "data_issues", "container_memory"] {
+        for id in ["sync_stale", "sync_unreachable", "sync_check_failed", "sync_check_backlog", "login_missing", "login_failed", "tracker_stale", "fs_tab_crashes", "fs_failing", "waf_users_hit", "data_issues", "container_memory", "client_stale"] {
             let i = Issue::new(id, "k", "warn", "/", json!({ "minutes": 1, "limit": 2, "syncapi": "s", "error": "e", "remaining": 3, "tracker": "t", "days": 4, "host": "h", "crashes": 5, "failed": 6, "requests": 7 }));
             assert!(!describe(&i).contains(id), "{id} should read as text");
         }

@@ -118,6 +118,13 @@ pub fn run_with_trigger(trigger: &str) -> Value {
     }
     log::info(cat::FDB, format!("data check ({trigger}): issues {} in {}s", report["total"]["issues"], report["tookSec"]));
     RUNNING.store(false, Ordering::SeqCst);
+    // autoFixData: a check the operator or cron started (not the re-check after a migration,
+    // which would loop) hands its plan to Fix all
+    if conf().autoFixData && matches!(trigger, "manual" | "cron") && !super::fixall::plan(&report).is_empty() {
+        let started = super::fixall::start();
+        log::info(cat::FDB, format!("data check ({trigger}): autoFixData -> fix all: {started}"));
+        report["autoFix"] = started;
+    }
     report
 }
 
@@ -216,7 +223,7 @@ pub fn last_report() -> Option<Value> {
 }
 
 pub fn status() -> Value {
-    json!({ "ok": true, "running": is_running(), "last": last_report(), "fixAll": super::fixall::status() })
+    json!({ "ok": true, "running": is_running(), "autoFix": conf().autoFixData, "last": last_report(), "fixAll": super::fixall::status() })
 }
 
 #[cfg(test)]

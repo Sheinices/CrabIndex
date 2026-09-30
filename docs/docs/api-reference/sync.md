@@ -163,8 +163,15 @@ curl "http://127.0.0.1:9117/sync/fdb?key=matrix"
 | Маршрут | Что делает |
 | --- | --- |
 | `GET /cron/sync/peers` | `{ ok, opensync, peers: [{ ip, version, firstSeen, lastSeen, requests, lastCursor, lastSpidr, lastCheck, lastRefetch, status, statusAt }] }` - кто забирал базу с этого сервера. Адрес берётся из `CF-Connecting-IP`, `X-Real-IP`, первого `X-Forwarded-For` или сокета; `version` - заголовок `X-CrabIndex-Version`, который шлёт клиент CrabIndex, пусто для других клиентов. `status` - самоотчёт клиента из заголовка `X-CrabIndex-Status` на `/sync/conf` в начале каждого цикла: `{ buckets, issues, errors, idIndex, check: { at, ok, remaining, missing, mismatched, extra } }`; сервер оставляет только эти поля и не больше 2 КБ. Хранится в `Data/temp/sync_peers.json`, клиенты без запросов 30 дней удаляются |
+| `GET /cron/sync/keys` | `{ ok, requireKey, keys: [{ name, key (маска), createdAt, lastUsedAt, lastIp, disabled }] }` - ключи клиентов sync |
+| `GET /cron/sync/keys/create?name=` | Новый ключ: `{ ok, name, key }`, секрет только в этом ответе. Имя уникально, 1-40 символов: буквы, цифры, `- _ .` и пробел |
+| `GET /cron/sync/keys/revoke?name=`, `.../enable?name=`, `.../delete?name=` | Отозвать (клиент получает 401), вернуть, удалить: `{ ok }` |
 | `GET /cron/sync/check` | Запустить сверку с `syncapi` сейчас: `ok`, `work` (уже идёт) или `disabled` (`syncapi` не задан) |
 | `GET /cron/sync/checkstatus` | `{ ok, running, progress, last }` - идёт ли сверка, её ход и последний отчёт. `progress` (только во время сверки): `{ startedAt, phase: conf | digest | compare | fetch | delete | save, done, total, missing, mismatched, extra }`, где `done` / `total` заполнены на фазах `fetch` и `delete`, а числа расхождений появляются после `compare` |
+
+## Ключи клиентов
+
+Запрос к любому `/sync/*` может нести ключ: заголовок `X-CrabIndex-Key` или параметр `?synckey=`. Клиент CrabIndex берёт его из `syncKey` в конфиге. Действующий ключ подписывает клиента именем в списке **Клиенты**, неизвестный или отозванный даёт `401 {"error":"sync key rejected"}`. Без ключа запросы обслуживаются, пока на сервере не включён `syncRequireKey`: тогда ответ `401 {"error":"sync key required (X-CrabIndex-Key)"}`. Ключи выдаются и отзываются на странице **Клиенты** и хранятся в `Data/temp/sync_keys.json`.
 
 ## GET /sync/torrents
 

@@ -129,7 +129,11 @@ pub fn start() -> Value {
     }
     log::info(cat::FDB, format!("fix all: {} step(s): {}", steps.len(), steps.join(", ")));
     let planned = steps.clone();
-    tokio::spawn(async move {
+    let Ok(rt) = tokio::runtime::Handle::try_current() else {
+        STATE.lock().running = false;
+        return json!({ "ok": false, "error": "no async runtime (CLI run)" });
+    };
+    rt.spawn(async move {
         for (idx, path) in steps.iter().enumerate() {
             let fix = FIXES.iter().find(|f| f.path == *path).copied();
             let Some(fix) = fix else { continue };

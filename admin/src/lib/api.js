@@ -128,6 +128,11 @@ export const resumeParseAll = () => get('cron/maintenance/resumeparseall', { raw
 
 // --- Sync ----------------------------------------------------------------------
 export const getSyncPeers = (opts) => get('cron/sync/peers', opts)
+export const getSyncKeys = (opts) => get('cron/sync/keys', opts)
+export const createSyncKey = (name) => get('cron/sync/keys/create', { query: { name } })
+export const revokeSyncKey = (name) => get('cron/sync/keys/revoke', { query: { name } })
+export const enableSyncKey = (name) => get('cron/sync/keys/enable', { query: { name } })
+export const deleteSyncKey = (name) => get('cron/sync/keys/delete', { query: { name } })
 export const startSyncCheck = () => get('cron/sync/check', { raw: true })
 export const getSyncCheckStatus = (opts) => get('cron/sync/checkstatus', opts)
 

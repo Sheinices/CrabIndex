@@ -29,6 +29,10 @@ const state = {
   syncCheckRunning: false,
   mutedIssues: new Set(),
   fixAll: null,
+  syncKeys: [
+    { name: 'home-box', key: 'q7Fz…9kLm', createdAt: new Date(Date.now() - 20 * 86_400_000).toISOString(), lastUsedAt: new Date(Date.now() - 6 * 60_000).toISOString(), lastIp: '94.156.102.20', disabled: false },
+    { name: 'old-vps', key: 'Ab12…Zz09', createdAt: new Date(Date.now() - 90 * 86_400_000).toISOString(), lastUsedAt: new Date(Date.now() - 40 * 86_400_000).toISOString(), lastIp: '203.0.113.5', disabled: true },
+  ],
 }
 
 const TRACKERS = [
@@ -171,7 +175,7 @@ function syncPeers() {
   const now = Date.now()
   const ft = (msAgo) => (BigInt(Math.floor((now - msAgo) / 1000)) + 11644473600n) * 10000000n
   return [
-    { ip: '94.156.102.20', version: '1.2.3', firstSeen: new Date(now - 40 * 86_400_000).toISOString(), lastSeen: new Date(now - 6 * 60_000).toISOString(), requests: 48_211, lastCursor: Number(ft(9 * 60_000)), lastSpidr: new Date(now - 3 * 3_600_000).toISOString(), lastCheck: new Date(now - 20 * 3_600_000).toISOString(), lastRefetch: new Date(now - 6 * 60_000).toISOString(), status: { buckets: 610_834, issues: 1, errors: 0, idIndex: true, check: { at: new Date(now - 20 * 3_600_000).toISOString(), ok: true, remaining: 0, missing: 140, mismatched: 119, extra: 2 } }, statusAt: new Date(now - 6 * 60_000).toISOString() },
+    { ip: '94.156.102.20', name: 'home-box', version: '1.2.3', firstSeen: new Date(now - 40 * 86_400_000).toISOString(), lastSeen: new Date(now - 6 * 60_000).toISOString(), requests: 48_211, lastCursor: Number(ft(9 * 60_000)), lastSpidr: new Date(now - 3 * 3_600_000).toISOString(), lastCheck: new Date(now - 20 * 3_600_000).toISOString(), lastRefetch: new Date(now - 6 * 60_000).toISOString(), status: { buckets: 610_834, issues: 1, errors: 0, idIndex: true, check: { at: new Date(now - 20 * 3_600_000).toISOString(), ok: true, remaining: 0, missing: 140, mismatched: 119, extra: 2 } }, statusAt: new Date(now - 6 * 60_000).toISOString() },
     { ip: '2a01:4f8:c0c:1234::1', version: '1.0.8', firstSeen: new Date(now - 12 * 86_400_000).toISOString(), lastSeen: new Date(now - 5 * 3_600_000).toISOString(), requests: 3_902, lastCursor: Number(ft(5 * 3_600_000)), lastSpidr: null, lastCheck: null, lastRefetch: null },
     { ip: '203.0.113.77', version: '', firstSeen: new Date(now - 3 * 86_400_000).toISOString(), lastSeen: new Date(now - 26 * 3_600_000).toISOString(), requests: 120, lastCursor: 0, lastSpidr: null, lastCheck: null, lastRefetch: null },
   ]
@@ -406,7 +410,24 @@ async function handle(req, res, path, query) {
     return send(res, 200, { ok: true, uid, muted: path === 'health/mute' })
   }
   if (path === 'notify/test' && method === 'POST') return send(res, 200, { ok: false, errors: ['no channel configured (notify.telegramToken + telegramChatId or notify.webhookUrl)'] })
-  if (path === 'cron/sync/peers') return send(res, 200, { ok: true, opensync: true, peers: syncPeers() })
+  if (path === 'cron/sync/peers') return send(res, 200, { ok: true, opensync: true, requireKey: false, staleHours: 6, peers: syncPeers() })
+  if (path === 'cron/sync/keys') return send(res, 200, { ok: true, requireKey: false, keys: state.syncKeys })
+  if (path === 'cron/sync/keys/create') {
+    const name = (query.get('name') || '').trim()
+    if (!name) return send(res, 200, { ok: false, error: 'name: 1-40 letters, digits, - _ . or space' })
+    if (state.syncKeys.some((k) => k.name.toLowerCase() === name.toLowerCase())) return send(res, 200, { ok: false, error: 'a key with this name exists' })
+    const key = Array.from({ length: 32 }, () => 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'[Math.floor(Math.random() * 62)]).join('')
+    state.syncKeys.unshift({ name, key: `${key.slice(0, 4)}…${key.slice(-4)}`, createdAt: new Date().toISOString(), lastUsedAt: null, lastIp: '', disabled: false })
+    return send(res, 200, { ok: true, name, key })
+  }
+  if (path === 'cron/sync/keys/revoke' || path === 'cron/sync/keys/enable' || path === 'cron/sync/keys/delete') {
+    const name = query.get('name') || ''
+    const k = state.syncKeys.find((x) => x.name === name)
+    if (!k) return send(res, 200, { ok: false })
+    if (path.endsWith('delete')) state.syncKeys = state.syncKeys.filter((x) => x !== k)
+    else k.disabled = path.endsWith('revoke')
+    return send(res, 200, { ok: true })
+  }
   if (path === 'cron/sync/check') {
     state.syncCheckRunning = true
     setTimeout(() => { state.syncCheckRunning = false }, 8000)

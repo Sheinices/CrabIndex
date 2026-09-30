@@ -26,8 +26,9 @@ PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 
 # data-check -> /dev/CheckData (max_time=3600s) - read-only report: duplicates, zero sizes,
 # foreign hosts, names to re-parse. Result: Data/temp/datacheck.json, admin panel "Maintenance",
-# health card. Sunday 05:30, after maintenance-check
-30 5 * * 0  /opt/crabindex/Data/run-job.sh data-check http://127.0.0.1:9117/dev/CheckData 3600
+# health card. Sunday 05:30, after maintenance-check. With autoFixData: true in init.yaml the
+# needed migrations (/dev/FixAll) start right after the report.
+30 5 * * 0  /opt/crabindex/Data/run-job.sh data-check http://127.0.0.1:9117/dev/CheckData?trigger=cron 3600
 
 # parseall-resume -> /cron/maintenance/ResumeParseAll (max_time=60s)
 # continue incomplete cycles after restart / hung cancel; idle if pending=0

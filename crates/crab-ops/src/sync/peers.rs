@@ -46,6 +46,9 @@ pub struct Peer {
     pub status: Option<serde_json::Value>,
     #[serde(default)]
     pub statusAt: Option<DateTime<Utc>>,
+    /// Name of the sync key the client used (see `keys.rs`), empty for anonymous clients.
+    #[serde(default)]
+    pub name: String,
 }
 
 static PEERS: Lazy<RwLock<HashMap<String, Peer>>> = Lazy::new(|| RwLock::new(HashMap::new()));
@@ -127,6 +130,7 @@ pub fn record(ip: &str, version: &str, hit: Hit) {
         lastRefetch: None,
         status: None,
         statusAt: None,
+        name: String::new(),
     });
     p.lastSeen = now;
     p.requests += 1;
@@ -154,6 +158,27 @@ pub fn record(ip: &str, version: &str, hit: Hit) {
 }
 
 /// Clients by last activity, newest first.
+/// Attach the key name to the client (called by the sync gate before the handler records the hit).
+pub fn note_name(ip: &str, name: &str) {
+    if ip.is_empty() || name.is_empty() {
+        return;
+    }
+    let mut g = PEERS.write();
+    if let Some(p) = g.get_mut(ip) {
+        if p.name != name {
+            p.name = name.to_string();
+            DIRTY.store(true, Ordering::SeqCst);
+        }
+    } else {
+        let now = Utc::now();
+        g.insert(
+            ip.to_string(),
+            Peer { ip: ip.to_string(), version: String::new(), firstSeen: now, lastSeen: now, requests: 0, lastCursor: 0, lastSpidr: None, lastCheck: None, lastRefetch: None, status: None, statusAt: None, name: name.to_string() },
+        );
+        DIRTY.store(true, Ordering::SeqCst);
+    }
+}
+
 pub fn list() -> Vec<Peer> {
     let mut v: Vec<Peer> = PEERS.read().values().cloned().collect();
     v.sort_by(|a, b| b.lastSeen.cmp(&a.lastSeen));

@@ -9,6 +9,7 @@
 
 pub mod check;
 pub mod cron;
+pub mod keys;
 pub mod peers;
 
 use axum::extract::{ConnectInfo, Query};
@@ -69,30 +70,99 @@ pub fn refresh_sorted_master() {
 }
 
 pub fn router() -> Router {
-    Router::new()
+    let sync = Router::new()
         .route("/sync/conf", any(sync_conf))
         .route("/sync/fdb", any(fdb_key))
         .route("/sync/fdb/torrents", any(fdb_torrents))
         .route("/sync/fdb/digest", any(fdb_digest))
         .route("/sync/torrents", any(torrents_legacy))
-        // DevAdmin policy (everything under /cron/), used by the admin panel.
+        .layer(axum::middleware::from_fn(sync_gate));
+    // DevAdmin policy (everything under /cron/), used by the admin panel.
+    let cron = Router::new()
         .route("/cron/sync/peers", any(cron_peers))
         .route("/cron/sync/check", any(cron_check))
         .route("/cron/sync/checkstatus", any(cron_check_status))
+        .route("/cron/sync/keys", any(cron_keys))
+        .route("/cron/sync/keys/create", any(cron_keys_create))
+        .route("/cron/sync/keys/revoke", any(cron_keys_revoke))
+        .route("/cron/sync/keys/enable", any(cron_keys_enable))
+        .route("/cron/sync/keys/delete", any(cron_keys_delete));
+    sync.merge(cron)
+}
+
+/// Client keys on every `/sync/*` request: a valid key names the client in the peers list; an
+/// unknown or revoked key is refused; without a key the request passes unless
+/// `syncRequireKey` is on.
+async fn sync_gate(req: axum::extract::Request, next: axum::middleware::Next) -> Response {
+    let ip = peers::client_ip(req.headers(), req.extensions().get::<ConnectInfo<SocketAddr>>());
+    match keys::check(req.headers(), req.uri().query(), &ip) {
+        keys::Access::Named(name) => peers::note_name(&ip, &name),
+        keys::Access::Rejected => {
+            log::warn(cat::SYNC, format!("{ip}: sync key rejected"));
+            return (StatusCode::UNAUTHORIZED, axum::Json(json!({ "error": "sync key rejected" }))).into_response();
+        }
+        keys::Access::Anonymous => {
+            if conf().syncRequireKey {
+                return (StatusCode::UNAUTHORIZED, axum::Json(json!({ "error": "sync key required (X-CrabIndex-Key)" }))).into_response();
+            }
+        }
+    }
+    next.run(req).await
+}
+
+fn key_name(q: &Query<HashMap<String, String>>) -> String {
+    q.get("name").cloned().unwrap_or_default()
+}
+
+/// Sync keys, secrets masked (admin panel, Clients → Keys).
+async fn cron_keys() -> axum::Json<serde_json::Value> {
+    axum::Json(json!({ "ok": true, "requireKey": conf().syncRequireKey, "keys": keys::list() }))
+}
+
+/// New key for `?name=`; the secret is in this answer only.
+async fn cron_keys_create(q: Query<HashMap<String, String>>) -> axum::Json<serde_json::Value> {
+    match keys::create(&key_name(&q)) {
+        Ok(v) => {
+            keys::save_if_dirty();
+            axum::Json(v)
+        }
+        Err(e) => axum::Json(json!({ "ok": false, "error": e })),
+    }
+}
+
+async fn cron_keys_revoke(q: Query<HashMap<String, String>>) -> axum::Json<serde_json::Value> {
+    let ok = keys::revoke(&key_name(&q));
+    keys::save_if_dirty();
+    axum::Json(json!({ "ok": ok }))
+}
+
+async fn cron_keys_enable(q: Query<HashMap<String, String>>) -> axum::Json<serde_json::Value> {
+    let ok = keys::enable(&key_name(&q));
+    keys::save_if_dirty();
+    axum::Json(json!({ "ok": ok }))
+}
+
+async fn cron_keys_delete(q: Query<HashMap<String, String>>) -> axum::Json<serde_json::Value> {
+    let ok = keys::delete(&key_name(&q));
+    keys::save_if_dirty();
+    axum::Json(json!({ "ok": ok }))
 }
 
 pub fn spawn_workers(shutdown: CancellationToken) {
     peers::load();
+    keys::load();
     let s = shutdown.clone();
     tokio::spawn(async move {
         loop {
             if !crate::sleep_ct(std::time::Duration::from_secs(600), &s).await {
                 peers::save_if_dirty();
+                keys::save_if_dirty();
                 return;
             }
             let _ = tokio::task::spawn_blocking(|| {
                 refresh_sorted_master();
                 peers::save_if_dirty();
+                keys::save_if_dirty();
             })
             .await;
         }
@@ -103,7 +173,7 @@ pub fn spawn_workers(shutdown: CancellationToken) {
 
 /// Clients that pulled from this host (admin panel, section "Clients").
 async fn cron_peers() -> axum::Json<serde_json::Value> {
-    axum::Json(json!({ "ok": true, "opensync": conf().opensync, "peers": peers::list() }))
+    axum::Json(json!({ "ok": true, "opensync": conf().opensync, "requireKey": conf().syncRequireKey, "staleHours": conf().syncClientStaleHours, "peers": peers::list() }))
 }
 
 /// Start an integrity check against `syncapi` now: `ok` / `work` / `disabled`.

@@ -50,7 +50,11 @@ macro_rules! fixing {
 }
 
 fixing!(update_size, maintenance::update_size);
-simple!(check_data, datacheck::run);
+async fn check_data(q: Q) -> Response {
+    // `?trigger=cron` from Data/crontab, `manual` otherwise (the panel button, curl)
+    let trigger = if Params::from_query(q).str("trigger").map(|t| t.eq_ignore_ascii_case("cron")).unwrap_or(false) { "cron" } else { "manual" };
+    blocking_json(move || datacheck::run_with_trigger(trigger)).await
+}
 simple!(check_data_status, datacheck::status);
 simple!(fix_all, fixall::start);
 simple!(fix_all_status, fixall::status);

@@ -2,6 +2,7 @@
 // Copyright (c) 2026 CrabIndex contributors
 
 import { useId, useState } from 'react'
+import { Link } from 'react-router'
 import { ClipboardCheck, CloudLightning, Database, HardDriveDownload, Play, Search, ShieldAlert, Stethoscope, Wand2 } from 'lucide-react'
 import { getDataCheck, runPath, startFixAll } from '../lib/api.js'
 import { CHECK_MODES, DIAGNOSTICS, MIGRATIONS } from '../lib/maintenance.js'
@@ -172,7 +173,7 @@ function DataCheckSection({ busy, onRun, onFix }) {
     () =>
       getDataCheck().then((r) => {
         setFast(!!r.fixAll?.running)
-        return { last: r.last || null, running: !!r.running, fixAll: r.fixAll || null }
+        return { last: r.last || null, running: !!r.running, fixAll: r.fixAll || null, autoFix: !!r.autoFix }
       }),
     fast ? 3_000 : 15_000,
   )
@@ -259,7 +260,13 @@ function DataCheckSection({ busy, onRun, onFix }) {
         )
       ) : null}
       {last ? <div className="mt-3"><FixAllRow fixAll={data?.fixAll} running={running || busy} reload={reload} /></div> : null}
-      <p className="mt-3 text-xs text-muted">{t('mt_data_hint')}</p>
+      <p className="mt-3 text-xs text-muted">
+        {t('mt_data_hint')}{' '}
+        {data?.autoFix ? t('mt_data_autofix_on') : t('mt_data_autofix_off')}{' '}
+        <Link to="/settings" className="text-accent hover:underline">
+          {t('mt_data_autofix_setting')}
+        </Link>
+      </p>
     </Section>
   )
 }

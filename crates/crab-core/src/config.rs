@@ -473,6 +473,12 @@ pub struct AppOptions {
     pub logParsers: bool,
 
     pub syncapi: Option<String>,
+    /// Key this client sends to `syncapi` (`X-CrabIndex-Key`), issued on the host's Clients page.
+    pub syncKey: Option<String>,
+    /// Host side: answer `/sync/*` only to requests with a valid key (see the Clients page).
+    pub syncRequireKey: bool,
+    /// Host side: a CrabIndex client silent for this many hours raises a health signal; 0 - off.
+    pub syncClientStaleHours: i32,
     pub synctrackers: Option<Vec<String>>,
     pub disable_trackers: Vec<String>,
     pub syncsport: bool,
@@ -488,6 +494,9 @@ pub struct AppOptions {
     pub timeSyncSpidr: i32,
     /// minutes between integrity checks against `syncapi` (bucket digest); 0 - off
     pub timeSyncCheck: i32,
+    /// After a scheduled or manual data check (`/dev/CheckData`) that finds fixable rows, run
+    /// the needed migrations right away (`/dev/FixAll`) instead of waiting for the operator.
+    pub autoFixData: bool,
     pub saveCheckpointEveryNBatches: i32,
 
     pub Rutor: TrackerSettings,
@@ -568,6 +577,9 @@ impl Default for AppOptions {
             logFdbMaxFiles: 0,
             logParsers: true,
             syncapi: None,
+            syncKey: None,
+            syncRequireKey: false,
+            syncClientStaleHours: 6,
             synctrackers: None,
             disable_trackers: vec![],
             syncsport: true,
@@ -579,6 +591,7 @@ impl Default for AppOptions {
             timeSync: 60,
             timeSyncSpidr: 60,
             timeSyncCheck: 1440,
+            autoFixData: false,
             saveCheckpointEveryNBatches: 5,
             Rutor: t("http://rutor.info", 8),
             Megapeer: t("http://megapeer.vip", 5),

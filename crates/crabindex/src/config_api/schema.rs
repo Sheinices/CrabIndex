@@ -122,6 +122,8 @@ pub fn get() -> Value {
         group("api", "API и дубликаты", None, vec![
             fd("openstats", "bool", "Открытая статистика", None),
             fd("opensync", "bool", "Открытый sync", None),
+            fd("syncRequireKey", "bool", "Sync только по ключу", Some("Отдавать /sync/* только клиентам с действующим ключом (раздел Клиенты → Ключи)")),
+            field("syncClientStaleHours", "int", "Молчание клиента (ч)", Some("Сигнал здоровья, если известный клиент CrabIndex не приходил столько часов; 0 - выключить"), min(0)),
             fd("mergeduplicates", "bool", "Объединять дубликаты", None),
             fd("mergenumduplicates", "bool", "Объединять по номеру", Some("Серии и т.п.")),
         ]),
@@ -129,12 +131,14 @@ pub fn get() -> Value {
             fd("syncapi", "string", "Sync API URL", Some("URL удалённого инстанса")),
             field("synctrackers", "stringList", "Sync трекеры", Some("Трекеры для синхронизации с удалённым инстансом"), enums(&slugs)),
             field("disable_trackers", "stringList", "Отключённые трекеры", Some("Трекеры, которые не должны работать на этом инстансе"), enums(&slugs)),
+            fd("syncKey", "string", "Ключ sync", Some("Ключ, выданный сервером синхронизации на его странице Клиенты; уходит заголовком X-CrabIndex-Key")),
             fd("syncsport", "bool", "Sync sport", None),
             fd("syncspidr", "bool", "Sync spidr", None),
             field("timeSync", "int", "Интервал sync (мин)", None, min(1)),
             field("timeSyncSpidr", "int", "Интервал sync spidr (мин)", None, min(1)),
             field("timeSyncCheck", "int", "Сверка с syncapi (мин)", Some("Сравнение списка бакетов с сервером: недостающие докачиваются, лишние удаляются; 0 - выключить"), min(0)),
             field("saveCheckpointEveryNBatches", "int", "Sync checkpoint (батчей)", Some("При catch-up: сохранять masterDb каждые N батчей; 0 - только по таймеру (5 мин)"), min(0)),
+            fd("autoFixData", "bool", "Авточистка данных", Some("После проверки данных (cron раз в неделю или кнопка «Проверить сейчас») сразу запускать «Исправить всё», если отчёт не пустой. Шаги и результат видны в разделе Обслуживание")),
             field("maxreadfile", "int", "Max read file", Some("Лимит чтения fdb"), min(1)),
         ]),
         group("logging", "Логирование", Some("Файлы в Data/log/ и уровни консоли (journalctl)"), vec![
