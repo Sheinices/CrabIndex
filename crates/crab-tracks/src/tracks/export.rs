@@ -119,6 +119,7 @@ fn collect_from_tracks_dir(tracks_dir: &str, result: &mut TrackMap, mut stats: O
 }
 
 fn collect_from_torrent_db(result: &mut TrackMap, mut stats: Option<&mut TracksExportStats>) {
+    let _pace = crab_core::fdb::pace::scan();
     for (key, _) in crab_core::fdb::master_db_snapshot() {
         let shard = crab_core::fdb::open_read(&key, false, false);
         for t in shard.values() {

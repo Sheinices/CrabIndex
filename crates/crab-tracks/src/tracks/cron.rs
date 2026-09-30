@@ -51,6 +51,7 @@ fn collect_candidates(typetask: i32) -> Vec<TorrentDetails> {
     let c = conf();
     let now = Utc::now();
     let mut torrents = Vec::new();
+    let _pace = crab_core::fdb::pace::scan();
     for (key, _) in crab_core::fdb::master_db_snapshot() {
         for t in crab_core::fdb::open_read(&key, false, false).into_values() {
             if t.magnet.is_empty() || !matches_typetask(&t, typetask, now) {

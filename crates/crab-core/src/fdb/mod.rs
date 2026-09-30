@@ -18,6 +18,7 @@ mod jsonstream;
 mod master;
 mod url_ids;
 pub mod id_index;
+pub mod pace;
 
 pub use details::{all_voices, rus_voices, size_from_name, ukr_voices, update_full_details};
 pub use jsonstream::{read_gz_json, write_gz_json};
@@ -110,6 +111,7 @@ pub fn path_for_key(key: &str) -> String {
 impl FileDb {
     fn load(key: &str) -> FileDb {
         let path = path_db(key);
+        pace::before_read();
         let db = if std::path::Path::new(&path).exists() {
             read_shard(&path).unwrap_or_default()
         } else {

@@ -455,6 +455,7 @@ pub fn migration_target(t: &TorrentDetails, current_key: &str) -> Option<String>
 }
 
 fn apply_safe_fixes(fixed: &mut FixedCounts, ct: &CancellationToken) -> Result<(), Cancelled> {
+    let _pace = fdb::pace::scan();
     for (key, _) in fdb::master_db_snapshot() {
         trackers::check(ct)?;
         let (w, nulls_removed) = nulls::open_write_clean(&key);
@@ -503,6 +504,7 @@ fn apply_safe_fixes(fixed: &mut FixedCounts, ct: &CancellationToken) -> Result<(
 }
 
 fn apply_full_fixes(fixed: &mut FixedCounts, ct: &CancellationToken) -> Result<(), Cancelled> {
+    let _pace = fdb::pace::scan();
     for (key, _) in fdb::master_db_snapshot() {
         trackers::check(ct)?;
         if !Path::new(&fdb::path_for_key(&key)).exists() {

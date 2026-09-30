@@ -494,6 +494,9 @@ pub struct AppOptions {
     pub syncsport: bool,
     pub syncspidr: bool,
     pub maxreadfile: i32,
+    /// Shard reads per second allowed to full passes over the FileDB (id index, statistics,
+    /// data check, migrations, maintenance); 0 - unlimited. Searches are never paced.
+    pub scanReadsPerSecond: i32,
     pub evercache: Evercache,
     pub fdbPathLevels: i32,
     /// minutes
@@ -595,6 +598,7 @@ impl Default for AppOptions {
             syncsport: true,
             syncspidr: true,
             maxreadfile: 200,
+            scanReadsPerSecond: 600,
             evercache: Evercache::default(),
             fdbPathLevels: 2,
             timeStatsUpdate: 90,

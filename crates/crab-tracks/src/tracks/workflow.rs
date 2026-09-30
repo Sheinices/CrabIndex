@@ -322,6 +322,7 @@ async fn find_torrent_key_by_magnet_async(magnet: &str) -> Option<String> {
 /// FileDB bucket that holds a torrent with the same infohash (full scan).
 pub fn find_torrent_key_by_magnet(magnet: &str) -> Option<String> {
     let infohash = db::infohash_from_magnet(magnet)?;
+    let _pace = crab_core::fdb::pace::scan();
     for (key, _) in crab_core::fdb::master_db_snapshot() {
         let shard = crab_core::fdb::open_read(&key, false, false);
         let found = shard

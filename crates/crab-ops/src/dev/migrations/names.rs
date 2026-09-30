@@ -22,6 +22,7 @@ where
     S: Fn(bool, i64) -> bool,
 {
     let (mut processed, mut migrated) = (0i64, 0i64);
+    let _pace = fdb::pace::scan();
     for (key, _) in fdb::master_db_snapshot() {
         let w = fdb::open_write(&key);
         let mut to_migrate: Vec<(TorrentDetails, String)> = Vec::new();

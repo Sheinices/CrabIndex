@@ -59,6 +59,7 @@ pub fn choose(mut rows: Vec<Cand>) -> (Cand, Vec<Cand>, Option<String>) {
 }
 
 pub fn fix_slug_duplicates() -> Value {
+    let _pace = fdb::pace::scan();
     let keys: Vec<String> = fdb::master_db_snapshot().into_iter().map(|(k, _)| k).collect();
 
     // pass 1: how many rows share each (tracker, id)

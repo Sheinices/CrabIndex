@@ -114,6 +114,7 @@ pub async fn collect_and_write_async(force: bool) -> Option<DateTime<Utc>> {
 /// Walk every FileDB bucket and accumulate tracker counters and ffprobe hashes.
 pub fn scan_fdb(today_utc: DateTime<Utc>) -> StatsFdbScanResult {
     let mut result = StatsFdbScanResult::default();
+    let _pace = crab_core::fdb::pace::scan();
     for (key, _) in crab_core::fdb::master_db_snapshot() {
         let shard = crab_core::fdb::open_read(&key, false, false);
         for t in shard.values() {

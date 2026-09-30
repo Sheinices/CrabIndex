@@ -131,6 +131,7 @@ pub fn run_with_trigger(trigger: &str) -> Value {
 fn run_inner() -> Value {
     let sw = Instant::now();
     let hosts = configured_hosts();
+    let _pace = fdb::pace::scan();
     let mut per: HashMap<String, Counts> = HashMap::new();
     // a few offending urls per tracker, so the panel can show what the count is about
     let mut samples: HashMap<String, Vec<String>> = HashMap::new();

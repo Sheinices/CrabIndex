@@ -192,6 +192,7 @@ fn process_shard(db: &mut fdb::ShardMap, spec: &Spec, c: &mut Counts) -> bool {
 
 fn run(spec: Spec) -> Value {
     let mut c = Counts::default();
+    let _pace = fdb::pace::scan();
     for (key, _) in fdb::master_db_snapshot() {
         let w = fdb::open_write(&key);
         w.modify(|db| process_shard(db, &spec, &mut c));

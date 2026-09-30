@@ -107,6 +107,7 @@ pub fn build() -> (usize, Vec<Duplicate>) {
     if BUILDING.swap(true, Ordering::SeqCst) {
         return (0, Vec::new());
     }
+    let _pace = super::pace::scan();
     let fresh: DashMap<u64, u32> = DashMap::new();
     // slot → (tracker, id, buckets) for ids seen in more than one bucket
     let dups: DashMap<u64, (String, i32, Vec<u32>)> = DashMap::new();
