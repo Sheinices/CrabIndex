@@ -82,16 +82,8 @@ pub fn search_results(
     is_serial: i32,
     rqnum: bool,
 ) -> Vec<Result> {
-    let cat_key = match category {
-        Some(c) if !c.is_empty() => c.iter().map(|(k, v)| format!("{k}={v}")).collect::<Vec<_>>().join(","),
-        _ => "null".to_string(),
-    };
-    let cachekey = format!(
-        "api:v2.0:indexers:{}:{}:{}:{year}:{cat_key}:{is_serial}",
-        query.unwrap_or(""),
-        title.unwrap_or(""),
-        title_original.unwrap_or("")
-    );
+    let cachekey = serde_json::to_string(&(query, title, title_original, year, category, is_serial, rqnum, apikey == Some("rus")))
+        .expect("search cache key serialization");
     if let Some(r) = RESULTS_CACHE.get(&cachekey) {
         return r;
     }

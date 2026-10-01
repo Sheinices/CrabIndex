@@ -159,17 +159,16 @@ impl FileDb {
     }
 
     pub fn save_changes_if_needed(&self) {
-        let g = self.inner.lock();
-        if !g.db.is_empty() && g.savechanges {
-            write_gz_json(&path_db(&self.key), &g.db);
+        let mut g = self.inner.lock();
+        if !g.db.is_empty() && g.savechanges && jsonstream::try_write_gz_json(&path_db(&self.key), &g.db).is_ok() {
+            g.savechanges = false;
         }
     }
 
     /// Persist unconditionally (also writes an empty shard - used by maintenance).
     pub fn save_now(&self) {
         let mut g = self.inner.lock();
-        write_gz_json(&path_db(&self.key), &g.db);
-        g.savechanges = false;
+        g.savechanges = jsonstream::try_write_gz_json(&path_db(&self.key), &g.db).is_err();
     }
 
     pub fn add_or_update(&self, torrent: &TorrentDetails) {

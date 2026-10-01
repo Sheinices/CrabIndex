@@ -33,16 +33,20 @@ pub fn read_gz_json<T: DeserializeOwned>(path: &str) -> Option<T> {
 
 /// Write gzip JSON atomically (temp + rename). Errors are logged at debug level.
 pub fn write_gz_json<T: Serialize + ?Sized>(path: &str, value: &T) {
+    let _ = try_write_gz_json(path, value);
+}
+
+pub(crate) fn try_write_gz_json<T: Serialize + ?Sized>(path: &str, value: &T) -> std::io::Result<()> {
     write_gz_json_level(path, value, Compression::default())
 }
 
 /// Same with the fastest gzip level: for big files rewritten often (masterDb, ~60 MB of JSON
 /// every few minutes) the write takes a third of the time for a file about a fifth larger.
-pub fn write_gz_json_fast<T: Serialize + ?Sized>(path: &str, value: &T) {
+pub(crate) fn write_gz_json_fast<T: Serialize + ?Sized>(path: &str, value: &T) -> std::io::Result<()> {
     write_gz_json_level(path, value, Compression::fast())
 }
 
-fn write_gz_json_level<T: Serialize + ?Sized>(path: &str, value: &T, level: Compression) {
+fn write_gz_json_level<T: Serialize + ?Sized>(path: &str, value: &T, level: Compression) -> std::io::Result<()> {
     let gate = lock_for(path);
     let _g = gate.lock();
     let started = Instant::now();
@@ -61,7 +65,7 @@ fn write_gz_json_level<T: Serialize + ?Sized>(path: &str, value: &T, level: Comp
         drop(w);
         std::fs::rename(&tmp, path)
     })();
-    if let Err(e) = res {
+    if let Err(e) = &res {
         let _ = std::fs::remove_file(&tmp);
         log::debug(cat::FDB, format!("gz json write failed path={path}: {e}"));
     }
@@ -69,4 +73,5 @@ fn write_gz_json_level<T: Serialize + ?Sized>(path: &str, value: &T, level: Comp
     if el > Duration::from_secs(5) {
         log::warn(cat::FDB, format!("gz json write slow path={path} elapsed={:.1}s", el.as_secs_f64()));
     }
+    res
 }

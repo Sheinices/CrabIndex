@@ -6,6 +6,7 @@
 use chrono::{DateTime, Duration, Utc};
 use dashmap::DashMap;
 use once_cell::sync::Lazy;
+use parking_lot::Mutex;
 use std::collections::HashMap;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
@@ -19,6 +20,7 @@ use crate::{conf, time};
 pub static MASTER_DB: Lazy<DashMap<String, MasterDbShard>> = Lazy::new(load_master_db);
 
 static DIRTY: AtomicBool = AtomicBool::new(false);
+static PERSIST_LOCK: Mutex<()> = parking_lot::const_mutex(());
 
 fn mark_dirty() {
     DIRTY.store(true, Ordering::SeqCst);
@@ -117,10 +119,40 @@ pub(crate) fn add_or_update_master_db(t: &TorrentDetails) {
 
 /// Persist masterDb + daily backup, drop the 3-days-old backup.
 pub fn save_changes_to_file() {
+    persist_master_db(false);
+}
+
+fn persist_with(
+    dirty: &AtomicBool,
+    gate: &Mutex<()>,
+    only_if_dirty: bool,
+    write: impl FnOnce() -> std::io::Result<()>,
+) -> std::io::Result<bool> {
+    let _guard = gate.lock();
+    if !dirty.swap(false, Ordering::SeqCst) && only_if_dirty {
+        return Ok(false);
+    }
+    if let Err(error) = write() {
+        dirty.store(true, Ordering::SeqCst);
+        return Err(error);
+    }
+    Ok(true)
+}
+
+fn persist_master_db(only_if_dirty: bool) -> bool {
+    match persist_with(&DIRTY, &PERSIST_LOCK, only_if_dirty, save_snapshot) {
+        Ok(saved) => saved,
+        Err(error) => {
+            log::warn(cat::FDB, format!("masterDb persistence failed: {error}"));
+            false
+        }
+    }
+}
+
+fn save_snapshot() -> std::io::Result<()> {
     let snapshot: HashMap<String, MasterDbShard> = MASTER_DB.iter().map(|e| (e.key().clone(), e.value().clone())).collect();
     // fastest gzip level: this file is rewritten every few minutes and read once at start
-    write_gz_json_fast("Data/masterDb.bz", &snapshot);
-    DIRTY.store(false, Ordering::SeqCst);
+    write_gz_json_fast("Data/masterDb.bz", &snapshot)?;
     let today = dated_name(0);
     if !std::path::Path::new(&today).exists() {
         let _ = std::fs::copy("Data/masterDb.bz", &today);
@@ -129,14 +161,11 @@ pub fn save_changes_to_file() {
     if std::path::Path::new(&old).exists() {
         let _ = std::fs::remove_file(old);
     }
+    Ok(())
 }
 
 pub fn save_changes_if_dirty() -> bool {
-    if !DIRTY.load(Ordering::SeqCst) {
-        return false;
-    }
-    save_changes_to_file();
-    true
+    persist_master_db(true)
 }
 
 pub fn is_master_db_dirty() -> bool {
@@ -228,4 +257,61 @@ pub fn flush_all() {
         e.db.save_changes_if_needed();
     }
     save_changes_if_dirty();
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::sync::mpsc;
+
+    #[test]
+    fn changes_during_persistence_remain_dirty() {
+        let dirty = AtomicBool::new(true);
+        let gate = Mutex::new(());
+        assert!(persist_with(&dirty, &gate, true, || {
+            dirty.store(true, Ordering::SeqCst);
+            Ok(())
+        })
+        .unwrap());
+        assert!(dirty.load(Ordering::SeqCst));
+        assert!(persist_with(&dirty, &gate, true, || Ok(())).unwrap());
+        assert!(!dirty.load(Ordering::SeqCst));
+        assert!(!persist_with(&dirty, &gate, true, || panic!("clean index must not be written")).unwrap());
+    }
+
+    #[test]
+    fn parallel_saves_take_snapshots_in_write_order() {
+        let dirty = AtomicBool::new(true);
+        let gate = Mutex::new(());
+        let (started_send, started_recv) = mpsc::channel();
+        let (release_send, release_recv) = mpsc::channel();
+        let snapshots = Mutex::new(Vec::new());
+        std::thread::scope(|scope| {
+            let dirty_ref = &dirty;
+            let gate_ref = &gate;
+            let snapshots_ref = &snapshots;
+            let first = scope.spawn(move || {
+                persist_with(dirty_ref, gate_ref, false, || {
+                    snapshots_ref.lock().push(1);
+                    started_send.send(()).unwrap();
+                    release_recv.recv().unwrap();
+                    Ok(())
+                })
+                .unwrap()
+            });
+            started_recv.recv().unwrap();
+            let second = scope.spawn(|| {
+                persist_with(&dirty, &gate, false, || {
+                    snapshots.lock().push(2);
+                    Ok(())
+                })
+                .unwrap()
+            });
+            assert!(gate.try_lock().is_none());
+            release_send.send(()).unwrap();
+            assert!(first.join().unwrap());
+            assert!(second.join().unwrap());
+        });
+        assert_eq!(*snapshots.lock(), vec![1, 2]);
+    }
 }
