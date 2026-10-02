@@ -82,6 +82,8 @@ async fn status_handler() -> Json<Value> {
             "crawlUrl": fs.crawlUrl,
             "maxTimeoutMs": fs.maxTimeoutMs,
             "sessionIdleMinutes": fs.sessionIdleMinutes,
+            "maxSessions": fs.maxSessions.max(1),
+            "maxConcurrent": 1,
             "browserTimeoutRetries": fs.browserTimeoutRetries,
             "recycleAfterTimeouts": fs.recycleAfterTimeouts,
             "guardedHours": fs.guardedHours,

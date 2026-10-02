@@ -37,7 +37,7 @@ struct View {
     max_timeout_ms: i32,
     browser_timeout_retries: i32,
     recycle_after_timeouts: i32,
-    session_idle_minutes: i32,
+    max_sessions: usize,
 }
 
 impl View {
@@ -47,7 +47,7 @@ impl View {
             max_timeout_ms: c.maxTimeoutMs,
             browser_timeout_retries: c.browserTimeoutRetries.max(0),
             recycle_after_timeouts: c.recycleAfterTimeouts.max(1),
-            session_idle_minutes: c.sessionIdleMinutes,
+            max_sessions: c.maxSessions.max(1) as usize,
         }
     }
 }
@@ -66,6 +66,7 @@ fn view() -> Option<View> {
 
 struct SessionState {
     alive: bool,
+    may_exist: bool,
     last_use: DateTime<Utc>,
     consecutive_browser_timeouts: i32,
 }
@@ -89,6 +90,8 @@ impl BrowserSession {
 }
 
 static SESSIONS: Lazy<DashMap<String, Arc<BrowserSession>>> = Lazy::new(DashMap::new);
+static SOLVER_GATES: Lazy<DashMap<String, Arc<tokio::sync::Mutex<()>>>> = Lazy::new(DashMap::new);
+static PENDING_DESTROYS: Lazy<DashMap<String, (String, String)>> = Lazy::new(DashMap::new);
 static RENEW_GATES: Lazy<DashMap<String, Arc<Semaphore>>> = Lazy::new(DashMap::new);
 static RENEWING: Lazy<DashMap<String, OwnedSemaphorePermit>> = Lazy::new(DashMap::new);
 static IDLE_TIMER: AtomicBool = AtomicBool::new(false);
@@ -97,6 +100,10 @@ static CLIENT: Lazy<reqwest::Client> =
     Lazy::new(|| reqwest::Client::builder().no_proxy().build().unwrap_or_else(|_| reqwest::Client::new()));
 
 const RENEW_WAIT_SECS: i64 = 100;
+
+fn solver_gate(url: &str) -> Arc<tokio::sync::Mutex<()>> {
+    SOLVER_GATES.entry(url.to_string()).or_insert_with(|| Arc::new(tokio::sync::Mutex::new(()))).clone()
+}
 
 /// FlareSolverr session id for a host, charset `[A-Za-z0-9_-]`.
 /// `kinozal.guru` → `crabindex-kinozal_guru`.
@@ -126,7 +133,7 @@ fn session_for_host(v: &View, host: &str) -> Arc<BrowserSession> {
                 host: host.to_lowercase(),
                 solver_url: v.url.clone(),
                 gate: tokio::sync::Mutex::new(()),
-                st: Mutex::new(SessionState { alive: false, last_use: DateTime::<Utc>::MIN_UTC, consecutive_browser_timeouts: 0 }),
+                st: Mutex::new(SessionState { alive: false, may_exist: false, last_use: DateTime::<Utc>::MIN_UTC, consecutive_browser_timeouts: 0 }),
             })
         })
         .value()
@@ -191,23 +198,36 @@ pub async fn fetch_async(url: &str, cookie: Option<&str>, referer: Option<&str>,
         return None;
     }
 
-    let session = session_for_host(&v, &host);
-    let _gate = session.gate.lock().await;
-    let _renew = RenewRelease(host.clone());
+    let url = url.to_string();
+    let cookie = cookie.map(str::to_string);
+    tokio::spawn(async move { fetch_browser(&v, &host, &url, cookie.as_deref()).await }).await.ok().flatten()
+}
 
-    if !session.alive() && !create_session(&v, &session).await {
+async fn fetch_browser(v: &View, host: &str, url: &str, cookie: Option<&str>) -> Option<String> {
+    let solver = solver_gate(&v.url);
+    let _solver_guard = solver.lock().await;
+    if cf::is_paused() || crate::backoff::active().iter().any(|entry| entry.host == host && entry.until > Utc::now()) {
+        return None;
+    }
+    let session = session_for_host(v, host);
+    let _gate = session.gate.lock().await;
+    let _renew = RenewRelease(host.to_string());
+
+    if !session.alive() && !create_session(v, &session).await {
         return None;
     }
 
-    let (outcome, html, fail) = request_with_timeout_retries(&v, &session, url, cookie).await;
+    let (outcome, html, fail) = request_with_timeout_retries(v, &session, url, cookie).await;
 
     if outcome == FetchOutcome::Ok {
         session.st.lock().consecutive_browser_timeouts = 0;
-        touch_session(&v, &session);
+        touch_session(v, &session);
         return html;
     }
     if outcome == FetchOutcome::PageFailed {
-        touch_session(&v, &session);
+        if fail.as_deref() == Some(CHALLENGE_HTML_MSG) {
+            destroy_session(v, &session).await;
+        }
         return None;
     }
 
@@ -226,7 +246,6 @@ pub async fn fetch_async(url: &str, cookie: Option<&str>, referer: Option<&str>,
                 cat::HOST,
                 format!("{host}: FlareSolverr browser timeout ({n}/{}) - сессию оставляем, caller ретраит", v.recycle_after_timeouts),
             );
-            touch_session(&v, &session);
             return None;
         }
         log::warn(cat::HOST, format!("{host}: session recycled after {n} browser timeouts"));
@@ -234,24 +253,26 @@ pub async fn fetch_async(url: &str, cookie: Option<&str>, referer: Option<&str>,
         log::warn(cat::HOST, format!("{host}: FlareSolverr session recycle - {fail_message}"));
     }
 
-    destroy_session(&v, &session).await;
+    if !destroy_session(v, &session).await {
+        return None;
+    }
     session.st.lock().consecutive_browser_timeouts = 0;
 
-    if !create_session(&v, &session).await {
+    if !create_session(v, &session).await {
         return None;
     }
 
-    let (outcome, html, fail) = request_with_timeout_retries(&v, &session, url, cookie).await;
+    let (outcome, html, fail) = request_with_timeout_retries(v, &session, url, cookie).await;
     if outcome == FetchOutcome::Ok {
         session.st.lock().consecutive_browser_timeouts = 0;
         log::warn(cat::HOST, format!("{host}: session recycled, OK"));
-        touch_session(&v, &session);
+        touch_session(v, &session);
         return html;
     }
     if is_browser_timeout_message(fail.as_deref().unwrap_or_default()) {
         session.st.lock().consecutive_browser_timeouts = 1;
     }
-    touch_session(&v, &session);
+    destroy_session(v, &session).await;
     None
 }
 
@@ -421,17 +442,26 @@ pub async fn recycle_session(host: &str) {
     if host.trim().is_empty() {
         return;
     }
+    let host = host.to_string();
+    let _ = tokio::spawn(async move { recycle_inner(v, &host).await }).await;
+}
+
+async fn recycle_inner(v: View, host: &str) {
+    let solver = solver_gate(&v.url);
+    let _solver_guard = solver.lock().await;
     let session = session_for_host(&v, host);
     let _gate = session.gate.lock().await;
     log::warn(cat::HOST, format!("{host}: FlareSolverr session recycle requested ({})", session.name));
-    destroy_session(&v, &session).await;
+    if !destroy_session(&v, &session).await {
+        return;
+    }
     session.st.lock().consecutive_browser_timeouts = 0;
     create_session(&v, &session).await;
 }
 
-fn touch_session(v: &View, session: &BrowserSession) {
+fn touch_session(_v: &View, session: &BrowserSession) {
     session.st.lock().last_use = Utc::now();
-    arm_idle_timer(v);
+    arm_idle_timer();
 }
 
 /// Same-session retries before escalating: on a browser timeout (`browserTimeoutRetries`) and
@@ -590,6 +620,15 @@ fn parse_cookies(cookie: Option<&str>) -> Vec<Value> {
 // ---------------------------------------------------------------- sessions
 
 async fn create_session(v: &View, session: &BrowserSession) -> bool {
+    if !make_room(v, session).await {
+        return false;
+    }
+    {
+        let mut state = session.st.lock();
+        state.may_exist = true;
+        state.last_use = Utc::now();
+    }
+    arm_idle_timer();
     let root = call(&v.url, json!({ "cmd": "sessions.create", "session": session.name }), v.max_timeout_ms as i64 + 30_000).await;
     let ok = root
         .as_ref()
@@ -605,21 +644,88 @@ async fn create_session(v: &View, session: &BrowserSession) -> bool {
     } else {
         let msg = root.as_ref().and_then(|r| val_str(r.get("message"))).unwrap_or_default();
         stats::browser(&session.host, 0, Some(&format!("session create failed: {}", if msg.is_empty() { "unreachable" } else { msg.as_str() })));
+        note_backoff(&session.host, false);
         log::error(cat::HOST, format!("FlareSolverr: сессию {} создать не удалось: {msg}", session.name));
     }
     ok
 }
 
-async fn destroy_session(v: &View, session: &BrowserSession) {
-    stats::session_recycled(&session.host);
-    call(&v.url, json!({ "cmd": "sessions.destroy", "session": session.name }), 60_000).await;
-    session.set_alive(false);
+async fn destroy_remote(url: &str, name: &str) -> bool {
+    let key = format!("{url}\n{name}");
+    PENDING_DESTROYS.insert(key.clone(), (url.to_string(), name.to_string()));
+    arm_idle_timer();
+    let root = call(url, json!({ "cmd": "sessions.destroy", "session": name }), 60_000).await;
+    let ok = root.as_ref().is_some_and(|response| {
+        let message = val_str(response.get("message")).unwrap_or_default().to_lowercase();
+        val_str(response.get("status")).is_some_and(|status| status.eq_ignore_ascii_case("ok"))
+            || message.contains("not found") || message.contains("does not exist")
+    });
+    if !ok {
+        log::warn(cat::HOST, format!("FlareSolverr: закрытие {name} не подтверждено, повторим уборку"));
+    } else {
+        PENDING_DESTROYS.remove(&key);
+        if let Some(session) = SESSIONS.get(&key) {
+            let mut state = session.st.lock();
+            state.alive = false;
+            state.may_exist = false;
+        }
+    }
+    ok
 }
 
-fn arm_idle_timer(v: &View) {
-    if v.session_idle_minutes <= 0 {
-        return;
+async fn destroy_session(v: &View, session: &BrowserSession) -> bool {
+    session.set_alive(false);
+    if !destroy_remote(&v.url, &session.name).await {
+        return false;
     }
+    session.st.lock().may_exist = false;
+    stats::session_recycled(&session.host);
+    true
+}
+
+async fn make_room(v: &View, session: &BrowserSession) -> bool {
+    let Some(remote) = list_solver_sessions(&v.url).await else {
+        log::warn(cat::HOST, "FlareSolverr: список сессий недоступен, новый браузер не создаём");
+        return false;
+    };
+    if remote.contains(&session.name) || session.st.lock().may_exist {
+        session.st.lock().may_exist = true;
+        if !destroy_session(v, session).await {
+            return false;
+        }
+    }
+    let known: Vec<Arc<BrowserSession>> = SESSIONS.iter().filter(|entry| entry.solver_url == v.url).map(|entry| entry.value().clone()).collect();
+    let mut candidates: Vec<(String, DateTime<Utc>)> = remote.into_iter()
+        .filter(|name| name.starts_with(SESSION_PREFIX) && name != &session.name)
+        .map(|name| (name, DateTime::<Utc>::MIN_UTC)).collect();
+    for other in &known {
+        let state = other.st.lock();
+        if !state.may_exist || other.name == session.name {
+            continue;
+        }
+        if let Some(candidate) = candidates.iter_mut().find(|candidate| candidate.0 == other.name) {
+            candidate.1 = state.last_use;
+        } else {
+            candidates.push((other.name.clone(), state.last_use));
+        }
+    }
+    candidates.sort_by_key(|candidate| candidate.1);
+    let remove_count = candidates.len().saturating_add(1).saturating_sub(v.max_sessions);
+    for (name, _) in candidates.into_iter().take(remove_count) {
+        if let Some(other) = known.iter().find(|other| other.name == name) {
+            other.st.lock().may_exist = true;
+            if !destroy_session(v, other).await {
+                return false;
+            }
+        } else if !destroy_remote(&v.url, &name).await {
+            return false;
+        }
+        log::info(cat::HOST, format!("FlareSolverr: сессия {name} закрыта для соблюдения maxSessions={}", v.max_sessions));
+    }
+    true
+}
+
+fn arm_idle_timer() {
     if IDLE_TIMER.swap(true, Ordering::SeqCst) {
         return;
     }
@@ -647,6 +753,7 @@ pub fn sessions_snapshot() -> Vec<Value> {
                 "name": s.name,
                 "host": s.host,
                 "alive": st.alive,
+                "cleanupPending": st.may_exist && !st.alive,
                 "busy": s.gate.try_lock().is_err(),
                 "lastUse": (st.last_use != DateTime::<Utc>::MIN_UTC).then_some(st.last_use),
                 "consecutiveTimeouts": st.consecutive_browser_timeouts,
@@ -661,6 +768,11 @@ pub fn sessions_snapshot() -> Vec<Value> {
 /// request in flight are skipped. Without `host`, orphan `crabindex-*` sessions that
 /// FlareSolverr still holds are closed too. Returns (closed, busy).
 pub async fn close_sessions(host: Option<&str>) -> (usize, usize) {
+    let host = host.map(str::to_string);
+    tokio::spawn(async move { close_sessions_inner(host.as_deref()).await }).await.unwrap_or((0, 0))
+}
+
+async fn close_sessions_inner(host: Option<&str>) -> (usize, usize) {
     let c = conf();
     let fs = &c.flaresolverr;
     if fs.url.trim().is_empty() {
@@ -668,36 +780,42 @@ pub async fn close_sessions(host: Option<&str>) -> (usize, usize) {
     }
     let host = host.map(|h| h.trim().to_lowercase()).filter(|h| !h.is_empty());
     let (mut closed, mut busy) = (0, 0);
-    let mut kept: Vec<String> = Vec::new();
     let sessions: Vec<Arc<BrowserSession>> = SESSIONS.iter().map(|e| e.value().clone()).collect();
-    for session in sessions {
-        if host.as_deref().is_some_and(|h| h != session.host) {
-            continue;
-        }
-        let Ok(_gate) = session.gate.try_lock() else {
-            busy += 1;
-            kept.push(session.name.clone());
+    let mut urls = vec![fs.url.clone()];
+    if !fs.crawlUrl.trim().is_empty() {
+        urls.push(fs.crawlUrl.clone());
+    }
+    urls.extend(sessions.iter().map(|session| session.solver_url.clone()));
+    urls.sort();
+    urls.dedup();
+    for url in urls {
+        let known: Vec<_> = sessions.iter().filter(|session| session.solver_url == url && host.as_deref().is_none_or(|host| host == session.host)).collect();
+        let solver = solver_gate(&url);
+        let Ok(_solver_guard) = solver.try_lock() else {
+            busy += known.iter().filter(|session| session.st.lock().may_exist).count().max(1);
             continue;
         };
-        if !session.alive() {
-            continue;
+        let mut attempted = Vec::new();
+        let v = View::with_url(fs, &url);
+        for session in known {
+            if !session.st.lock().may_exist {
+                continue;
+            }
+            let Ok(_gate) = session.gate.try_lock() else {
+                busy += 1;
+                continue;
+            };
+            attempted.push(session.name.clone());
+            if destroy_session(&v, session).await {
+                closed += 1;
+            }
         }
-        call(&session.solver_url, json!({ "cmd": "sessions.destroy", "session": session.name }), 60_000).await;
-        session.set_alive(false);
-        closed += 1;
-        log::warn(cat::HOST, format!("FlareSolverr: сессия {} закрыта из админ-панели", session.name));
-    }
-    if host.is_none() {
-        let mut urls = vec![fs.url.clone()];
-        if !fs.crawlUrl.trim().is_empty() && fs.crawlUrl != fs.url {
-            urls.push(fs.crawlUrl.clone());
-        }
-        for url in urls {
-            for name in solver_session_names(&url).await {
-                if !name.starts_with(SESSION_PREFIX) || kept.contains(&name) {
-                    continue;
-                }
-                call(&url, json!({ "cmd": "sessions.destroy", "session": name }), 60_000).await;
+        for name in solver_session_names(&url).await {
+            if !name.starts_with(SESSION_PREFIX) || attempted.contains(&name)
+                || host.as_deref().is_some_and(|host| name != session_name_for(Some(host))) {
+                continue;
+            }
+            if destroy_remote(&url, &name).await {
                 closed += 1;
             }
         }
@@ -705,12 +823,15 @@ pub async fn close_sessions(host: Option<&str>) -> (usize, usize) {
     (closed, busy)
 }
 
-async fn solver_session_names(url: &str) -> Vec<String> {
+async fn list_solver_sessions(url: &str) -> Option<Vec<String>> {
     call(url, json!({ "cmd": "sessions.list" }), 15_000)
         .await
         .and_then(|r| r.get("sessions").and_then(|s| s.as_array()).cloned())
         .map(|a| a.iter().filter_map(|s| s.as_str().map(|s| s.to_string())).collect())
-        .unwrap_or_default()
+}
+
+async fn solver_session_names(url: &str) -> Vec<String> {
+    list_solver_sessions(url).await.unwrap_or_default()
 }
 
 /// FlareSolverr health for the admin panel: `GET` on the service root plus its session list.
@@ -740,29 +861,39 @@ pub async fn solver_info(url: &str) -> Value {
 pub async fn close_if_idle() {
     let c = conf();
     let fs = &c.flaresolverr;
-    if !fs.enable || fs.url.trim().is_empty() || fs.sessionIdleMinutes <= 0 {
-        return;
-    }
+    let mut attempted = Vec::new();
     let sessions: Vec<Arc<BrowserSession>> = SESSIONS.iter().map(|e| e.value().clone()).collect();
     for session in sessions {
+        let solver = solver_gate(&session.solver_url);
+        let Ok(_solver_guard) = solver.try_lock() else { continue };
+        let Ok(_gate) = session.gate.try_lock() else { continue };
         {
             let st = session.st.lock();
-            if !st.alive {
+            if !st.may_exist {
                 continue;
             }
-            if st.last_use != DateTime::<Utc>::MIN_UTC && Utc::now() < st.last_use + Duration::minutes(fs.sessionIdleMinutes as i64) {
+            if st.alive && fs.enable && (fs.sessionIdleMinutes <= 0 || Utc::now() < st.last_use + Duration::minutes(fs.sessionIdleMinutes as i64)) {
                 continue;
             }
         }
-        let Ok(_gate) = session.gate.try_lock() else { continue };
         if session.solver_url.trim().is_empty() {
             continue;
         }
         let v = View::with_url(fs, &session.solver_url);
-        call(&v.url, json!({ "cmd": "sessions.destroy", "session": session.name }), 60_000).await;
-        session.set_alive(false);
-        stats::session_closed_idle(&session.host);
-        log::warn(cat::HOST, format!("FlareSolverr: сессия {} закрыта по простою, память освобождена", session.name));
+        attempted.push(format!("{}\n{}", session.solver_url, session.name));
+        if destroy_session(&v, &session).await {
+            stats::session_closed_idle(&session.host);
+            log::warn(cat::HOST, format!("FlareSolverr: сессия {} закрыта уборщиком", session.name));
+        }
+    }
+    let pending: Vec<_> = PENDING_DESTROYS.iter().map(|entry| entry.value().clone()).collect();
+    for (url, name) in pending {
+        if attempted.contains(&format!("{url}\n{name}")) {
+            continue;
+        }
+        let solver = solver_gate(&url);
+        let Ok(_solver_guard) = solver.try_lock() else { continue };
+        destroy_remote(&url, &name).await;
     }
 }
 
@@ -814,7 +945,6 @@ async fn post_once(v: &View, session: &BrowserSession, host: &str, url: &str, fo
     let started = std::time::Instant::now();
     let root = call(&v.url, payload, v.max_timeout_ms as i64 + 30_000).await;
     let ms = started.elapsed().as_millis() as u64;
-    touch_session(v, session);
     let Some(root) = root else {
         stats::browser(host, ms, Some("login POST: empty response / unreachable"));
         session.set_alive(false);
@@ -833,6 +963,7 @@ async fn post_once(v: &View, session: &BrowserSession, host: &str, url: &str, fo
     }
     stats::browser(host, ms, None);
     note_backoff(host, true);
+    touch_session(v, session);
     PostOutcome::Ok(root)
 }
 
@@ -841,7 +972,21 @@ async fn post_once(v: &View, session: &BrowserSession, host: &str, url: &str, fo
 /// browser's cookie jar (it includes the cookies the login just set).
 pub async fn post_form_async(url: &str, form: &str) -> Option<cf::BrowserPost> {
     let v = view()?;
+    let url = url.to_string();
+    let form = form.to_string();
+    tokio::spawn(async move { post_form_inner(v, &url, &form).await }).await.ok().flatten()
+}
+
+async fn post_form_inner(v: View, url: &str, form: &str) -> Option<cf::BrowserPost> {
     let host = host_of(url)?;
+    if cf::is_paused() || crate::backoff::skip(&host).is_some() {
+        return None;
+    }
+    let solver = solver_gate(&v.url);
+    let _solver_guard = solver.lock().await;
+    if cf::is_paused() {
+        return None;
+    }
     let session = session_for_host(&v, &host);
     let _gate = session.gate.lock().await;
 
@@ -855,7 +1000,9 @@ pub async fn post_form_async(url: &str, form: &str) -> Option<cf::BrowserPost> {
             // A crashed tab stays crashed: every later call fails instantly. Recycle the
             // session and submit the form once more.
             log::warn(cat::HOST, format!("{host}: FlareSolverr session recycle after POST failure"));
-            destroy_session(&v, &session).await;
+            if !destroy_session(&v, &session).await {
+                return None;
+            }
             if !create_session(&v, &session).await {
                 return None;
             }

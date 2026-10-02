@@ -44,6 +44,9 @@ static SERIAL: Lazy<tokio::sync::Mutex<()>> = Lazy::new(|| tokio::sync::Mutex::n
 async fn fs_handler(Json(v): Json<Value>) -> Json<Value> {
     let cmd = v["cmd"].as_str().unwrap_or_default().to_string();
     let session = v["session"].as_str().unwrap_or_default().to_string();
+    if cmd == "sessions.list" {
+        return Json(json!({"status": "ok", "sessions": []}));
+    }
     let (mode, recreated) = {
         let mut m = MOCK.lock();
         m.fs_calls.push(format!("{cmd}:{session}"));
@@ -194,7 +197,7 @@ async fn browser_timeouts_recycle_session_after_threshold() {
     assert!(fetch_async("https://slow.test/a", None, None, &[]).await.is_none());
     assert_eq!(
         fs_calls()[2..],
-        ["request.get:crabindex-slow_test", "sessions.destroy:crabindex-slow_test", "sessions.create:crabindex-slow_test", "request.get:crabindex-slow_test"]
+        ["request.get:crabindex-slow_test", "sessions.destroy:crabindex-slow_test", "sessions.create:crabindex-slow_test", "request.get:crabindex-slow_test", "sessions.destroy:crabindex-slow_test"]
     );
 }
 
@@ -207,8 +210,9 @@ async fn interstitial_solution_is_page_failure() {
     assert!(fetch_async("https://chl.test/a", None, None, &[]).await.is_none());
     // sessions.create + the request + 2 same-session retries (FlareSolverr keeps answering with
     // the interstitial), then the fetch fails.
-    assert_eq!(fs_calls().len(), 4);
-    assert!(fs_calls()[1..].iter().all(|c| c == "request.get:crabindex-chl_test"), "{:?}", fs_calls());
+    assert_eq!(fs_calls().len(), 5);
+    assert!(fs_calls()[1..4].iter().all(|c| c == "request.get:crabindex-chl_test"), "{:?}", fs_calls());
+    assert_eq!(fs_calls()[4], "sessions.destroy:crabindex-chl_test");
 }
 
 #[tokio::test]

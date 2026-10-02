@@ -55,6 +55,7 @@ flaresolverr:
   crawlUrl: "" # http://127.0.0.1:8193/v1 when a second FlareSolverr runs
   maxTimeoutMs: 300000
   sessionIdleMinutes: 30 # закрывать простаивающий Chrome: заодно чистит процессы после упавших вкладок
+  maxSessions: 2
   browserTimeoutRetries: 1
   recycleAfterTimeouts: 3
   guardedHours: 6

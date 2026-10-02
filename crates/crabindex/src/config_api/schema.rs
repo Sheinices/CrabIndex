@@ -222,6 +222,7 @@ pub fn get() -> Value {
             fd("flaresolverr.crawlUrl", "string", "Crawl URL", Some("Второй FlareSolverr для ParseAll/UpdateTasks. Пусто - тот же url")),
             field("flaresolverr.maxTimeoutMs", "int", "Таймаут (мс)", Some("Первая страница / challenge+retry (~5 мин)"), min(1000)),
             field("flaresolverr.sessionIdleMinutes", "int", "Idle сессии (мин)", Some("Закрыть Chromium после простоя (дефолт 30). При закрытии сессии Chrome завершается целиком и уносит процессы-сироты после упавших вкладок; keep-alive cron держит нужные сессии тёплыми"), min(0)),
+            field("flaresolverr.maxSessions", "int", "Максимум браузеров", Some("На каждый URL FlareSolverr, по умолчанию 2. Перед созданием нового браузера закрывается самая давно использованная сессия. Браузерные запросы выполняются по одному на экземпляр"), min(1)),
             field("flaresolverr.browserTimeoutRetries", "int", "Retry на timeout", Some("Same-session retry до recycle (дефолт 1)"), min(0)),
             field("flaresolverr.recycleAfterTimeouts", "int", "Recycle после N timeout", Some("Destroy сессии после N подряд browser timeout (дефолт 3)"), min(1)),
             field("flaresolverr.guardedHours", "int", "Guarded hours", Some("Сколько помнить CF на хосте"), min(1)),
